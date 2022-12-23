@@ -59,17 +59,17 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
         y_interpolated = a * x + b
       }
       else {
-        y_interpolated = approx(.x_ref,
-                         .y_ref,
-                         method = "linear",
-                         rule = 1,
-                         xout = x)$y
+        y_interpolated = stats::approx(.x_ref,
+                                       .y_ref,
+                                       method = "linear",
+                                       rule = 1,
+                                       xout = x)$y
       }
       return(y_interpolated)
     }
   }
   else if (method == "spline") {
-    ref_fun = splinefun(x_ref,
+    ref_fun = stats::splinefun(x_ref,
                         y_ref,
                         method = "natural")
   }
@@ -90,7 +90,7 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
     }
     else {
       # The uniroot() function finds the root of g(x).
-      x_mapped[i] = uniroot(
+      x_mapped[i] = stats::uniroot(
         f = function(x)
           ref_fun(x) - y_obs[i],
         interval = c(min(x_ref) - extrapol,
