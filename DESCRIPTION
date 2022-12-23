@@ -18,3 +18,6 @@ Config/testthat/edition: 3
 Imports: 
     nlme,
     stats
+Depends: 
+    R (>= 2.10)
+LazyData: true

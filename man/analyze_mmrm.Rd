@@ -15,7 +15,6 @@ variables should be present:
 \item \code{time_int}: integer that indicates the measurement occasion. Should start
 with \code{1} for the first occasion, values for subsequent occasions should be
 consecutive integers.
-\item 
 }}
 
 \item{method}{Which method should be used for fitting the MMRM? Should be one

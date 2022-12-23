@@ -10,7 +10,6 @@
 #'   * `time_int`: integer that indicates the measurement occasion. Should start
 #'   with `1` for the first occasion, values for subsequent occasions should be
 #'   consecutive integers.
-#'   *
 #' @param method Which method should be used for fitting the MMRM? Should be one
 #'   of the following strings:
 #'   * `"ML"` (default): maximum likelihood
