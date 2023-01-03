@@ -1,4 +1,3 @@
-
 #' Analyze a list of trials
 #'
 #' The [analyze_trials()] function analyzes a list of data frames where each
