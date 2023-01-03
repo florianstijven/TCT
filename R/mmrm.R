@@ -19,6 +19,7 @@
 #' @export
 #'
 #' @examples
+#'
 analyze_mmrm = function(data_trial, method = "ML") {
   # The following options could be elaborated on in the future.
   baseline = FALSE
