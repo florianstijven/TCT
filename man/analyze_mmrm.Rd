@@ -4,7 +4,7 @@
 \alias{analyze_mmrm}
 \title{Analyze trial data with MMRM}
 \usage{
-analyze_mmrm(data_trial, method = "ML")
+analyze_mmrm(data_trial, method = "ML", type = "full")
 }
 \arguments{
 \item{data_trial}{A data frame from a single clinical trial. The following
@@ -22,6 +22,13 @@ of the following strings:
 \itemize{
 \item \code{"ML"} (default): maximum likelihood
 \item \code{"REML"}: restricted maximum likelihood
+}}
+
+\item{type}{Which MMRM model should be use?
+\itemize{
+\item \code{"full"} (default): full model with treatment-time interaction.
+\item \code{"null"}: null model with no treatment effect. The only use case for
+fitting this model is to perform likelihood ratio tests.
 }}
 }
 \value{

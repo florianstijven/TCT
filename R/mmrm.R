@@ -14,13 +14,17 @@
 #'   of the following strings:
 #'   * `"ML"` (default): maximum likelihood
 #'   * `"REML"`: restricted maximum likelihood
+#' @param type Which MMRM model should be use?
+#'   * `"full"` (default): full model with treatment-time interaction.
+#'   * `"null"`: null model with no treatment effect. The only use case for
+#'   fitting this model is to perform likelihood ratio tests.
 #'
 #' @return fitted-model object from [nlme::gls()]
 #' @export
 #'
 #' @examples
 #'
-analyze_mmrm = function(data_trial, method = "ML") {
+analyze_mmrm = function(data_trial, method = "ML", type = "full") {
   # The following options could be elaborated on in the future.
   baseline = FALSE
   covariates = FALSE
@@ -37,6 +41,11 @@ analyze_mmrm = function(data_trial, method = "ML") {
     formula = update.formula(old = formula, .~. +
                                BMMSE_integer + BMMSE_integer:as.factor(time_int)
     )
+  }
+
+  if (type == "null") {
+    formula = update.formula(old = formula,
+                             .~. - arm_time + as.factor(time_int))
   }
 
   nlme::gls(

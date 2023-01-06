@@ -23,3 +23,29 @@ test_that("mmrm is correctly fitted for simulated_test_trial with REML", {
                c(22.94563423 ,
                  -7957.205066), ignore_attr = "names")
 })
+
+test_that("mmrm (null model) is correctly fitted for simulated_test_trial with ML", {
+  data_trial = simulated_test_trial %>%
+    dplyr::mutate(time_int = (Week %/% 25) + 1,
+                  arm_time = ifelse(time_int == 1L,
+                                    "baseline",
+                                    paste0(arm, ":", time_int)))
+  mmrm_fit = analyze_mmrm(data_trial, type = "null")
+  expect_equal(c(mmrm_fit$coefficients[1],
+                 mmrm_fit$logLik[1]),
+               c(22.544,
+                 -7958.859608), ignore_attr = "names")
+})
+
+test_that("mmrm (null model) is correctly fitted for simulated_test_trial with REML", {
+  data_trial = simulated_test_trial %>%
+    dplyr::mutate(time_int = (Week %/% 25) + 1,
+                  arm_time = ifelse(time_int == 1L,
+                                    "baseline",
+                                    paste0(arm, ":", time_int)))
+  mmrm_fit = analyze_mmrm(data_trial, method = "REML", type = "null")
+  expect_equal(c(mmrm_fit$coefficients[1],
+                 mmrm_fit$logLik[1]),
+               c(22.544 ,
+                 -7960.975908), ignore_attr = "names")
+})
