@@ -18,6 +18,8 @@ profile.}
 \itemize{
 \item \code{"linear"}: piecewise linear interpolation
 \item \code{"spline"}: natural cubic spline interpolation
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch and
+Carlson.
 }}
 }
 \value{

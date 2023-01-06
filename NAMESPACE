@@ -3,6 +3,7 @@
 export(analyze_mmrm)
 export(analyze_ps_pmrm)
 export(analyze_trials)
+export(delta_vertical_to_horizontal)
 export(simulate_N_trials)
 export(simulate_single_trial)
 importFrom(dplyr,"%>%")

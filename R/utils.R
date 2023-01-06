@@ -24,6 +24,8 @@
 #' @param method Method for interpolation:
 #' * `"linear"`: piecewise linear interpolation
 #' * `"spline"`: natural cubic spline interpolation
+#' * `"monoH.FC`: monotone Hermite spline according to the method of Fritsch and
+#'      Carlson.
 #'
 #' @return A vector of the time-mapped values.
 #'
@@ -70,12 +72,23 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
                                        xout = x)$y
       }
       else if (method == "spline") {
-        ref_fun = stats::splinefun(x_ref,
-                                   y_ref,
-                                   method = "natural")
+        y_interpolated = stats::spline(x = .x_ref,
+                                       y = .y_ref,
+                                       method = "natural",
+                                       xout = x)$y
       }
     }
     return(y_interpolated)
+  }
+
+  if (method == "monoH.FC") {
+    # interpolation: monotone Hermite spline according to the method of Fritsch
+    # and Carlson.
+    # This interpolation method ensures a monotone interpolated function iff the
+    # data themselves are monotone
+    ref_fun = stats::splinefun(x_ref,
+                               y_ref,
+                               method = "monoH.FC")
   }
 
 
@@ -101,7 +114,7 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
           ref_fun(x) - y_obs[i],
         interval = c(min(x_ref) - extrapol,
                      max(x_ref) + extrapol),
-        tol = .Machine$double.eps^0.5,
+        tol = .Machine$double.eps^0.75,
         maxiter = 10e4
       )$root
     }
