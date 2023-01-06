@@ -114,7 +114,7 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
           ref_fun(x) - y_obs[i],
         interval = c(min(x_ref) - extrapol,
                      max(x_ref) + extrapol),
-        tol = .Machine$double.eps^0.75,
+        tol = .Machine$double.eps^0.5,
         maxiter = 10e4
       )$root
     }
