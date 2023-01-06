@@ -38,6 +38,7 @@ analyze_trials = function(list_data_trials,
     cl = parallel::makeCluster(n_cores)
     # parallel::clusterExport(cl = cl, varlist = env_vars)
     parallel::clusterEvalQ(cl = cl, library(tidyverse))
+    parallel::clusterEvalQ(cl = cl, library(TCT))
     fitted_models = parallel::clusterApply(
       cl = cl,
       x = list_data_trials,
