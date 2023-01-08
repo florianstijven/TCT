@@ -38,12 +38,17 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   ref_fun = function(x,
                      .x_ref = x_ref,
                      .y_ref = y_ref) {
+    p = length(.x_ref)
     if ((x < min(.x_ref))) {
       # standard function does not do extrapolation, this extrapolation is
       # implemented here.
-      y2 = .y_ref[2]
+      # y2 = .y_ref[2]
+      # y1 = .y_ref[1]
+      # x2 = .x_ref[2]
+      # x1 = .x_ref[1]
+      y2 = .y_ref[p]
       y1 = .y_ref[1]
-      x2 = .x_ref[2]
+      x2 = .x_ref[p]
       x1 = .x_ref[1]
       # slope
       a = (y2 - y1) / (x2 - x1)
@@ -52,11 +57,14 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
       y_interpolated = a * x + b
     }
     else if (x > max(.x_ref)) {
-      p = length(.x_ref)
+      # y2 = .y_ref[p]
+      # y1 = .y_ref[p - 1]
+      # x2 = .x_ref[p]
+      # x1 = .x_ref[p - 1]
       y2 = .y_ref[p]
-      y1 = .y_ref[p - 1]
+      y1 = .y_ref[1]
       x2 = .x_ref[p]
-      x1 = .x_ref[p - 1]
+      x1 = .x_ref[1]
       # slope
       a = (y2 - y1) / (x2 - x1)
       # intercept
