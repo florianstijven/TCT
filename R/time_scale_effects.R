@@ -86,7 +86,6 @@ DeltaMethod = function (par, fct, vcov,  ...) {
 # }
 
 g_Delta_bis = function(par,
-                       x_ref,
                        method,
                        time_points) {
   n_points = length(time_points)
@@ -96,7 +95,7 @@ g_Delta_bis = function(par,
     X = y_obs,
     FUN = get_new_time,
     y_ref = y_ref,
-    x_ref = x_ref,
+    x_ref = time_points,
     method = method
   )
   return(t_mapped/time_points[-1])
@@ -115,36 +114,25 @@ g_Delta_bis = function(par,
 #'
 #' @examples
 pm_bootstrap_vertical_to_horizontal = function(time_points,
-                                               ctrl_means,
-                                               exp_means,
+                                               ctrl_estimates,
+                                               exp_estimates,
                                                vcov,
                                                interpolation = "spline",
                                                B = 100) {
-  if (B == 0) return(NULL)
-  # number of time points
-  n_points = length(time_points)
-  # rewrite get_new_time() for the DeltaMethod() function
-  g_Delta = function(par, x_ref, method = interpolation) {
-    y_ref = par[1:n_points]
-    y_obs = par[(n_points + 1):length(par)]
-    t_mapped = sapply(
-      X = y_obs,
-      FUN = get_new_time,
-      y_ref = y_ref,
-      x_ref = x_ref,
-      method = method
-    )
-    return(t_mapped/time_points[-1])
-  }
-  par_sampled = mvtnorm::rmvnorm(n = B,
-                                 mean = c(ctrl_means, exp_means),
-                                 sigma = vcov
-                                 )
+  if (B == 0)
+    return(NULL)
+
+  par_sampled = mvtnorm::rmvnorm(
+    n = B,
+    mean = c(ctrl_estimates, exp_estimates),
+    sigma = vcov
+  )
   estimates = matrix(0, nrow = B, ncol = 4)
   for (i in 1:B) {
-    estimates[i, ] = g_Delta(par_sampled[i, ], time_points, interpolation)
+    estimates[i, ] = g_Delta_bis(par = par_sampled[i, ],
+                                 method = interpolation,
+                                 time_points = time_points)
   }
-
   return(estimates)
 }
 
@@ -170,41 +158,26 @@ TCT = function(time_points,
                vcov,
                interpolation = "spline",
                B = 0) {
-  # number of time points
-  n_points = length(time_points)
-  # rewrite get_new_time() for the DeltaMethod() function
-  g_Delta = function(par, x_ref, method = interpolation) {
-    y_ref = par[1:n_points]
-    y_obs = par[(n_points + 1):length(par)]
-    t_mapped = sapply(
-      X = y_obs,
-      FUN = get_new_time,
-      y_ref = y_ref,
-      x_ref = x_ref,
-      method = method
-    )
-    return(t_mapped/time_points[-1])
-  }
   se_delta = DeltaMethod(
     par = c(ctrl_estimates, exp_estimates),
-    fct = g_Delta,
+    fct = g_Delta_bis,
     vcov = vcov,
-    x_ref = time_points,
+    time_points = time_points,
     method = interpolation
   )
 
-  se_bootstrap = pm_bootstrap_vertical_to_horizontal(
-    time_points,
-    ctrl_estimates,
-    exp_estimates,
-    vcov,
-    interpolation,
-    B
+  bootstrap_estimates = pm_bootstrap_vertical_to_horizontal(
+    time_points = time_points,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov,
+    interpolation = interpolation,
+    B = B
   )
 
   return(new_TCT(coefficients = se_delta$estimate,
                  vcov = se_delta$variance,
-                 bootstrap_estimates = se_bootstrap,
+                 bootstrap_estimates = bootstrap_estimates,
                  interpolation = interpolation,
                  type = "time-based treatment effects",
                  vertical_model = list(time_points = time_points,
@@ -334,6 +307,53 @@ print.summary.TCT = function(x) {
   cat(paste0("alpha = ", x$alpha))
 }
 
+pm_bootstrap_vertical_to_common = function(time_points,
+                                           ctrl_estimates,
+                                           exp_estimates,
+                                           vcov,
+                                           TCT_vcov,
+                                           interpolation = "spline",
+                                           B = 100,
+                                           bs_fix_vcov = TRUE) {
+  if (B == 0)
+    return(NULL)
+
+  p = length(exp_estimates)
+  vec_1 = matrix(1, nrow = p, ncol = 1)
+  estimates_bootstrap = 1:B
+  ctrl_estimates = ctrl_estimates
+  exp_estimates = exp_estimates
+  time_points = time_points
+  par_sampled = mvtnorm::rmvnorm(n = B,
+                                 mean = c(ctrl_estimates, exp_estimates),
+                                 sigma = vcov)
+  for (i in 1:B) {
+    if (bs_fix_vcov) {
+      vcov_gls = TCT_vcov
+      coef_gls = g_Delta_bis(par = par_sampled[i, ],
+                             time_points = time_points,
+                             method = interpolation)
+    }
+    else {
+      tct_results = TCT(
+        time_points = time_points,
+        ctrl_estimates = par_sampled[i, 1:n_points],
+        exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
+        vcov = TCT_Fit$vertical_model$vcov,
+        interpolation = interpolation,
+        B = 0
+      )
+      vcov_gls = tct_results$vcov
+      coef_gls = coef(tct_results)
+    }
+
+    est_bs = (t(vec_1) %*% solve(vcov_gls) %*% matrix(coef_gls, ncol = 1) ) /
+      (t(vec_1) %*% solve(vcov_gls) %*% vec_1)
+    estimates_bootstrap[i] = est_bs
+  }
+  return(estimates_bootstrap)
+}
+
 TCT_common = function(TCT_Fit,
                       B = 0,
                       bs_fix_vcov = FALSE) {
@@ -349,52 +369,50 @@ TCT_common = function(TCT_Fit,
   vcov_delta = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
 
   # bootstrap
-  if (B > 0) {
-    estimates_bootstrap = 1:B
-    ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
-    exp_estimates = TCT_Fit$vertical_model$exp_estimates
-    time_points = TCT_Fit$vertical_model$time_points
-    par_sampled = mvtnorm::rmvnorm(n = B,
-                                   mean = c(ctrl_estimates, exp_estimates),
-                                   sigma = TCT_Fit$vertical_model$vcov)
-    for (i in 1:B) {
-      if (bs_fix_vcov) {
-        vcov_gls = TCT_Fit$vcov
-        g_Delta = function(par, x_ref, method = interpolation) {
-          y_ref = par[1:n_points]
-          y_obs = par[(n_points + 1):length(par)]
-          t_mapped = sapply(
-            X = y_obs,
-            FUN = get_new_time,
-            y_ref = y_ref,
-            x_ref = x_ref,
-            method = method
-          )
-          return(t_mapped/time_points[-1])
-        }
-        coef_gls = g_Delta(par_sampled[i, ], time_points, method = "spline")
-      }
-      else {
-        tct_results = TCT(
-          time_points = time_points,
-          ctrl_estimates = par_sampled[i, 1:n_points],
-          exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
-          vcov = TCT_Fit$vertical_model$vcov,
-          interpolation = "spline",
-          B = 0
-        )
-        vcov_gls = tct_results$vcov
-        coef_gls = coef(tct_results)
-      }
-
-      est_bs = (t(vec_1) %*% solve(vcov_gls) %*% matrix(coef_gls, ncol = 1) ) /
-        (t(vec_1) %*% solve(vcov_gls) %*% vec_1)
-      estimates[i] = est_bs
-    }
-  }
-  else {
-    estimates = NULL
-  }
+  # if (B > 0) {
+  #   estimates_bootstrap = 1:B
+  #   ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
+  #   exp_estimates = TCT_Fit$vertical_model$exp_estimates
+  #   time_points = TCT_Fit$vertical_model$time_points
+  #   par_sampled = mvtnorm::rmvnorm(n = B,
+  #                                  mean = c(ctrl_estimates, exp_estimates),
+  #                                  sigma = TCT_Fit$vertical_model$vcov)
+  #   for (i in 1:B) {
+  #     if (bs_fix_vcov) {
+  #       vcov_gls = TCT_Fit$vcov
+  #       coef_gls = g_Delta_bis(par = par_sampled[i, ],
+  #                              time_points = time_points,
+  #                              method = "spline")
+  #     }
+  #     else {
+  #       tct_results = TCT(
+  #         time_points = time_points,
+  #         ctrl_estimates = par_sampled[i, 1:n_points],
+  #         exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
+  #         vcov = TCT_Fit$vertical_model$vcov,
+  #         interpolation = "spline",
+  #         B = 0
+  #       )
+  #       vcov_gls = tct_results$vcov
+  #       coef_gls = coef(tct_results)
+  #     }
+  #
+  #     est_bs = (t(vec_1) %*% solve(vcov_gls) %*% matrix(coef_gls, ncol = 1) ) /
+  #       (t(vec_1) %*% solve(vcov_gls) %*% vec_1)
+  #     estimates[i] = est_bs
+  #   }
+  # }
+  # else {
+  #   estimates = NULL
+  # }
+  estimates = pm_bootstrap_vertical_to_common(time_points = TCT_Fit$vertical_model$time_points,
+                                              ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
+                                              exp_estimates = TCT_Fit$vertical_model$exp_estimates,
+                                              vcov = TCT_Fit$vertical_model$vcov,
+                                              TCT_vcov = TCT_Fit$vcov,
+                                              interpolation = TCT_Fit$interpolation,
+                                              B = B
+                                              )
 
 
   new_TCT_common(
