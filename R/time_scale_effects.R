@@ -319,46 +319,168 @@ TCT_common = function(TCT_Fit,
   vcov_delta = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
 
   # bootstrap
-  estimates_bootstrap = 1:B
-  ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
-  exp_estimates = TCT_Fit$vertical_model$exp_estimates
-  time_points = TCT_Fit$vertical_model$time_points
-  par_sampled = mvtnorm::rmvnorm(n = B,
-                                 mean = c(ctrl_estimates, exp_estimates),
-                                 sigma = TCT_Fit$vertical_model$vcov)
-  for (i in 1:B) {
+  if (B > 0) {
+    estimates_bootstrap = 1:B
+    ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
+    exp_estimates = TCT_Fit$vertical_model$exp_estimates
+    time_points = TCT_Fit$vertical_model$time_points
+    par_sampled = mvtnorm::rmvnorm(n = B,
+                                   mean = c(ctrl_estimates, exp_estimates),
+                                   sigma = TCT_Fit$vertical_model$vcov)
+    for (i in 1:B) {
 
-    tct_results = TCT(
-      time_points = time_points,
-      ctrl_estimates = par_sampled[i, 1:n_points],
-      exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
-      vcov = TCT_Fit$vertical_model$vcov,
-      interpolation = "spline",
-      B = 0
-    )
-    est_bs = (t(vec_1) %*% solve(tct_results$vcov) %*% matrix(coef(tct_results), ncol = 1) ) /
-      (t(vec_1) %*% solve(tct_results$vcov) %*% vec_1)
-    estimates[i] = est_bs
+      tct_results = TCT(
+        time_points = time_points,
+        ctrl_estimates = par_sampled[i, 1:n_points],
+        exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
+        vcov = TCT_Fit$vertical_model$vcov,
+        interpolation = "spline",
+        B = 0
+      )
+      est_bs = (t(vec_1) %*% solve(tct_results$vcov) %*% matrix(coef(tct_results), ncol = 1) ) /
+        (t(vec_1) %*% solve(tct_results$vcov) %*% vec_1)
+      estimates[i] = est_bs
+    }
   }
+  else {
+    estimates = NULL
+  }
+
 
   new_TCT_common(
     coefficients = est_delta,
     vcov = vcov_delta,
-    coefficients_bootstrap = estimates
+    bootstrap_estimates = estimates
   )
 }
 
 new_TCT_common = function(coefficients,
                           vcov,
-                          coefficients_bootstrap) {
+                          bootstrap_estimates
+                          ) {
   structure(
     list(
       coefficients = coefficients,
       vcov = vcov,
-      coefficients_bootstrap = coefficients_bootstrap
-    )
+      bootstrap_estimates = bootstrap_estimates
+    ),
+    class = "TCT_common"
   )
 }
+
+print.TCT_common = function(x) {
+  cat(
+    paste0(
+      "Time Component Test: ",
+      "proportional slowing",
+      "\n\n"
+    )
+  )
+  cat("Coefficients: \n")
+  print(x$coefficients)
+}
+
+summary.TCT_common = function(x,
+                              alpha = 0.05) {
+  # inference based on delta method
+  se_delta = sqrt(diag(x$vcov))
+  z_delta = (1 - coef(x)) / se_delta
+  ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
+  ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
+  ci_delta = matrix(
+    data = c(ci_delta_lower, ci_delta_upper),
+    ncol = 2,
+    byrow = FALSE
+  )
+  p_delta =  (1 - pnorm(abs(z_delta))) * 2
+
+  # inference based on parametric bootstrap
+  if (!(is.null(x$bootstrap_estimates))) {
+    vcov_bootstrap = var(x$bootstrap_estimates)
+    se_bootstrap = sqrt(vcov_bootstrap)
+    ci_bootstrap = quantile(
+      x = x$bootstrap_estimates,
+      probs = c(alpha / 2, 1 - alpha / 2)
+    )
+    p_bootstrap = min(mean(x$bootstrap_estimates > 1) * 2,
+                      (1 - mean(x$bootstrap_estimates > 1)) * 2)
+  }
+  else {
+    vcov_bootstrap = NULL
+    se_bootstrap = NULL
+    ci_bootstrap = NULL
+    p_bootstrap = NULL
+  }
+
+
+  new_summary.TCT_common(
+    x = x,
+    se_delta = se_delta,
+    z_delta = z_delta,
+    ci_delta = ci_delta,
+    p_delta = p_delta,
+    vcov_bootstrap = vcov_bootstrap,
+    se_bootstrap = se_bootstrap,
+    ci_bootstrap = ci_bootstrap,
+    p_bootstrap = p_bootstrap,
+    alpha = alpha
+  )
+}
+
+new_summary.TCT_common = function(
+    x,
+    se_delta,
+    z_delta,
+    ci_delta,
+    p_delta,
+    vcov_bootstrap,
+    se_bootstrap,
+    ci_bootstrap,
+    p_bootstrap,
+    alpha
+) {
+  structure(append(
+    x,
+    list(
+      se_delta = se_delta,
+      z_delta = z_delta,
+      ci_delta = ci_delta,
+      p_delta = p_delta,
+      vcov_bootstrap = vcov_bootstrap,
+      se_bootstrap = se_bootstrap,
+      ci_bootstrap = ci_bootstrap,
+      p_bootstrap = p_bootstrap,
+      alpha = alpha
+    )
+  ),
+  class = "summary.TCT_common")
+}
+
+print.summary.TCT_common = function(x) {
+  cat(
+    paste0(
+      "Time Component Test: ",
+      "proportional slowing",
+      "\n\n"
+    )
+  )
+  cat("Coefficients: \n")
+  coefficients_df = data.frame(
+    Value = coef(x),
+    `Std. Error (delta)` = x$se_delta,
+    `z-value (delta)` = x$z_delta,
+    `p-value (delta)` = x$p_delta,
+    `CI lower (delta)` = x$ci_delta[, 1],
+    `CI upper (delta)` = x$ci_delta[, 2],
+    `CI lower (bootstrap)` = x$ci_bootstrap[1],
+    `CI upper (bootstrap)` = x$ci_bootstrap[2],
+    `p-value (bootstrap)` = x$p_bootstrap[1]
+  )
+  print(coefficients_df)
+  cat(paste0("alpha = ", x$alpha))
+}
+
+
 
 bootstrap_c_decel = function(time_points,
                              ctrl_means,
