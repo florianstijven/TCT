@@ -48,3 +48,7 @@ Data frame with the same structure as \link{simulated_test_trial}.
 \description{
 Simulates N clinical trials under the supplied model parameters.
 }
+\examples{
+# simulate a single trial with default arguments
+simulate_N_trials()
+}

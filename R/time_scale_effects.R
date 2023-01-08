@@ -15,7 +15,6 @@
 #'   estimates
 #'  * `partial`: the Jacobian matrix
 #'
-#' @examples
 DeltaMethod = function (par, fct, vcov,  ...) {
   theta <- function(par)
     fct(par, ...)
@@ -24,44 +23,6 @@ DeltaMethod = function (par, fct, vcov,  ...) {
   return(list(estimate = theta(par), variance = variance, partial = partial))
 }
 
-#' Transform vertical treatment effect estimates to time scale
-#'
-#' This function transform the vertical parameter estimates to parameter
-#' estimates on the time scale.
-#'
-#' @details
-#'
-#'
-# delta_vertical_to_horizontal = function(time_points,
-#                                         ctrl_means,
-#                                         exp_means,
-#                                         vcov,
-#                                         interpolation = "spline"
-#                                         ) {
-#   # number of time points
-#   n_points = length(time_points)
-#   # rewrite get_new_time() for the DeltaMethod() function
-#   g_Delta = function(par, x_ref, method = interpolation) {
-#     y_ref = par[1:n_points]
-#     y_obs = par[(n_points + 1):length(par)]
-#     t_mapped = sapply(
-#       X = y_obs,
-#       FUN = get_new_time,
-#       y_ref = y_ref,
-#       x_ref = x_ref,
-#       method = method
-#     )
-#     return(t_mapped/time_points[-1])
-#   }
-#   se_delta = DeltaMethod(
-#     par = c(ctrl_means, exp_means),
-#     fct = g_Delta,
-#     vcov = vcov,
-#     x_ref = time_points,
-#     method = interpolation
-#   )
-#   return(se_delta)
-# }
 
 g_Delta_bis = function(par,
                        method,
@@ -79,18 +40,6 @@ g_Delta_bis = function(par,
   return(t_mapped/time_points[-1])
 }
 
-#' Title
-#'
-#' @param time_points
-#' @param ctrl_means
-#' @param exp_means
-#' @param vcov
-#' @param interpolation
-#' @param B
-#'
-#' @return
-#'
-#' @examples
 pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                ctrl_estimates,
                                                exp_estimates,
@@ -157,6 +106,26 @@ new_TCT = function(coefficients,
 #' @export
 #'
 #' @examples
+#' # transform example data set to desired format
+#' library(dplyr)
+#' data = simulated_test_trial %>%
+#' mutate(time_int = (Week %/% 25)) %>%
+#'   arrange(trial_number, SubjId, time_int) %>%
+#'   mutate(time_int = as.integer(time_int) + 1L) %>%
+#'   mutate(arm_time = ifelse(time_int == 1L,
+#'                            "baseline",
+#'                            paste0(arm, ":", time_int)))
+#' # fit e.g. MMRM model to obtain estimates of profiles
+#' mmrm_fit = analyze_mmrm(data)
+#' set.seed(1)
+#' TCT_Fit = TCT(
+#'   time_points = 0:4,
+#'   ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+#'   exp_estimates = mmrm_fit$coefficients[5:8],
+#'   vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#'   interpolation = "spline",
+#'   B = 1e3
+#' )
 TCT = function(time_points,
                ctrl_estimates,
                exp_estimates,
@@ -192,7 +161,15 @@ TCT = function(time_points,
                  ))
 }
 
-print.TCT = function(x) {
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
+print.TCT = function(x, ...) {
   cat(
     paste0(
       "Time Component Test: ",
@@ -206,6 +183,15 @@ print.TCT = function(x) {
   cat(x$interpolation)
 }
 
+#' Title
+#'
+#' @param x
+#' @param alpha
+#'
+#' @return
+#' @export
+#'
+#' @examples
 summary.TCT = function(x,
                        alpha = 0.05) {
   # inference based on delta method
@@ -228,22 +214,30 @@ summary.TCT = function(x,
   p_delta =  (1 - pnorm(abs(z_delta))) * 2
 
   # inference based on parametric bootstrap
-  vcov_bootstrap = var(x$bootstrap_estimates)
-  se_bootstrap = sqrt(diag(vcov_bootstrap))
-  ci_bootstrap = t(apply(
-    X = x$bootstrap_estimates,
-    MARGIN = 2,
-    FUN = quantile,
-    probs = c(alpha / 2, 1 - alpha / 2)
-  ))
-  p_bootstrap = apply(
-    X = x$bootstrap_estimates,
-    MARGIN = 2,
-    FUN = function(x) {
-      prop = mean(x > 1)
-      return(min(prop * 2, (1 - prop) * 2))
-    }
-  )
+  if (!(is.null(x$bootstrap_estimates))) {
+    vcov_bootstrap = var(x$bootstrap_estimates)
+    se_bootstrap = sqrt(diag(vcov_bootstrap))
+    ci_bootstrap = t(apply(
+      X = x$bootstrap_estimates,
+      MARGIN = 2,
+      FUN = quantile,
+      probs = c(alpha / 2, 1 - alpha / 2)
+    ))
+    p_bootstrap = apply(
+      X = x$bootstrap_estimates,
+      MARGIN = 2,
+      FUN = function(x) {
+        prop = mean(x > 1)
+        return(min(prop * 2, (1 - prop) * 2))
+      }
+    )
+  }
+  else {
+    vcov_bootstrap = NULL
+    se_bootstrap = NULL
+    ci_bootstrap = NULL
+    p_bootstrap = NULL
+  }
 
   new_summary.TCT(
     x = x,
@@ -291,6 +285,14 @@ new_summary.TCT = function(
   class = "summary.TCT")
 }
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
 print.summary.TCT = function(x) {
   cat(
     paste0(
@@ -300,16 +302,29 @@ print.summary.TCT = function(x) {
     )
   )
   cat("Coefficients: \n")
-  coefficients_df = data.frame(
-    Value = coef(x),
-    `Std. Error (delta)` = x$se_delta,
-    `z-value (delta)` = x$z_delta,
-    `p-value (delta)` = x$p_delta,
-    `CI lower (delta)` = x$ci_delta[, 1],
-    `CI upper (delta)` = x$ci_delta[, 2],
-    `CI lower (bootstrap)` = x$ci_bootstrap[, 1],
-    `CI upper (bootstrap)` = x$ci_bootstrap[, 2]
-  )
+  if (is.null(x$x$ci_bootstrap)) {
+    coefficients_df = data.frame(
+      Value = coef(x),
+      `Std. Error (delta)` = x$se_delta,
+      `z-value (delta)` = x$z_delta,
+      `p-value (delta)` = x$p_delta,
+      `CI lower (delta)` = x$ci_delta[, 1],
+      `CI upper (delta)` = x$ci_delta[, 2]
+    )
+  }
+  else {
+    coefficients_df = data.frame(
+      Value = coef(x),
+      `Std. Error (delta)` = x$se_delta,
+      `z-value (delta)` = x$z_delta,
+      `p-value (delta)` = x$p_delta,
+      `CI lower (delta)` = x$ci_delta[, 1],
+      `CI upper (delta)` = x$ci_delta[, 2],
+      `CI lower (bootstrap)` = x$ci_bootstrap[, 1],
+      `CI upper (bootstrap)` = x$ci_bootstrap[, 2]
+    )
+  }
+
   print(coefficients_df)
   cat(paste0("alpha = ", x$alpha))
   cat("\n Interpolation Method: ")
@@ -363,6 +378,16 @@ pm_bootstrap_vertical_to_common = function(time_points,
   return(estimates_bootstrap)
 }
 
+#' Title
+#'
+#' @param TCT_Fit
+#' @param B
+#' @param bs_fix_vcov
+#'
+#' @return
+#' @export
+#'
+#' @examples
 TCT_common = function(TCT_Fit,
                       B = 0,
                       bs_fix_vcov = FALSE) {
@@ -377,43 +402,6 @@ TCT_common = function(TCT_Fit,
     (t(vec_1) %*% solve(vcov) %*% vec_1)
   vcov_delta = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
 
-  # bootstrap
-  # if (B > 0) {
-  #   estimates_bootstrap = 1:B
-  #   ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
-  #   exp_estimates = TCT_Fit$vertical_model$exp_estimates
-  #   time_points = TCT_Fit$vertical_model$time_points
-  #   par_sampled = mvtnorm::rmvnorm(n = B,
-  #                                  mean = c(ctrl_estimates, exp_estimates),
-  #                                  sigma = TCT_Fit$vertical_model$vcov)
-  #   for (i in 1:B) {
-  #     if (bs_fix_vcov) {
-  #       vcov_gls = TCT_Fit$vcov
-  #       coef_gls = g_Delta_bis(par = par_sampled[i, ],
-  #                              time_points = time_points,
-  #                              method = "spline")
-  #     }
-  #     else {
-  #       tct_results = TCT(
-  #         time_points = time_points,
-  #         ctrl_estimates = par_sampled[i, 1:n_points],
-  #         exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
-  #         vcov = TCT_Fit$vertical_model$vcov,
-  #         interpolation = "spline",
-  #         B = 0
-  #       )
-  #       vcov_gls = tct_results$vcov
-  #       coef_gls = coef(tct_results)
-  #     }
-  #
-  #     est_bs = (t(vec_1) %*% solve(vcov_gls) %*% matrix(coef_gls, ncol = 1) ) /
-  #       (t(vec_1) %*% solve(vcov_gls) %*% vec_1)
-  #     estimates[i] = est_bs
-  #   }
-  # }
-  # else {
-  #   estimates = NULL
-  # }
   estimates = pm_bootstrap_vertical_to_common(time_points = TCT_Fit$vertical_model$time_points,
                                               ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
                                               exp_estimates = TCT_Fit$vertical_model$exp_estimates,
@@ -448,6 +436,14 @@ new_TCT_common = function(coefficients,
   )
 }
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
 print.TCT_common = function(x) {
   cat(
     paste0(
@@ -462,6 +458,15 @@ print.TCT_common = function(x) {
   cat(x$interpolation)
 }
 
+#' Title
+#'
+#' @param x
+#' @param alpha
+#'
+#' @return
+#' @export
+#'
+#' @examples
 summary.TCT_common = function(x,
                               alpha = 0.05) {
   # inference based on delta method
@@ -538,6 +543,14 @@ new_summary.TCT_common = function(
   class = "summary.TCT_common")
 }
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
 print.summary.TCT_common = function(x) {
   cat(
     paste0(
@@ -547,17 +560,29 @@ print.summary.TCT_common = function(x) {
     )
   )
   cat("Coefficients: \n")
-  coefficients_df = data.frame(
-    Value = coef(x),
-    `Std. Error (delta)` = x$se_delta,
-    `z-value (delta)` = x$z_delta,
-    `p-value (delta)` = x$p_delta,
-    `CI lower (delta)` = x$ci_delta[, 1],
-    `CI upper (delta)` = x$ci_delta[, 2],
-    `CI lower (bootstrap)` = x$ci_bootstrap[1],
-    `CI upper (bootstrap)` = x$ci_bootstrap[2],
-    `p-value (bootstrap)` = x$p_bootstrap[1]
-  )
+  if (is.null(x$vcov_bootstrap)) {
+    coefficients_df = data.frame(
+      Value = coef(x),
+      `Std. Error (delta)` = x$se_delta,
+      `z-value (delta)` = x$z_delta,
+      `p-value (delta)` = x$p_delta,
+      `CI lower (delta)` = x$ci_delta[, 1],
+      `CI upper (delta)` = x$ci_delta[, 2]
+    )
+  }
+  else {
+    coefficients_df = data.frame(
+      Value = coef(x),
+      `Std. Error (delta)` = x$se_delta,
+      `z-value (delta)` = x$z_delta,
+      `p-value (delta)` = x$p_delta,
+      `CI lower (delta)` = x$ci_delta[, 1],
+      `CI upper (delta)` = x$ci_delta[, 2],
+      `CI lower (bootstrap)` = x$ci_bootstrap[1],
+      `CI upper (bootstrap)` = x$ci_bootstrap[2],
+      `p-value (bootstrap)` = x$p_bootstrap[1]
+    )
+  }
   print(coefficients_df)
   cat(paste0("alpha = ", x$alpha))
 }

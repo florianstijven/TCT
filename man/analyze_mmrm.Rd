@@ -38,3 +38,18 @@ fitted-model object from \code{\link[nlme:gls]{nlme::gls()}}
 The \code{\link[=analyze_mmrm]{analyze_mmrm()}} function analyzes data from a single trial with the
 mixed model for repeated measures (See Details).
 }
+\examples{
+
+# load example data and add required variables (time_int and arm_time)
+library(dplyr)
+data = simulated_test_trial \%>\%
+  mutate(time_int = (Week \%/\% 25)) \%>\%
+  arrange(trial_number, SubjId, time_int) \%>\%
+  mutate(time_int = as.integer(time_int) + 1L) \%>\%
+  mutate(arm_time = ifelse(time_int == 1L,
+                           "baseline",
+                           paste0(arm, ":", time_int)))
+mmrm_fit = analyze_mmrm(data)
+
+
+}

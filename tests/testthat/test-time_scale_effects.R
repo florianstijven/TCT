@@ -10,9 +10,9 @@ test_that("TCT() function works", {
     set.seed(1)
     TCT_Fit = TCT(
       time_points = 0:4,
-      ctrl_estimates = x$coefficients[c(9, 1:4)],
-      exp_estimates = x$coefficients[5:8],
-      vcov = x$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+      ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+      exp_estimates = mmrm_fit$coefficients[5:8],
+      vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
       interpolation = "spline",
       B = 1e3
     )
@@ -37,9 +37,9 @@ test_that("TCT_common() function works", {
   set.seed(1)
   TCT_Fit = TCT(
     time_points = 0:4,
-    ctrl_estimates = x$coefficients[c(9, 1:4)],
-    exp_estimates = x$coefficients[5:8],
-    vcov = x$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+    exp_estimates = mmrm_fit$coefficients[5:8],
+    vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
     interpolation = "spline",
     B = 0
   )

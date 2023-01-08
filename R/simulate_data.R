@@ -21,6 +21,8 @@
 #' @export
 #'
 #' @examples
+#' # simulate a single trial with default arguments
+#' simulate_N_trials()
 simulate_N_trials = function(control = "placebo",
                              delta = 1.3,
                              total_time = 50,
@@ -68,6 +70,9 @@ simulate_N_trials = function(control = "placebo",
 #' @export
 #'
 #' @examples
+#' # simulate a single trial with default parameters
+#' simulate_single_trial()
+#'
 simulate_single_trial = function(control = "placebo",
                                  delta = 1.3,
                                  total_time = 50,

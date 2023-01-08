@@ -24,6 +24,18 @@
 #'
 #' @examples
 #'
+#' # load example data and add required variables (time_int and arm_time)
+#' library(dplyr)
+#' data = simulated_test_trial %>%
+#'   mutate(time_int = (Week %/% 25)) %>%
+#'   arrange(trial_number, SubjId, time_int) %>%
+#'   mutate(time_int = as.integer(time_int) + 1L) %>%
+#'   mutate(arm_time = ifelse(time_int == 1L,
+#'                            "baseline",
+#'                            paste0(arm, ":", time_int)))
+#' mmrm_fit = analyze_mmrm(data)
+#'
+#'
 analyze_mmrm = function(data_trial, method = "ML", type = "full") {
   # The following options could be elaborated on in the future.
   baseline = FALSE
