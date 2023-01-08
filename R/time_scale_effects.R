@@ -31,29 +31,7 @@ DeltaMethod = function (par, fct, vcov,  ...) {
 #'
 #' @details
 #'
-#' @param time_points Ordered vector that contains the times corresponding to
-#'   the estimated means in the `ctrl_means` vector.
-#' @param ctrl_means Estimated mean outcome in the control group at fixed
-#'   occasions.
-#' @param exp_means Estimated mean outcomes in the experimental group at fixed
-#'   occasions.
-#' @param vcov The variance-covariance matrix for the means. In order to map to
-#'   the correct estimates, this matrix should be the variance-covariance matrix
-#'   of `c(ctrl_means, exp_means)`.
-#' @param interpolation Which interpolation method to use?
-#'  * `"linear"`: linear interpolation
-#'  * `"spline"`: natural cubic spline interpolation
-#'  * `"monoH.FC`: monotone Hermite spline according to the method of Fritsch
-#'  and Carlson
 #'
-#' @return A list with three element:
-#'  * `estimate`: the transformed parameter estimates
-#'  * `variance`: the variance-covariance matrix for the transformed parameter
-#'   estimates
-#'  * `partial`: the Jacobian matrix
-#' @export
-#'
-#' @examples
 # delta_vertical_to_horizontal = function(time_points,
 #                                         ctrl_means,
 #                                         exp_means,
@@ -152,6 +130,33 @@ new_TCT = function(coefficients,
             class = "TCT")
 }
 
+
+#' Transform vertical treatment effect estimates to time scale
+#'
+#' This function transform the vertical parameter estimates to parameter
+#' estimates on the time scale.
+#'
+#' @param time_points Ordered vector that contains the times corresponding to
+#'   the estimated means in the `ctrl_means` vector.
+#' @param ctrl_estimates Estimated mean outcome in the control group at fixed
+#'   occasions.
+#' @param exp_estimates Estimated mean outcomes in the experimental group at fixed
+#'   occasions.
+#' @param vcov The variance-covariance matrix for the means. In order to map to
+#'   the correct estimates, this matrix should be the variance-covariance matrix
+#'   of `c(ctrl_means, exp_means)`.
+#' @param interpolation Which interpolation method to use?
+#'  * `"linear"`: linear interpolation
+#'  * `"spline"`: natural cubic spline interpolation
+#'  * `"monoH.FC`: monotone Hermite spline according to the method of Fritsch
+#'   and Carlson
+#' @param B Number of bootstrap replications. If `B = 0`, no boostrap is
+#'   performed (default).
+#'
+#' @return An object from the TCT-class:
+#' @export
+#'
+#' @examples
 TCT = function(time_points,
                ctrl_estimates,
                exp_estimates,
@@ -197,6 +202,8 @@ print.TCT = function(x) {
   )
   cat("Coefficients: \n")
   print(coef(x))
+  cat("\n Interpolation Method: ")
+  cat(x$interpolation)
 }
 
 summary.TCT = function(x,
@@ -305,6 +312,8 @@ print.summary.TCT = function(x) {
   )
   print(coefficients_df)
   cat(paste0("alpha = ", x$alpha))
+  cat("\n Interpolation Method: ")
+  cat(x$interpolation)
 }
 
 pm_bootstrap_vertical_to_common = function(time_points,
@@ -418,19 +427,22 @@ TCT_common = function(TCT_Fit,
   new_TCT_common(
     coefficients = est_delta,
     vcov = vcov_delta,
-    bootstrap_estimates = estimates
+    bootstrap_estimates = estimates,
+    interpolation = TCT_Fit$interpolation
   )
 }
 
 new_TCT_common = function(coefficients,
                           vcov,
-                          bootstrap_estimates
+                          bootstrap_estimates,
+                          interpolation
                           ) {
   structure(
     list(
       coefficients = coefficients,
       vcov = vcov,
-      bootstrap_estimates = bootstrap_estimates
+      bootstrap_estimates = bootstrap_estimates,
+      interpolation = interpolation
     ),
     class = "TCT_common"
   )
@@ -446,6 +458,8 @@ print.TCT_common = function(x) {
   )
   cat("Coefficients: \n")
   print(x$coefficients)
+  cat("\n Interpolation Method: ")
+  cat(x$interpolation)
 }
 
 summary.TCT_common = function(x,
