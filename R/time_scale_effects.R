@@ -305,11 +305,15 @@ print.summary.TCT = function(x) {
   if (is.null(x$x$ci_bootstrap)) {
     coefficients_df = data.frame(
       Value = coef(x),
-      `Std. Error (delta)` = x$se_delta,
-      `z-value (delta)` = x$z_delta,
-      `p-value (delta)` = x$p_delta,
-      `CI lower (delta)` = x$ci_delta[, 1],
-      `CI upper (delta)` = x$ci_delta[, 2]
+      "Std. Error (delta)" = x$se_delta,
+      "z-value (delta)" = x$z_delta,
+      "p-value (delta)" = x$p_delta,
+      "CI (delta)" = paste0("(",
+                            format(x$ci_delta[, 1], digits = 5),
+                            ", ",
+                            format(x$ci_delta[, 2], digits = 5),
+                            ")"),
+      check.names = FALSE
     )
   }
   else {
@@ -318,17 +322,25 @@ print.summary.TCT = function(x) {
       `Std. Error (delta)` = x$se_delta,
       `z-value (delta)` = x$z_delta,
       `p-value (delta)` = x$p_delta,
-      `CI lower (delta)` = x$ci_delta[, 1],
-      `CI upper (delta)` = x$ci_delta[, 2],
-      `CI lower (bootstrap)` = x$ci_bootstrap[, 1],
-      `CI upper (bootstrap)` = x$ci_bootstrap[, 2]
+      `CI (delta)` = paste0("(",
+                            format(x$ci_delta[, 1], digits = 5),
+                            ", ",
+                            format(x$ci_delta[, 2], digits = 5),
+                            ")"),
+      `CI (bootstrap)` = paste0("(",
+                                format(x$ci_bootstrap[, 1], digits = 5),
+                                ", ",
+                                format(x$ci_bootstrap[, 2], digits = 5),
+                                ")"),
+      check.names = FALSE
     )
   }
 
-  print(coefficients_df)
+  print(coefficients_df, digits = 5)
   cat(paste0("alpha = ", x$alpha))
   cat("\n Interpolation Method: ")
   cat(x$interpolation)
+  cat("\n")
 }
 
 pm_bootstrap_vertical_to_common = function(time_points,
@@ -566,8 +578,12 @@ print.summary.TCT_common = function(x) {
       `Std. Error (delta)` = x$se_delta,
       `z-value (delta)` = x$z_delta,
       `p-value (delta)` = x$p_delta,
-      `CI lower (delta)` = x$ci_delta[, 1],
-      `CI upper (delta)` = x$ci_delta[, 2]
+      `CI (delta)` = paste0("(",
+                            format(x$ci_delta[1], digits = 5),
+                            ", ",
+                            format(x$ci_delta[2], digits = 5),
+                            ")"),
+      check.names = FALSE
     )
   }
   else {
@@ -576,14 +592,21 @@ print.summary.TCT_common = function(x) {
       `Std. Error (delta)` = x$se_delta,
       `z-value (delta)` = x$z_delta,
       `p-value (delta)` = x$p_delta,
-      `CI lower (delta)` = x$ci_delta[, 1],
-      `CI upper (delta)` = x$ci_delta[, 2],
-      `CI lower (bootstrap)` = x$ci_bootstrap[1],
-      `CI upper (bootstrap)` = x$ci_bootstrap[2],
-      `p-value (bootstrap)` = x$p_bootstrap[1]
+      `CI (delta)` = paste0("(",
+                            format(x$ci_delta[1], digits = 5),
+                            ", ",
+                            format(x$ci_delta[2], digits = 5),
+                            ")"),
+      `CI (bootstrap)` = paste0("(",
+                                format(x$ci_bootstrap[1], digits = 5),
+                                ", ",
+                                format(x$ci_bootstrap[2], digits = 5),
+                                ")"),
+      `p-value (bootstrap)` = x$p_bootstrap[1],
+      check.names = FALSE
     )
   }
-  print(coefficients_df)
+  print(coefficients_df, digits = 5)
   cat(paste0("alpha = ", x$alpha))
 }
 
