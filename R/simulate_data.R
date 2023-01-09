@@ -87,7 +87,7 @@ simulate_single_trial = function(control = "placebo",
     delta = 1,
     total_time = total_time,
     n_measurements = n_measurements,
-    details = FALSE
+    details = details
   )
   data_control = dplyr::mutate(data_control,
                                arm = 0L)
@@ -98,7 +98,7 @@ simulate_single_trial = function(control = "placebo",
     delta = delta,
     total_time = total_time,
     n_measurements = n_measurements,
-    details = FALSE
+    details = details
   )
   data_active = dplyr::mutate(data_active,
                               arm = 1L,
