@@ -37,7 +37,7 @@ g_Delta_bis = function(par,
     x_ref = time_points,
     method = method
   )
-  return(t_mapped/time_points[-1])
+  return(t_mapped/time_points[(n_points - length(y_obs) + 1):length(time_points)])
 }
 
 pm_bootstrap_vertical_to_horizontal = function(time_points,
@@ -357,8 +357,6 @@ pm_bootstrap_vertical_to_common = function(time_points,
   p = length(exp_estimates)
   vec_1 = matrix(1, nrow = p, ncol = 1)
   estimates_bootstrap = 1:B
-  ctrl_estimates = ctrl_estimates
-  exp_estimates = exp_estimates
   time_points = time_points
   par_sampled = mvtnorm::rmvnorm(n = B,
                                  mean = c(ctrl_estimates, exp_estimates),
@@ -402,9 +400,11 @@ pm_bootstrap_vertical_to_common = function(time_points,
 #' @examples
 TCT_common = function(TCT_Fit,
                       B = 0,
-                      bs_fix_vcov = FALSE) {
-  estimates = coef(TCT_Fit)
-  vcov = TCT_Fit$vcov
+                      bs_fix_vcov = FALSE,
+                      select_coef = 1:length(coef(TCT_Fit))) {
+
+  estimates = coef(TCT_Fit)[select_coef]
+  vcov = TCT_Fit$vcov[select_coef, select_coef]
   n_points = length(TCT_Fit$vertical_model$time_points)
 
   # delta method
@@ -414,11 +414,12 @@ TCT_common = function(TCT_Fit,
     (t(vec_1) %*% solve(vcov) %*% vec_1)
   vcov_delta = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
 
+
   estimates = pm_bootstrap_vertical_to_common(time_points = TCT_Fit$vertical_model$time_points,
                                               ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-                                              exp_estimates = TCT_Fit$vertical_model$exp_estimates,
-                                              vcov = TCT_Fit$vertical_model$vcov,
-                                              TCT_vcov = TCT_Fit$vcov,
+                                              exp_estimates = TCT_Fit$vertical_model$exp_estimates[select_coef],
+                                              vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
+                                              TCT_vcov = vcov,
                                               interpolation = TCT_Fit$interpolation,
                                               B = B
                                               )
