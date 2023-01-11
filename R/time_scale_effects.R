@@ -415,35 +415,52 @@ TCT_common = function(TCT_Fit,
   vcov_delta = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
 
 
-  estimates = pm_bootstrap_vertical_to_common(time_points = TCT_Fit$vertical_model$time_points,
-                                              ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-                                              exp_estimates = TCT_Fit$vertical_model$exp_estimates[select_coef],
-                                              vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
-                                              TCT_vcov = vcov,
-                                              interpolation = TCT_Fit$interpolation,
-                                              B = B
-                                              )
+  bs_estimates = pm_bootstrap_vertical_to_common(
+    time_points = TCT_Fit$vertical_model$time_points,
+    ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
+    exp_estimates = TCT_Fit$vertical_model$exp_estimates[select_coef],
+    vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
+    TCT_vcov = vcov,
+    interpolation = TCT_Fit$interpolation,
+    B = B
+  )
+
+  # Test for common slowing parameter
+  lht_matrix = matrix(0, nrow = length(estimates) - 1, ncol = length(estimates) - 1)
+  diag(lht_matrix) = -1
+  lht_matrix = cbind(1, lht_matrix)
+
+  lht_common = car::linearHypothesis(
+    model = TCT_Fit,
+    vcov. = vcov,
+    coef. = estimates,
+    rhs = rep(0, length(estimates) - 1),
+    hypothesis.matrix = lht_matrix
+  )
 
 
   new_TCT_common(
     coefficients = est_delta,
     vcov = vcov_delta,
-    bootstrap_estimates = estimates,
-    interpolation = TCT_Fit$interpolation
+    bootstrap_estimates = bs_estimates,
+    interpolation = TCT_Fit$interpolation,
+    lht_common = lht_common
   )
 }
 
 new_TCT_common = function(coefficients,
                           vcov,
                           bootstrap_estimates,
-                          interpolation
+                          interpolation,
+                          lht_common
                           ) {
   structure(
     list(
       coefficients = coefficients,
       vcov = vcov,
       bootstrap_estimates = bootstrap_estimates,
-      interpolation = interpolation
+      interpolation = interpolation,
+      lht_common = lht_common
     ),
     class = "TCT_common"
   )
@@ -469,6 +486,8 @@ print.TCT_common = function(x) {
   print(x$coefficients)
   cat("\n Interpolation Method: ")
   cat(x$interpolation)
+  cat("\n")
+
 }
 
 #' Title
@@ -609,6 +628,14 @@ print.summary.TCT_common = function(x) {
   }
   print(coefficients_df, digits = 5)
   cat(paste0("alpha = ", x$alpha))
+  cat("\n\n")
+  cat("Test for proportional slowing factor:\n")
+  print(
+    data.frame("Df" = x$lht_common$Df[2],
+               "Chisq" = x$lht_common$Chisq[2],
+               "p-value" = x$lht_common$`Pr(>Chisq)`[2]),
+    digits = 5
+  )
 }
 
 
