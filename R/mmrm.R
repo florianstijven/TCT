@@ -36,7 +36,7 @@
 #' mmrm_fit = analyze_mmrm(data)
 #'
 #'
-analyze_mmrm = function(data_trial, method = "ML", type = "full") {
+analyze_mmrm = function(data_trial, method = "ML", type = "full", package = "mmrm") {
   # The following options could be elaborated on in the future.
   baseline = FALSE
   covariates = FALSE
@@ -60,11 +60,23 @@ analyze_mmrm = function(data_trial, method = "ML", type = "full") {
                              .~. - arm_time + as.factor(time_int))
   }
 
-  nlme::gls(
-    formula,
-    data = data_trial,
-    correlation = nlme::corSymm(form = ~ time_int | SubjId),
-    weights = nlme::varIdent(form = ~ 1 | time_int),
-    method = method
-  )
+  if (package == "mmrm") {
+    data_trial$SubjId = as.factor(data_trial$SubjId)
+    data_trial$time_int = as.factor(data_trial$time_int)
+    formula = update.formula(old = formula, .~. + us(time_int | SubjId))
+    mmrm::mmrm(
+      formula = ADAScog_integer ~ arm_time + 0 + us(time_int | SubjId),
+      data = data_trial,
+      reml = (method == "REML")
+    )
+  }
+  else if (package == "nlme") {
+    nlme::gls(
+      formula,
+      data = data_trial,
+      correlation = nlme::corSymm(form = ~ time_int | SubjId),
+      weights = nlme::varIdent(form = ~ 1 | time_int),
+      method = method
+    )
+  }
 }
