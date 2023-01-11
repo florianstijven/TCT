@@ -302,7 +302,7 @@ print.summary.TCT = function(x) {
     )
   )
   cat("Coefficients: \n")
-  if (is.null(x$x$ci_bootstrap)) {
+  if (is.null(x$ci_bootstrap)) {
     coefficients_df = data.frame(
       Value = coef(x),
       "Std. Error (delta)" = x$se_delta,
