@@ -193,17 +193,31 @@ print.TCT = function(x, ...) {
 #'
 #' @examples
 summary.TCT = function(x,
-                       alpha = 0.05) {
+                       alpha = 0.05,
+                       delta_transformation = "identity") {
   # inference based on delta method
-  se_delta = sqrt(diag(x$vcov))
-  z_delta = (1 - coef(x)) / se_delta
-  ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
-  ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
-  ci_delta = matrix(
-    data = c(ci_delta_lower, ci_delta_upper),
-    ncol = 2,
-    byrow = FALSE
-  )
+  if (delta_transformation == "identity") {
+    se_delta = sqrt(diag(x$vcov))
+    z_delta = (1 - coef(x)) / se_delta
+    ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
+    ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
+    ci_delta = matrix(
+      data = c(ci_delta_lower, ci_delta_upper),
+      ncol = 2,
+      byrow = FALSE
+    )
+  }
+  else if (delta_transformation == "log") {
+    se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
+    z_delta = (log(coef(x))) / se_delta
+    ci_delta_lower = exp(log(coef(x)) - qnorm(1 - (alpha / 2)) * se_delta)
+    ci_delta_upper = exp(log(coef(x)) + qnorm(1 - (alpha / 2)) * se_delta)
+    ci_delta = matrix(
+      data = c(ci_delta_lower, ci_delta_upper),
+      ncol = 2,
+      byrow = FALSE
+    )
+  }
   lht_delta = car::linearHypothesis(
     model = x,
     vcov. = x$vcov,
@@ -500,17 +514,32 @@ print.TCT_common = function(x) {
 #'
 #' @examples
 summary.TCT_common = function(x,
-                              alpha = 0.05) {
+                              alpha = 0.05,
+                              delta_transformation = "identity") {
   # inference based on delta method
-  se_delta = sqrt(diag(x$vcov))
-  z_delta = (1 - coef(x)) / se_delta
-  ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
-  ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
-  ci_delta = matrix(
-    data = c(ci_delta_lower, ci_delta_upper),
-    ncol = 2,
-    byrow = FALSE
-  )
+
+  if (delta_transformation == "identity") {
+    se_delta = sqrt(diag(x$vcov))
+    z_delta = (1 - coef(x)) / se_delta
+    ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
+    ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
+    ci_delta = matrix(
+      data = c(ci_delta_lower, ci_delta_upper),
+      ncol = 2,
+      byrow = FALSE
+    )
+  }
+  else if (delta_transformation == "log") {
+    se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
+    z_delta = (log(coef(x))) / se_delta
+    ci_delta_lower = exp(log(coef(x)) - qnorm(1 - (alpha / 2)) * se_delta)
+    ci_delta_upper = exp(log(coef(x)) + qnorm(1 - (alpha / 2)) * se_delta)
+    ci_delta = matrix(
+      data = c(ci_delta_lower, ci_delta_upper),
+      ncol = 2,
+      byrow = FALSE
+    )
+  }
   p_delta =  (1 - pnorm(abs(z_delta))) * 2
 
   # inference based on parametric bootstrap
