@@ -49,6 +49,7 @@ analyze_trials = function(list_data_trials,
             return(NA)
           }
         )
+        gc()
       },
       ...
     )
