@@ -39,9 +39,9 @@ analyze_trials = function(list_data_trials,
     # parallel::clusterExport(cl = cl, varlist = env_vars)
     parallel::clusterEvalQ(cl = cl, library(tidyverse))
     parallel::clusterEvalQ(cl = cl, library(TCT))
-    fitted_models = parallel::clusterApply(
+    fitted_models = parallel::parLapply(
       cl = cl,
-      x = list_data_trials,
+      X = list_data_trials,
       fun = function(x, ...) {
         tryCatch(
           expr = trial_function(x, ...),
