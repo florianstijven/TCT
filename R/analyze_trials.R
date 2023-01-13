@@ -43,13 +43,13 @@ analyze_trials = function(list_data_trials,
       cl = cl,
       X = list_data_trials,
       fun = function(x, ...) {
+        gc()
         tryCatch(
           expr = trial_function(x, ...),
           error = function(e) {
             return(NA)
           }
         )
-        gc()
       },
       ...
     )
