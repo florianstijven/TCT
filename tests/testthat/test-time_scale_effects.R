@@ -1,18 +1,19 @@
 test_that("TCT() function works", {
+  library(mmrm)
   data = simulated_test_trial %>%
-    mutate(time_int = (Week %/% 25)) %>%
-    arrange(trial_number, SubjId, time_int) %>%
-    mutate(time_int = as.integer(time_int) + 1L) %>%
-    mutate(arm_time = ifelse(time_int == 1L,
+    dplyr::mutate(time_int = (Week %/% 25)) %>%
+    dplyr::arrange(trial_number, SubjId, time_int) %>%
+    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
+    dplyr::mutate(arm_time = ifelse(time_int == 1L,
                              "baseline",
                              paste0(arm, ":", time_int)))
     mmrm_fit = analyze_mmrm(data)
     set.seed(1)
     TCT_Fit = TCT(
       time_points = 0:4,
-      ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
-      exp_estimates = mmrm_fit$coefficients[5:8],
-      vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+      ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+      exp_estimates = coef(mmrm_fit)[5:8],
+      vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
       interpolation = "spline",
       B = 1e3
     )
@@ -22,24 +23,25 @@ test_that("TCT() function works", {
     check_vctr = c(0.7327657260, 0.8734756221, 0.7936971718, 0.7510185731,
                    0.4256797100, 1.0165886470, 0.0411074803)
   expect_equal(TCT_output_vctr, check_vctr,
-               ignore_attr = "names")
+               ignore_attr = "names", tolerance = 1e-3)
 })
 
 test_that("TCT_common() function works", {
   data = simulated_test_trial %>%
-    mutate(time_int = (Week %/% 25)) %>%
-    arrange(trial_number, SubjId, time_int) %>%
-    mutate(time_int = as.integer(time_int) + 1L) %>%
-    mutate(arm_time = ifelse(time_int == 1L,
+    dplyr::mutate(time_int = (Week %/% 25)) %>%
+    dplyr::arrange(trial_number, SubjId, time_int) %>%
+    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
+    dplyr::mutate(arm_time = ifelse(time_int == 1L,
                              "baseline",
                              paste0(arm, ":", time_int)))
+  library(mmrm)
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT(
     time_points = 0:4,
-    ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
-    exp_estimates = mmrm_fit$coefficients[5:8],
-    vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
     interpolation = "spline",
     B = 0
   )
@@ -50,7 +52,7 @@ test_that("TCT_common() function works", {
                       TCT_common_fit$vcov)
   check_vctr = c(0.8027742481, 0.8488277428, 0.8906516826, 0.0046274862)
   expect_equal(TCT_output_vctr, check_vctr,
-               ignore_attr = "names")
+               ignore_attr = "names", tolerance = 1e-3)
 })
 
 

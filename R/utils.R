@@ -31,73 +31,29 @@
 #'
 get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   # amount of extrapolation
-  extrapol = 1e4
+  extrapol = max(y_ref)
   # Only the first first value in y_obs is used. This enables us to use
   # straightforward data handling methods from dplyr.
-  y_obs = y_obs
-  ref_fun = function(x,
-                     .x_ref = x_ref,
-                     .y_ref = y_ref) {
-    p = length(.x_ref)
-    if ((x < min(.x_ref))) {
-      # standard function does not do extrapolation, this extrapolation is
-      # implemented here.
-      # y2 = .y_ref[2]
-      # y1 = .y_ref[1]
-      # x2 = .x_ref[2]
-      # x1 = .x_ref[1]
-      y2 = .y_ref[p]
-      y1 = .y_ref[1]
-      x2 = .x_ref[p]
-      x1 = .x_ref[1]
-      # slope
-      a = (y2 - y1) / (x2 - x1)
-      # intercept
-      b = y2 - a * x2
-      y_interpolated = a * x + b
-    }
-    else if (x > max(.x_ref)) {
-      # y2 = .y_ref[p]
-      # y1 = .y_ref[p - 1]
-      # x2 = .x_ref[p]
-      # x1 = .x_ref[p - 1]
-      y2 = .y_ref[p]
-      y1 = .y_ref[1]
-      x2 = .x_ref[p]
-      x1 = .x_ref[1]
-      # slope
-      a = (y2 - y1) / (x2 - x1)
-      # intercept
-      b = y2 - a * x2
-      y_interpolated = a * x + b
-    }
-    else {
-      if (method == "linear") {
-        y_interpolated = stats::approx(.x_ref,
-                                       .y_ref,
-                                       method = "linear",
-                                       rule = 1,
-                                       xout = x)$y
-      }
-      else if (method == "spline") {
-        y_interpolated = stats::spline(x = .x_ref,
-                                       y = .y_ref,
-                                       method = "natural",
-                                       xout = x)$y
-      }
-    }
-    return(y_interpolated)
+  if (method == "linear") {
+    interpol_fun = stats::approxfun(x_ref,
+                                    y_ref,
+                                    method = "linear",
+                                    rule = 1)
+  }
+  else if (method == "spline") {
+    interpol_fun = stats::splinefun(x_ref,
+                                    y_ref,
+                                    method = "natural")
+  }
+  else if (method == "monoH.FC") {
+    interpol_fun = stats::splinefun(x_ref,
+                                    y_ref,
+                                    method = "monoH.FC")
   }
 
-  if (method == "monoH.FC") {
-    # interpolation: monotone Hermite spline according to the method of Fritsch
-    # and Carlson.
-    # This interpolation method ensures a monotone interpolated function iff the
-    # data themselves are monotone
-    ref_fun = stats::splinefun(x_ref,
-                               y_ref,
-                               method = "monoH.FC")
-  }
+  p = length(x_ref)
+  extrapol_fun = extrapol_fun_factory(x_ref, y_ref)
+  ref_fun = ref_fun_factory(x_ref, extrapol_fun, interpol_fun)
 
 
   # x-value that maps to y_obs with the reference function. The reference
@@ -123,10 +79,37 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
         interval = c(min(x_ref) - extrapol,
                      max(x_ref) + extrapol),
         tol = .Machine$double.eps^0.5,
-        maxiter = 10e4
+        maxiter = 1e3
       )$root
     }
   }
-
   return(x_mapped)
+}
+
+extrapol_fun_factory = function(.x_ref, .y_ref) {
+  # standard function does not do extrapolation, this extrapolation is
+  # implemented here.
+  p = length(.y_ref)
+  y2 = .y_ref[p]
+  y1 = .y_ref[1]
+  x2 = .x_ref[p]
+  x1 = .x_ref[1]
+  # slope
+  a = (y2 - y1) / (x2 - x1)
+  # intercept
+  b = y2 - a * x2
+  return(
+    function(x) {
+      a * x + b
+    }
+  )
+}
+
+ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun) {
+  ref_fun =   function(x) {
+    ifelse(test = (x < min(.x_ref)) | (x > max(.x_ref)),
+           yes = extrapol_fun(x),
+           no = interpol_fun(x))
+  }
+  return(ref_fun)
 }
