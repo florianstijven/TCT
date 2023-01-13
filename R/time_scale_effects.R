@@ -201,23 +201,25 @@ summary.TCT = function(x,
     z_delta = (1 - coef(x)) / se_delta
     ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
     ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
-    ci_delta = matrix(
-      data = c(ci_delta_lower, ci_delta_upper),
-      ncol = 2,
-      byrow = FALSE
-    )
   }
   else if (delta_transformation == "log") {
     se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
     z_delta = (log(coef(x))) / se_delta
     ci_delta_lower = exp(log(coef(x)) - qnorm(1 - (alpha / 2)) * se_delta)
     ci_delta_upper = exp(log(coef(x)) + qnorm(1 - (alpha / 2)) * se_delta)
-    ci_delta = matrix(
-      data = c(ci_delta_lower, ci_delta_upper),
-      ncol = 2,
-      byrow = FALSE
-    )
   }
+  else if (delta_transformation == "log10") {
+    se_delta = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
+    z_delta = (log10(coef(x))) / se_delta
+    ci_delta_lower = 10**(log10(coef(x)) - qnorm(1 - (alpha / 2)) * se_delta)
+    ci_delta_upper = 10**(log10(coef(x)) + qnorm(1 - (alpha / 2)) * se_delta)
+  }
+  ci_delta = matrix(
+    data = c(ci_delta_lower, ci_delta_upper),
+    ncol = 2,
+    byrow = FALSE
+  )
+
   lht_delta = car::linearHypothesis(
     model = x,
     vcov. = x$vcov,
@@ -523,23 +525,24 @@ summary.TCT_common = function(x,
     z_delta = (1 - coef(x)) / se_delta
     ci_delta_lower = coef(x) - qnorm(1 - (alpha / 2)) * se_delta
     ci_delta_upper = coef(x) + qnorm(1 - (alpha / 2)) * se_delta
-    ci_delta = matrix(
-      data = c(ci_delta_lower, ci_delta_upper),
-      ncol = 2,
-      byrow = FALSE
-    )
   }
   else if (delta_transformation == "log") {
     se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
     z_delta = (log(coef(x))) / se_delta
     ci_delta_lower = exp(log(coef(x)) - qnorm(1 - (alpha / 2)) * se_delta)
     ci_delta_upper = exp(log(coef(x)) + qnorm(1 - (alpha / 2)) * se_delta)
-    ci_delta = matrix(
-      data = c(ci_delta_lower, ci_delta_upper),
-      ncol = 2,
-      byrow = FALSE
-    )
   }
+  else if (delta_transformation == "log10") {
+    se_delta = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
+    z_delta = log10(coef(x)) / se_delta
+    ci_delta_lower = 10**(log10(coef(x)) - qnorm(1 - (alpha / 2)) * se_delta)
+    ci_delta_upper = 10**(log10(coef(x)) + qnorm(1 - (alpha / 2)) * se_delta)
+  }
+  ci_delta = matrix(
+    data = c(ci_delta_lower, ci_delta_upper),
+    ncol = 2,
+    byrow = FALSE
+  )
   p_delta =  (1 - pnorm(abs(z_delta))) * 2
 
   # inference based on parametric bootstrap
