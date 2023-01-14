@@ -65,7 +65,7 @@ analyze_mmrm = function(data_trial, method = "ML", type = "full", package = "mmr
     data_trial$time_int = as.factor(data_trial$time_int)
     formula = update.formula(old = formula, .~. + us(time_int | SubjId))
     mmrm::mmrm(
-      formula = ADAScog_integer ~ arm_time + 0 + us(time_int | SubjId),
+      formula = formula,
       data = data_trial,
       reml = (method == "REML")
     )

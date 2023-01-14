@@ -34,7 +34,6 @@ test_that("TCT_common() function works", {
     dplyr::mutate(arm_time = ifelse(time_int == 1L,
                              "baseline",
                              paste0(arm, ":", time_int)))
-  library(mmrm)
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT(
@@ -48,7 +47,7 @@ test_that("TCT_common() function works", {
   set.seed(1)
   TCT_common_fit = TCT_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = TRUE)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
-                      TCT_common_fit$bootstrap_estimates[1:2],
+                      TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
   check_vctr = c(0.8027742481, 0.8488277428, 0.8906516826, 0.0046274862)
   expect_equal(TCT_output_vctr, check_vctr,

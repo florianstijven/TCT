@@ -99,17 +99,94 @@ extrapol_fun_factory = function(.x_ref, .y_ref) {
   # intercept
   b = y2 - a * x2
   return(
-    function(x) {
-      a * x + b
+    function(x, deriv = 0) {
+      a * (x ** (1 - deriv))  + b * (1 - deriv)
     }
   )
 }
 
-ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun) {
-  ref_fun =   function(x) {
+ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun, deriv = 0) {
+  ref_fun = function(x, deriv = 0) {
     ifelse(test = (x < min(.x_ref)) | (x > max(.x_ref)),
-           yes = extrapol_fun(x),
-           no = interpol_fun(x))
+           yes = extrapol_fun(x, deriv),
+           no = interpol_fun(x, deriv))
   }
   return(ref_fun)
 }
+
+deriv_f0_t = function(ref_fun, t_m) {
+  ref_fun(t_m, 1)
+}
+
+deriv_tm_beta = function(t_m, beta, ref_fun) {
+  ((ref_fun(t_m, 1)) ** -1) * 1
+}
+
+deriv_gamma_beta = function(t_m, t_j, ref_fun) {
+  diag_J = ((ref_fun(t_m, 1)) ** -1) / t_j
+  return(diag(x = diag_J))
+}
+
+deriv_gamma_alpha = function(t_m, t_j, x_ref, y_ref, method = "spline") {
+  ref_fun = ref_fun_constructor(x_ref, y_ref, method)
+  -1 *diag(1 / (deriv_f0_t(ref_fun, t_m) * t_j)) %*%
+    attr(deriv_f0_alpha(t_m, x_ref, y_ref, method), "gradient")
+}
+
+deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline") {
+  myenv <- new.env()
+  myenv$x_ref <- x_ref
+  myenv$y_ref <- y_ref
+  myenv$method <- method
+  myenv$t_m <- t_m
+  myenv$ref_fun_constructor <- ref_fun_constructor
+  numericDeriv(expr = quote({
+    ref_fun = ref_fun_constructor(x_ref, y_ref, method)
+    ref_fun(t_m)
+  }),
+  theta = c("y_ref"),
+  rho = myenv)
+}
+
+deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "spline") {
+  numDeriv::jacobian(
+    func = function(y_ref) {
+      ref_fun = ref_fun_constructor(x_ref, y_ref, method)
+      ref_fun(t_m)
+    },
+    x = y_ref
+  )
+}
+
+ref_fun_constructor = function(x_ref, y_ref, method) {
+  if (method == "linear") {
+    interpol_fun = stats::approxfun(x_ref,
+                                    y_ref,
+                                    method = "linear",
+                                    rule = 1)
+  }
+  else if (method == "spline") {
+    interpol_fun = stats::splinefun(x_ref,
+                                    y_ref,
+                                    method = "natural")
+  }
+  else if (method == "monoH.FC") {
+    interpol_fun = stats::splinefun(x_ref,
+                                    y_ref,
+                                    method = "monoH.FC")
+  }
+
+  extrapol_fun = extrapol_fun_factory(x_ref, y_ref)
+  ref_fun = ref_fun_factory(x_ref, extrapol_fun, interpol_fun)
+  return(ref_fun)
+}
+
+jacobian_tct = function(t_m, t_j, x_ref, y_ref, ref_fun, method = "spline") {
+ return(
+   cbind(
+     deriv_gamma_alpha(t_m, t_j, x_ref, y_ref, method),
+     deriv_gamma_beta(t_m, t_j, ref_fun)
+   )
+ )
+}
+

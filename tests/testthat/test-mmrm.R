@@ -5,10 +5,10 @@ test_that("mmrm is correctly fitted for simulated_test_trial with ML", {
                                     "baseline",
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data_trial)
-  expect_equal(c(mmrm_fit$coefficients[1],
-                 mmrm_fit$logLik[1]),
+  expect_equal(c(coef(mmrm_fit)[1],
+                 mmrm_fit$neg_log_lik),
                c(22.94564411,
-                 -7955.777072), ignore_attr = "names")
+                 7955.777072), ignore_attr = "names")
 })
 
 test_that("mmrm is correctly fitted for simulated_test_trial with REML", {
@@ -18,10 +18,10 @@ test_that("mmrm is correctly fitted for simulated_test_trial with REML", {
                                     "baseline",
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data_trial, method = "REML")
-  expect_equal(c(mmrm_fit$coefficients[1],
-                 mmrm_fit$logLik[1]),
+  expect_equal(c(coef(mmrm_fit)[1],
+                 mmrm_fit$neg_log_lik),
                c(22.94563423 ,
-                 -7957.205066), ignore_attr = "names")
+                 7957.205066), ignore_attr = "names")
 })
 
 test_that("mmrm (null model) is correctly fitted for simulated_test_trial with ML", {
@@ -31,10 +31,10 @@ test_that("mmrm (null model) is correctly fitted for simulated_test_trial with M
                                     "baseline",
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data_trial, type = "null")
-  expect_equal(c(mmrm_fit$coefficients[1],
-                 mmrm_fit$logLik[1]),
+  expect_equal(c(coef(mmrm_fit)[1],
+                 mmrm_fit$neg_log_lik),
                c(22.544,
-                 -7958.859608), ignore_attr = "names")
+                 7958.8597402), ignore_attr = "names")
 })
 
 test_that("mmrm (null model) is correctly fitted for simulated_test_trial with REML", {
@@ -44,8 +44,8 @@ test_that("mmrm (null model) is correctly fitted for simulated_test_trial with R
                                     "baseline",
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data_trial, method = "REML", type = "null")
-  expect_equal(c(mmrm_fit$coefficients[1],
-                 mmrm_fit$logLik[1]),
+  expect_equal(c(coef(mmrm_fit)[1],
+                 mmrm_fit$neg_log_lik),
                c(22.544 ,
-                 -7960.975908), ignore_attr = "names")
+                 7960.975908), ignore_attr = "names")
 })

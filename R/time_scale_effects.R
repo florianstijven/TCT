@@ -15,12 +15,32 @@
 #'   estimates
 #'  * `partial`: the Jacobian matrix
 #'
-DeltaMethod = function (par, fct, vcov,  ...) {
-  theta <- function(par)
-    fct(par, ...)
-  partial <- t(numDeriv::jacobian(theta, x = par))
+DeltaMethod = function (time_points,
+                        y_ref,
+                        y_obs,
+                        ref_fun,
+                        method,
+                        vcov)
+{
+  gamma_est = g_Delta_bis(par = c(y_ref, y_obs),
+                          method = method,
+                          time_points = time_points)
+  partial <- t(
+    jacobian_tct(
+      t_m = gamma_est * time_points[-1],
+      t_j = time_points[-1],
+      x_ref = time_points,
+      y_ref = y_ref,
+      ref_fun = ref_fun,
+      method = method
+    )
+  )
   variance <- t(partial) %*% vcov %*% partial
-  return(list(estimate = theta(par), variance = variance, partial = partial))
+  return(list(
+    estimate = gamma_est,
+    variance = variance,
+    partial = partial
+  ))
 }
 
 
@@ -132,12 +152,16 @@ TCT = function(time_points,
                vcov,
                interpolation = "spline",
                B = 0) {
+  ref_fun = ref_fun_constructor(time_points,
+                                ctrl_estimates,
+                                interpolation)
   se_delta = DeltaMethod(
-    par = c(ctrl_estimates, exp_estimates),
-    fct = g_Delta_bis,
-    vcov = vcov,
     time_points = time_points,
-    method = interpolation
+    y_ref = ctrl_estimates,
+    y_obs = exp_estimates,
+    ref_fun = ref_fun,
+    method = interpolation,
+    vcov = vcov
   )
 
   bootstrap_estimates = pm_bootstrap_vertical_to_horizontal(
@@ -366,13 +390,16 @@ pm_bootstrap_vertical_to_common = function(time_points,
                                            TCT_vcov,
                                            interpolation = "spline",
                                            B = 100,
-                                           bs_fix_vcov = TRUE) {
+                                           bs_fix_vcov = TRUE,
+                                           return_se = TRUE) {
   if (B == 0)
     return(NULL)
 
+  n_points = length(time_points)
   p = length(exp_estimates)
   vec_1 = matrix(1, nrow = p, ncol = 1)
   estimates_bootstrap = 1:B
+  se_bootstrap = rep(NA, B)
   time_points = time_points
   par_sampled = mvtnorm::rmvnorm(n = B,
                                  mean = c(ctrl_estimates, exp_estimates),
@@ -389,7 +416,7 @@ pm_bootstrap_vertical_to_common = function(time_points,
         time_points = time_points,
         ctrl_estimates = par_sampled[i, 1:n_points],
         exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
-        vcov = TCT_Fit$vertical_model$vcov,
+        vcov = vcov,
         interpolation = interpolation,
         B = 0
       )
@@ -400,8 +427,12 @@ pm_bootstrap_vertical_to_common = function(time_points,
     est_bs = (t(vec_1) %*% solve(vcov_gls) %*% matrix(coef_gls, ncol = 1) ) /
       (t(vec_1) %*% solve(vcov_gls) %*% vec_1)
     estimates_bootstrap[i] = est_bs
+    if (return_se) {
+      se_bootstrap[i] = sqrt((t(vec_1) %*% solve(vcov_gls) %*% vec_1)**(-1))
+    }
   }
-  return(estimates_bootstrap)
+  return(list(estimates_bootstrap  = estimates_bootstrap,
+              se_bootstrap = se_bootstrap))
 }
 
 #' Title
@@ -438,7 +469,9 @@ TCT_common = function(TCT_Fit,
     vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
     TCT_vcov = vcov,
     interpolation = TCT_Fit$interpolation,
-    B = B
+    B = B,
+    bs_fix_vcov = bs_fix_vcov,
+    return_se = TRUE
   )
 
   # Test for common slowing parameter
@@ -547,14 +580,14 @@ summary.TCT_common = function(x,
 
   # inference based on parametric bootstrap
   if (!(is.null(x$bootstrap_estimates))) {
-    vcov_bootstrap = var(x$bootstrap_estimates)
+    vcov_bootstrap = var(x$bootstrap_estimates[[1]])
     se_bootstrap = sqrt(vcov_bootstrap)
     ci_bootstrap = quantile(
-      x = x$bootstrap_estimates,
+      x = x$bootstrap_estimates[[1]],
       probs = c(alpha / 2, 1 - alpha / 2)
     )
-    p_bootstrap = min(mean(x$bootstrap_estimates > 1) * 2,
-                      (1 - mean(x$bootstrap_estimates > 1)) * 2)
+    p_bootstrap = min(mean(x$bootstrap_estimates[[1]] > 1) * 2,
+                      (1 - mean(x$bootstrap_estimates[[1]] > 1)) * 2)
   }
   else {
     vcov_bootstrap = NULL
