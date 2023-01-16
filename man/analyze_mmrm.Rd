@@ -4,7 +4,7 @@
 \alias{analyze_mmrm}
 \title{Analyze trial data with MMRM}
 \usage{
-analyze_mmrm(data_trial, method = "ML", type = "full")
+analyze_mmrm(data_trial, method = "ML", type = "full", package = "mmrm")
 }
 \arguments{
 \item{data_trial}{A data frame from a single clinical trial. The following

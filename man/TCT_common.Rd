@@ -4,7 +4,12 @@
 \alias{TCT_common}
 \title{Title}
 \usage{
-TCT_common(TCT_Fit, B = 0, bs_fix_vcov = FALSE)
+TCT_common(
+  TCT_Fit,
+  B = 0,
+  bs_fix_vcov = FALSE,
+  select_coef = 1:length(coef(TCT_Fit))
+)
 }
 \arguments{
 \item{bs_fix_vcov}{}

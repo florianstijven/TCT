@@ -4,7 +4,7 @@
 \alias{summary.TCT}
 \title{Title}
 \usage{
-\method{summary}{TCT}(x, alpha = 0.05)
+\method{summary}{TCT}(x, alpha = 0.05, delta_transformation = "identity")
 }
 \arguments{
 \item{alpha}{}

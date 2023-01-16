@@ -244,13 +244,14 @@ summary.TCT = function(x,
     byrow = FALSE
   )
 
-  lht_delta = car::linearHypothesis(
-    model = x,
-    vcov. = x$vcov,
-    coef. = coef(x),
-    rhs = rep(1, length(coef(x))),
-    hypothesis.matrix = diag(1, nrow = length(coef(x)), ncol = length(coef(x)))
-  )
+  # lht_delta = car::linearHypothesis(
+  #   model = x,
+  #   vcov. = x$vcov,
+  #   coef. = coef(x),
+  #   rhs = rep(1, length(coef(x))),
+  #   hypothesis.matrix = diag(1, nrow = length(coef(x)), ncol = length(coef(x)))
+  # )
+  lht_delta = NA
   p_delta =  (1 - pnorm(abs(z_delta))) * 2
 
   # inference based on parametric bootstrap
@@ -479,13 +480,14 @@ TCT_common = function(TCT_Fit,
   diag(lht_matrix) = -1
   lht_matrix = cbind(1, lht_matrix)
 
-  lht_common = car::linearHypothesis(
-    model = TCT_Fit,
-    vcov. = vcov,
-    coef. = estimates,
-    rhs = rep(0, length(estimates) - 1),
-    hypothesis.matrix = lht_matrix
-  )
+  # lht_common = car::linearHypothesis(
+  #   model = TCT_Fit,
+  #   vcov. = vcov,
+  #   coef. = estimates,
+  #   rhs = rep(0, length(estimates) - 1),
+  #   hypothesis.matrix = lht_matrix
+  # )
+  lht_common = NA
 
 
   new_TCT_common(

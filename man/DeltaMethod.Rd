@@ -4,16 +4,16 @@
 \alias{DeltaMethod}
 \title{Delta method with numerical derivatives}
 \usage{
-DeltaMethod(par, fct, vcov, ...)
+DeltaMethod(time_points, y_ref, y_obs, ref_fun, method, vcov)
 }
 \arguments{
+\item{vcov}{The variance-covariance matrix of the parameter estimates in the
+\code{par} vector argument}
+
 \item{par}{vector of parameter estimates}
 
 \item{fct}{function that transforms the parameter values to the appropriate
 function}
-
-\item{vcov}{The variance-covariance matrix of the parameter estimates in the
-\code{par} vector argument}
 
 \item{...}{}
 }
