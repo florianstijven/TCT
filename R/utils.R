@@ -190,3 +190,146 @@ jacobian_tct = function(t_m, t_j, x_ref, y_ref, ref_fun, method = "spline") {
  )
 }
 
+
+# copy from linearHypothesis() from car package. That package has many
+# dependencies that can cause issue with installation. It is therefore better
+# not to depend on that package.
+linearHypothesis.default = function (model,
+                                     hypothesis.matrix,
+                                     rhs = NULL,
+                                     test = c("Chisq",
+                                              "F"),
+                                     vcov. = NULL,
+                                     singular.ok = FALSE,
+                                     verbose = FALSE,
+                                     coef. = coef(model),
+                                     suppress.vcov.msg = FALSE,
+                                     error.df,
+                                     ...)
+
+{
+  if (missing(error.df)) {
+    df <- df.residual(model)
+    test <- match.arg(test)
+    if (test == "F" && (is.null(df) || is.na(df))) {
+      test <- "Chisq"
+      message("residual df unavailable, test set to 'Chisq'")
+    }
+  }
+  else {
+    df <- error.df
+  }
+  if (is.null(df))
+    df <- Inf
+  if (df == 0)
+    stop("residual df = 0")
+  V <- if (is.null(vcov.))
+    vcov(model, complete = FALSE)
+  else if (is.function(vcov.))
+    vcov.(model)
+  else vcov.
+  b <- coef.
+  if (any(aliased <- is.na(b)) && !singular.ok)
+    stop("there are aliased coefficients in the model")
+  b <- b[!aliased]
+  if (is.null(b))
+    stop(paste("there is no coef() method for models of class",
+               paste(class(model), collapse = ", ")))
+  if (is.character(hypothesis.matrix)) {
+    L <- makeHypothesis(names(b), hypothesis.matrix, rhs)
+    if (is.null(dim(L)))
+      L <- t(L)
+    rhs <- L[, NCOL(L)]
+    L <- L[, -NCOL(L), drop = FALSE]
+    rownames(L) <- hypothesis.matrix
+  }
+  else {
+    L <- if (is.null(dim(hypothesis.matrix)))
+      t(hypothesis.matrix)
+    else hypothesis.matrix
+    if (is.null(rhs))
+      rhs <- rep(0, nrow(L))
+  }
+  q <- NROW(L)
+  value.hyp <- L %*% b - rhs
+  vcov.hyp <- L %*% V %*% t(L)
+  if (verbose) {
+    cat("\nHypothesis matrix:\n")
+    print(L)
+    cat("\nRight-hand-side vector:\n")
+    print(rhs)
+    cat("\nEstimated linear function (hypothesis.matrix %*% coef - rhs)\n")
+    print(drop(value.hyp))
+    cat("\n")
+    if (length(vcov.hyp) == 1)
+      cat("\nEstimated variance of linear function\n")
+    else cat("\nEstimated variance/covariance matrix for linear function\n")
+    print(drop(vcov.hyp))
+    cat("\n")
+  }
+  SSH <- as.vector(t(value.hyp) %*% solve(vcov.hyp) %*% value.hyp)
+  test <- match.arg(test)
+  if (!(is.finite(df) && df > 0))
+    test <- "Chisq"
+  name <- try(formula(model), silent = TRUE)
+  if (inherits(name, "try-error"))
+    name <- substitute(model)
+  title <- "Linear hypothesis test\n\nHypothesis:"
+  topnote <- paste("Model 1: restricted model", "\n", "Model 2: ",
+                   paste(deparse(name), collapse = "\n"), sep = "")
+  note <- if (is.null(vcov.) || suppress.vcov.msg)
+    ""
+  else "\nNote: Coefficient covariance matrix supplied.\n"
+  rval <- matrix(rep(NA, 8), ncol = 4)
+  colnames(rval) <- c("Res.Df", "Df", test, paste("Pr(>", test,
+                                                  ")", sep = ""))
+  rownames(rval) <- 1:2
+  rval[, 1] <- c(df + q, df)
+  if (test == "F") {
+    f <- SSH/q
+    p <- pf(f, q, df, lower.tail = FALSE)
+    rval[2, 2:4] <- c(q, f, p)
+  }
+  else {
+    p <- pchisq(SSH, q, lower.tail = FALSE)
+    rval[2, 2:4] <- c(q, SSH, p)
+  }
+  if (!(is.finite(df) && df > 0))
+    rval <- rval[, -1]
+  result <- structure(as.data.frame(rval), heading = c(title,
+                                                       printHypothesis(L, rhs, names(b)), "", topnote, note),
+                      class = c("anova", "data.frame"))
+  attr(result, "value") <- value.hyp
+  attr(result, "vcov") <- vcov.hyp
+  result
+}
+
+printHypothesis = function (L, rhs, cnames)
+{
+  hyp <- rep("", nrow(L))
+  for (i in 1:nrow(L)) {
+    sel <- L[i, ] != 0
+    h <- L[i, sel]
+    h <- ifelse(h < 0, as.character(h), paste("+", h, sep = ""))
+    nms <- cnames[sel]
+    h <- paste(h, nms)
+    h <- gsub("-", " - ", h)
+    h <- gsub("+", "  + ", h, fixed = TRUE)
+    h <- paste(h, collapse = "")
+    h <- gsub("  ", " ", h, fixed = TRUE)
+    h <- sub("^\\ \\+", "", h)
+    h <- sub("^\\ ", "", h)
+    h <- sub("^-\\ ", "-", h)
+    h <- paste(" ", h, sep = "")
+    h <- paste(h, "=", rhs[i])
+    h <- gsub(" 1([^[:alnum:]_.]+)[ *]*", "", gsub("-1([^[:alnum:]_.]+)[ *]*",
+                                                   "-", gsub("- +1 +", "-1 ", h)))
+    h <- sub("Intercept)", "(Intercept)", h)
+    h <- gsub("-", " - ", h)
+    h <- gsub("+", "  + ", h, fixed = TRUE)
+    h <- gsub("  ", " ", h, fixed = TRUE)
+    h <- sub("^ *", "", h)
+    hyp[i] <- h
+  }
+  hyp
+}
