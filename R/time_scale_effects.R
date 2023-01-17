@@ -424,7 +424,7 @@ pm_bootstrap_vertical_to_common = function(time_points,
       vcov_gls = tct_results$vcov
       coef_gls = stats::coef(tct_results)
     }
-
+    vcov_gls[lower.tri(vcov_gls)] = t(vcov_gls)[lower.tri(vcov_gls)]
     inv_vcov_gls = mnormt::pd.solve(vcov_gls)
     est_bs = (t(vec_1) %*% inv_vcov_gls %*% matrix(coef_gls, ncol = 1) ) /
       (t(vec_1) %*% inv_vcov_gls %*% vec_1)
