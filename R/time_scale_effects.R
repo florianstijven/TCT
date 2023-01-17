@@ -425,11 +425,12 @@ pm_bootstrap_vertical_to_common = function(time_points,
       coef_gls = stats::coef(tct_results)
     }
 
-    est_bs = (t(vec_1) %*% solve(vcov_gls) %*% matrix(coef_gls, ncol = 1) ) /
-      (t(vec_1) %*% solve(vcov_gls) %*% vec_1)
+    inv_vcov_gls = mnormt::pd.solve(vcov_gls)
+    est_bs = (t(vec_1) %*% inv_vcov_gls %*% matrix(coef_gls, ncol = 1) ) /
+      (t(vec_1) %*% inv_vcov_gls %*% vec_1)
     estimates_bootstrap[i] = est_bs
     if (return_se) {
-      se_bootstrap[i] = sqrt((t(vec_1) %*% solve(vcov_gls) %*% vec_1)**(-1))
+      se_bootstrap[i] = sqrt((t(vec_1) %*% inv_vcov_gls %*% vec_1)**(-1))
     }
   }
   return(list(estimates_bootstrap  = estimates_bootstrap,
