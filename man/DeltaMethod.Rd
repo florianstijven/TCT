@@ -2,30 +2,40 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{DeltaMethod}
 \alias{DeltaMethod}
-\title{Delta method with numerical derivatives}
+\title{Delta method}
 \usage{
 DeltaMethod(time_points, y_ref, y_obs, ref_fun, method, vcov)
 }
 \arguments{
-\item{vcov}{The variance-covariance matrix of the parameter estimates in the
-\code{par} vector argument}
+\item{time_points}{Time points to which the estimates in \code{y_ref} correspond.}
 
-\item{par}{vector of parameter estimates}
+\item{y_ref}{Vector with estimated values for reference trajectory at
+\code{time_points}. This vector should thus have the same length as
+\code{time_points}.}
 
-\item{fct}{function that transforms the parameter values to the appropriate
-function}
+\item{y_obs}{Vector with estimated values for the active treatment group at
+\code{time_points}. This vector should thus have length \code{length(time_points) - 1} since the baseline values are assumed to be equal in both treatment
+groups.}
 
-\item{...}{}
+\item{ref_fun}{Intra- and extrapolation function that is returned by
+\code{ref_fun_constructor()}.}
+
+\item{method}{Interpolation method; see \code{\link[=TCT]{TCT()}}.}
+
+\item{vcov}{The (estimated) variance-covariance matrix of the parameter
+estimates in the \code{c(y_ref, y_obs)} vector.}
 }
 \value{
 A list with three element:
 \itemize{
 \item \code{estimate}: the transformed parameter estimates
-\item \code{variance}: the variance-covariance matrix for the transformed parameter
+\item \code{variance}: the (estimated) variance-covariance matrix for the transformed parameter
 estimates
 \item \code{partial}: the Jacobian matrix
 }
 }
 \description{
-Delta method with numerical derivatives
+The DeltaMethod() function applies the delta-method in the context of the
+time-component tests. This function is based on a combination of analytical
+(where possible) and numerical derivatives.
 }

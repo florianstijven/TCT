@@ -2,7 +2,7 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{TCT}
 \alias{TCT}
-\title{Transform vertical treatment effect estimates to time scale}
+\title{Transform vertical Treatment Effect Estimates to the Time Scale}
 \usage{
 TCT(
   time_points,
@@ -15,13 +15,13 @@ TCT(
 }
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
-the estimated means in the \code{ctrl_means} vector.}
+the estimated means in the \code{ctrl_estimates} vector.}
 
 \item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
 occasions.}
 
-\item{exp_estimates}{Estimated mean outcomes in the experimental group at fixed
-occasions.}
+\item{exp_estimates}{Estimated mean outcomes in the experimental group at
+fixed occasions.}
 
 \item{vcov}{The variance-covariance matrix for the means. In order to map to
 the correct estimates, this matrix should be the variance-covariance matrix
@@ -35,15 +35,23 @@ of \code{c(ctrl_means, exp_means)}.}
 and Carlson
 }}
 
-\item{B}{Number of bootstrap replications. If \code{B = 0}, no boostrap is
+\item{B}{Number of bootstrap replications. If \code{B = 0}, no bootstrap is
 performed (default).}
 }
 \value{
-An object from the TCT-class:
+An object from the TCT-class
 }
 \description{
-This function transform the vertical parameter estimates to parameter
-estimates on the time scale.
+The \code{\link[=TCT]{TCT()}} function transforms the vertical parameter estimates to parameter
+estimates on the time scale. These treatment effect estimates are
+acceleration factors. This is an application of the Time-Component Test (TCT)
+methodology.
+}
+\details{
+# Time-Component Test
+Explanation of TCT
+
+# Inference
 }
 \examples{
 # transform example data set to desired format

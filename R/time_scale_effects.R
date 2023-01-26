@@ -1,22 +1,26 @@
 #' Delta method
 #'
 #' The DeltaMethod() function applies the delta-method in the context of the
-#' time-component tests.
+#' time-component tests. This function is based on a combination of analytical
+#' (where possible) and numerical derivatives.
 #'
-#' @param time_points
+#' @param time_points Time points to which the estimates in `y_ref` correspond.
 #' @param y_ref Vector with estimated values for reference trajectory at
 #'   `time_points`. This vector should thus have the same length as
 #'   `time_points`.
 #' @param y_obs Vector with estimated values for the active treatment group at
-#'   `time_points`. This vector should thus have the same length as
-#'   `time_points`.
-#' @param ref_fun
-#' @param method Interpolation method
-#' @param vcov The variance-covariance matrix of the parameter estimates in the
+#'   `time_points`. This vector should thus have length `length(time_points) -
+#'   1` since the baseline values are assumed to be equal in both treatment
+#'   groups.
+#' @param ref_fun Intra- and extrapolation function that is returned by
+#'   `ref_fun_constructor()`.
+#' @param method Interpolation method; see [TCT()].
+#' @param vcov The (estimated) variance-covariance matrix of the parameter
+#'   estimates in the `c(y_ref, y_obs)` vector.
 #'
 #' @return A list with three element:
 #'  * `estimate`: the transformed parameter estimates
-#'  * `variance`: the variance-covariance matrix for the transformed parameter
+#'  * `variance`: the (estimated) variance-covariance matrix for the transformed parameter
 #'   estimates
 #'  * `partial`: the Jacobian matrix
 #'
@@ -27,9 +31,11 @@ DeltaMethod = function (time_points,
                         method,
                         vcov)
 {
+  # Vector of estimated acceleration factors
   gamma_est = g_Delta_bis(par = c(y_ref, y_obs),
                           method = method,
                           time_points = time_points)
+  # Jacobian matrix
   partial <- t(
     jacobian_tct(
       t_m = gamma_est * time_points[-1],
@@ -40,6 +46,8 @@ DeltaMethod = function (time_points,
       method = method
     )
   )
+  # Apply delta method to obtain the variance-covariance matrix of the estimated
+  # acceleration factors.
   variance <- t(partial) %*% vcov %*% partial
   return(list(
     estimate = gamma_est,
@@ -49,6 +57,22 @@ DeltaMethod = function (time_points,
 }
 
 
+#' Compute acceleration factor
+#'
+#' The [g_Delta_bis()] function computes the time-specific acceleration factor
+#' from the estimated trajectories in both treatment groups.
+#'
+#' @param par Vector with estimated points of the trajectories at `time_points`.
+#'   This vector is a combinations of the estimates in both treatment groups.
+#'   The `length(time_points)` first elements correspond to the reference group.
+#'   The `length(time_points) - 1` remaining elements correspond to the active
+#'   treatment group.
+#' @param method Interpolation method; see [TCT()].
+#' @param time_points Time points to which the first `length(time_points)`
+#'   elements in `par` correspond.
+#'
+#' @return A vector of length `length(time_points) - 1` containing the estimated
+#'   acceleration factors for the estimates in the active treatment group.
 g_Delta_bis = function(par,
                        method,
                        time_points) {
@@ -65,6 +89,25 @@ g_Delta_bis = function(par,
   return(t_mapped/time_points[(n_points - length(y_obs) + 1):length(time_points)])
 }
 
+#' Parametric Bootstrap for Time-Specific Acceleration Factors
+#'
+#'
+#' @param time_points Time points to which the estimates in `ctrl_estimates`
+#'   correspond.
+#' @param ctrl_estimates Vector with estimated values for reference trajectory
+#'   at `time_points`. This vector should thus have the same length as
+#'   `time_points`.
+#' @param exp_estimates Vector with estimated values for the active treatment
+#'   group at `time_points`. This vector should thus have length
+#'   `length(time_points) - 1` since the baseline values are assumed to be equal
+#'   in both treatment groups.
+#' @param vcov The (estimated) variance-covariance matrix of the parameter
+#'   estimates in the `c(ctrl_estimates, exp_estimates)` vector.
+#' @param interpolation Interpolation method; see [TCT()].
+#' @param B number of bootstrap replications.
+#'
+#' @return Matrix where each row corresponds to the bootstrap replicates of the
+#'   acceleration factors.
 pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                ctrl_estimates,
                                                exp_estimates,
@@ -105,17 +148,19 @@ new_TCT = function(coefficients,
 }
 
 
-#' Transform vertical treatment effect estimates to time scale
+#' Transform vertical Treatment Effect Estimates to the Time Scale
 #'
-#' This function transform the vertical parameter estimates to parameter
-#' estimates on the time scale.
+#' The [TCT()] function transforms the vertical parameter estimates to parameter
+#' estimates on the time scale. These treatment effect estimates are
+#' acceleration factors. This is an application of the Time-Component Test (TCT)
+#' methodology.
 #'
 #' @param time_points Ordered vector that contains the times corresponding to
-#'   the estimated means in the `ctrl_means` vector.
+#'   the estimated means in the `ctrl_estimates` vector.
 #' @param ctrl_estimates Estimated mean outcome in the control group at fixed
 #'   occasions.
-#' @param exp_estimates Estimated mean outcomes in the experimental group at fixed
-#'   occasions.
+#' @param exp_estimates Estimated mean outcomes in the experimental group at
+#'   fixed occasions.
 #' @param vcov The variance-covariance matrix for the means. In order to map to
 #'   the correct estimates, this matrix should be the variance-covariance matrix
 #'   of `c(ctrl_means, exp_means)`.
@@ -124,11 +169,17 @@ new_TCT = function(coefficients,
 #'  * `"spline"`: natural cubic spline interpolation
 #'  * `"monoH.FC`: monotone Hermite spline according to the method of Fritsch
 #'   and Carlson
-#' @param B Number of bootstrap replications. If `B = 0`, no boostrap is
+#' @param B Number of bootstrap replications. If `B = 0`, no bootstrap is
 #'   performed (default).
 #'
-#' @return An object from the TCT-class:
+#' @return An object from the TCT-class
 #' @export
+#'
+#' @details
+#' # Time-Component Test
+#' Explanation of TCT
+#'
+#' # Inference
 #'
 #' @examples
 #' # transform example data set to desired format
@@ -190,14 +241,7 @@ TCT = function(time_points,
                  ))
 }
 
-#' Title
-#'
-#' @param x
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 print.TCT = function(x, ...) {
   cat(
     paste0(
@@ -212,15 +256,7 @@ print.TCT = function(x, ...) {
   cat(x$interpolation)
 }
 
-#' Title
-#'
-#' @param x
-#' @param alpha
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 summary.TCT = function(x,
                        alpha = 0.05,
                        delta_transformation = "identity") {
@@ -330,14 +366,6 @@ new_summary.TCT = function(
   class = "summary.TCT")
 }
 
-#' Title
-#'
-#' @param x
-#'
-#' @return
-#' @export
-#'
-#' @examples
 print.summary.TCT = function(x) {
   cat(
     paste0(
