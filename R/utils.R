@@ -31,7 +31,7 @@
 #'
 get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   # amount of extrapolation
-  extrapol = 1e3
+  extrapol = 1e5
   # Only the first first value in y_obs is used. This enables us to use
   # straightforward data handling methods from dplyr.
   if (method == "linear") {

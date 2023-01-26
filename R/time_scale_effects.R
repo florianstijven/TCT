@@ -1,13 +1,18 @@
-#' Delta method with numerical derivatives
+#' Delta method
 #'
+#' The DeltaMethod() function applies the delta-method in the context of the
+#' time-component tests.
 #'
-#'
-#' @param par vector of parameter estimates
-#' @param fct function that transforms the parameter values to the appropriate
-#'   function
+#' @param time_points
+#' @param y_ref Vector with estimated values for reference trajectory at
+#'   `time_points`. This vector should thus have the same length as
+#'   `time_points`.
+#' @param y_obs Vector with estimated values for the active treatment group at
+#'   `time_points`. This vector should thus have the same length as
+#'   `time_points`.
+#' @param ref_fun
+#' @param method Interpolation method
 #' @param vcov The variance-covariance matrix of the parameter estimates in the
-#'   `par` vector argument
-#' @param ...
 #'
 #' @return A list with three element:
 #'  * `estimate`: the transformed parameter estimates
