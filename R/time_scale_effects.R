@@ -416,6 +416,19 @@ print.summary.TCT = function(x) {
   cat("\n")
 }
 
+#' Parametric Bootstrap for a Common Acceleration Factor
+#'
+#' @param time_points
+#' @param ctrl_estimates
+#' @param exp_estimates
+#' @param vcov
+#' @param TCT_vcov
+#' @param interpolation
+#' @param B
+#' @param bs_fix_vcov
+#' @param return_se
+#'
+#' @return
 pm_bootstrap_vertical_to_common = function(time_points,
                                            ctrl_estimates,
                                            exp_estimates,
