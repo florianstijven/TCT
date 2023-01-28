@@ -50,6 +50,10 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
                                     y_ref,
                                     method = "monoH.FC")
   }
+  else if (method = "4PL") {
+    #add 4PL
+    # interpol_fun = fit_4PL(x_ref, y_ref, cov?)
+  }
 
   p = length(x_ref)
   extrapol_fun = extrapol_fun_factory(x_ref, y_ref)
