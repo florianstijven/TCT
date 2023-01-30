@@ -647,14 +647,14 @@ summary.TCT_common = function(x,
 
   # inference based on parametric bootstrap
   if (!(is.null(x$bootstrap_estimates))) {
-    vcov_bootstrap = var(x$bootstrap_estimates[[1]])
+    vcov_bootstrap = var(x$bootstrap_estimates[[1]], na.rm = TRUE)
     se_bootstrap = sqrt(vcov_bootstrap)
     ci_bootstrap = quantile(
       x = x$bootstrap_estimates[[1]],
       probs = c(alpha / 2, 1 - alpha / 2)
     )
-    p_bootstrap = min(mean(x$bootstrap_estimates[[1]] > 1) * 2,
-                      (1 - mean(x$bootstrap_estimates[[1]] > 1)) * 2)
+    p_bootstrap = min(mean(x$bootstrap_estimates[[1]] > 1, na.rm = TRUE) * 2,
+                      (1 - mean(x$bootstrap_estimates[[1]] > 1, na.rm = TRUE)) * 2)
   }
   else {
     vcov_bootstrap = NULL
