@@ -651,7 +651,8 @@ summary.TCT_common = function(x,
     se_bootstrap = sqrt(vcov_bootstrap)
     ci_bootstrap = quantile(
       x = x$bootstrap_estimates[[1]],
-      probs = c(alpha / 2, 1 - alpha / 2)
+      probs = c(alpha / 2, 1 - alpha / 2),
+      na.rm = TRUE
     )
     p_bootstrap = min(mean(x$bootstrap_estimates[[1]] > 1, na.rm = TRUE) * 2,
                       (1 - mean(x$bootstrap_estimates[[1]] > 1, na.rm = TRUE)) * 2)
