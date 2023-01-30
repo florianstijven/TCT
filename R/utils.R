@@ -50,7 +50,7 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
                                     y_ref,
                                     method = "monoH.FC")
   }
-  else if (method = "4PL") {
+  else if (method == "4PL") {
     #add 4PL
     # interpol_fun = fit_4PL(x_ref, y_ref, cov?)
   }
@@ -76,15 +76,21 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
       x_mapped[i] = NA
     }
     else {
-      # The uniroot() function finds the root of g(x).
-      x_mapped[i] = stats::uniroot(
-        f = function(x)
-          ref_fun(x) - y_obs[i],
-        interval = c(min(x_ref) - extrapol,
-                     max(x_ref) + extrapol),
-        tol = .Machine$double.eps^0.5,
-        maxiter = 1e3
-      )$root
+      # The uniroot() function finds the root of g(x). If error is returned by
+      # uniroot, then the NA value remains at position i. Error are most likely
+      # due to mulitple possible time mappings.
+      try({
+        x_mapped[i] = stats::uniroot(
+          f = function(x)
+            ref_fun(x) - y_obs[i],
+          interval = c(min(x_ref) - extrapol,
+                       max(x_ref) + extrapol),
+          tol = .Machine$double.eps ^ 0.5,
+          maxiter = 1e3
+        )$root
+      }
+
+      )
     }
   }
   return(x_mapped)
