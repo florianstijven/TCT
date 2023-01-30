@@ -34,31 +34,8 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   extrapol = 1e5
   # Only the first first value in y_obs is used. This enables us to use
   # straightforward data handling methods from dplyr.
-  if (method == "linear") {
-    interpol_fun = stats::approxfun(x_ref,
-                                    y_ref,
-                                    method = "linear",
-                                    rule = 1)
-  }
-  else if (method == "spline") {
-    interpol_fun = stats::splinefun(x_ref,
-                                    y_ref,
-                                    method = "natural")
-  }
-  else if (method == "monoH.FC") {
-    interpol_fun = stats::splinefun(x_ref,
-                                    y_ref,
-                                    method = "monoH.FC")
-  }
-  else if (method == "4PL") {
-    #add 4PL
-    # interpol_fun = fit_4PL(x_ref, y_ref, cov?)
-  }
-
   p = length(x_ref)
-  extrapol_fun = extrapol_fun_factory(x_ref, y_ref)
-  ref_fun = ref_fun_factory(x_ref, extrapol_fun, interpol_fun)
-
+  ref_fun = ref_fun_constructor(x_ref, y_ref, method)
 
   # x-value that maps to y_obs with the reference function. The reference
   # function represents the reference mean trajectory. To find this x-value, we
@@ -115,6 +92,38 @@ extrapol_fun_factory = function(.x_ref, .y_ref) {
   )
 }
 
+interpol_fun_factory = function(x_ref, y_ref, method) {
+  switch(
+    method,
+    linear = linear_interpolation_f_factory(x_ref,
+                                            y_ref),
+    spline = stats::splinefun(x_ref,
+                              y_ref,
+                              method = "natural"),
+    monoH.FC = stats::splinefun(x_ref,
+                                y_ref,
+                                method = "monoH.FC") # Methods can be added here
+  )
+}
+
+linear_interpolation_f_factory = function(x_ref, y_ref) {
+  linear_spline_fun = stats::approxfun(x_ref,
+                                       y_ref,
+                                       method = "linear",
+                                       rule = 1)
+  linear_spline_deriv_fun = function(x) {
+    epsilon = 1e-6
+    (linear_spline_fun(x + epsilon) - linear_spline_fun(x)) / epsilon
+  }
+  function(x, deriv = 0) {
+    ifelse(
+      deriv == 0,
+      linear_spline_fun(x),
+      linear_spline_deriv_fun(x)
+    )
+  }
+}
+
 ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun, deriv = 0) {
   ref_fun = function(x, deriv = 0) {
     ifelse(test = (x < min(.x_ref)) | (x > max(.x_ref)),
@@ -169,23 +178,23 @@ deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "s
 }
 
 ref_fun_constructor = function(x_ref, y_ref, method) {
-  if (method == "linear") {
-    interpol_fun = stats::approxfun(x_ref,
-                                    y_ref,
-                                    method = "linear",
-                                    rule = 1)
-  }
-  else if (method == "spline") {
-    interpol_fun = stats::splinefun(x_ref,
-                                    y_ref,
-                                    method = "natural")
-  }
-  else if (method == "monoH.FC") {
-    interpol_fun = stats::splinefun(x_ref,
-                                    y_ref,
-                                    method = "monoH.FC")
-  }
-
+  # if (method == "linear") {
+  #   interpol_fun = stats::approxfun(x_ref,
+  #                                   y_ref,
+  #                                   method = "linear",
+  #                                   rule = 1)
+  # }
+  # else if (method == "spline") {
+  #   interpol_fun = stats::splinefun(x_ref,
+  #                                   y_ref,
+  #                                   method = "natural")
+  # }
+  # else if (method == "monoH.FC") {
+  #   interpol_fun = stats::splinefun(x_ref,
+  #                                   y_ref,
+  #                                   method = "monoH.FC")
+  # }
+  interpol_fun = interpol_fun_factory(x_ref, y_ref, method)
   extrapol_fun = extrapol_fun_factory(x_ref, y_ref)
   ref_fun = ref_fun_factory(x_ref, extrapol_fun, interpol_fun)
   return(ref_fun)
