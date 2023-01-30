@@ -36,19 +36,27 @@ DeltaMethod = function (time_points,
                           method = method,
                           time_points = time_points)
   # Jacobian matrix
-  partial <- t(
-    jacobian_tct(
-      t_m = gamma_est * time_points[-1],
-      t_j = time_points[-1],
-      x_ref = time_points,
-      y_ref = y_ref,
-      ref_fun = ref_fun,
-      method = method
+  # Condition handler is used here since derivatives may not exist in special
+  # situations such as when no unique time mapping is available.
+  tryCatch(expr = {
+    partial <- t(
+      jacobian_tct(
+        t_m = gamma_est * time_points[-1],
+        t_j = time_points[-1],
+        x_ref = time_points,
+        y_ref = y_ref,
+        ref_fun = ref_fun,
+        method = method
+      )
     )
-  )
-  # Apply delta method to obtain the variance-covariance matrix of the estimated
-  # acceleration factors.
-  variance <- t(partial) %*% vcov %*% partial
+    # Apply delta method to obtain the variance-covariance matrix of the estimated
+    # acceleration factors.
+    variance <- t(partial) %*% vcov %*% partial
+  },
+  error = function(e) {
+    warning("Jacobian matrix could not be computed.")
+    return(NA)
+  })
   return(list(
     estimate = gamma_est,
     variance = variance,
@@ -296,19 +304,20 @@ summary.TCT = function(x,
 
   # inference based on parametric bootstrap
   if (!(is.null(x$bootstrap_estimates))) {
-    vcov_bootstrap = var(x$bootstrap_estimates)
+    vcov_bootstrap = var(x$bootstrap_estimates, na.rm = TRUE)
     se_bootstrap = sqrt(diag(vcov_bootstrap))
     ci_bootstrap = t(apply(
       X = x$bootstrap_estimates,
       MARGIN = 2,
       FUN = quantile,
-      probs = c(alpha / 2, 1 - alpha / 2)
+      probs = c(alpha / 2, 1 - alpha / 2),
+      na.rm = TRUE
     ))
     p_bootstrap = apply(
       X = x$bootstrap_estimates,
       MARGIN = 2,
       FUN = function(x) {
-        prop = mean(x > 1)
+        prop = mean(x > 1, na.rm = TRUE)
         return(min(prop * 2, (1 - prop) * 2))
       }
     )
@@ -470,11 +479,17 @@ pm_bootstrap_vertical_to_common = function(time_points,
       vcov_gls = tct_results$vcov
       coef_gls = stats::coef(tct_results)
     }
-    vcov_gls[lower.tri(vcov_gls)] = t(vcov_gls)[lower.tri(vcov_gls)]
-    inv_vcov_gls = mnormt::pd.solve(vcov_gls)
-    est_bs = (t(vec_1) %*% inv_vcov_gls %*% matrix(coef_gls, ncol = 1) ) /
-      (t(vec_1) %*% inv_vcov_gls %*% vec_1)
-    estimates_bootstrap[i] = est_bs
+    # If vcov cannot be computed (eg, derivative is infinite) NA is returned.
+    if (is.na(vcov_gls)[[1]]) {
+      estimates_bootstrap[i] = NA
+    }
+    else {
+      vcov_gls[lower.tri(vcov_gls)] = t(vcov_gls)[lower.tri(vcov_gls)]
+      inv_vcov_gls = mnormt::pd.solve(vcov_gls)
+      est_bs = (t(vec_1) %*% inv_vcov_gls %*% matrix(coef_gls, ncol = 1) ) /
+        (t(vec_1) %*% inv_vcov_gls %*% vec_1)
+      estimates_bootstrap[i] = est_bs
+    }
     if (return_se) {
       se_bootstrap[i] = sqrt((t(vec_1) %*% inv_vcov_gls %*% vec_1)**(-1))
     }
