@@ -38,6 +38,7 @@ DeltaMethod = function (time_points,
   # Jacobian matrix
   # Condition handler is used here since derivatives may not exist in special
   # situations such as when no unique time mapping is available.
+  partial <- variance <- NA
   tryCatch(expr = {
     partial <- t(
       jacobian_tct(
@@ -482,6 +483,9 @@ pm_bootstrap_vertical_to_common = function(time_points,
     # If vcov cannot be computed (eg, derivative is infinite) NA is returned.
     if (is.na(vcov_gls)[[1]]) {
       estimates_bootstrap[i] = NA
+      if (return_se) {
+        se_bootstrap[i] = sqrt((t(vec_1) %*% inv_vcov_gls %*% vec_1)**(-1))
+      }
     }
     else {
       vcov_gls[lower.tri(vcov_gls)] = t(vcov_gls)[lower.tri(vcov_gls)]
@@ -489,9 +493,9 @@ pm_bootstrap_vertical_to_common = function(time_points,
       est_bs = (t(vec_1) %*% inv_vcov_gls %*% matrix(coef_gls, ncol = 1) ) /
         (t(vec_1) %*% inv_vcov_gls %*% vec_1)
       estimates_bootstrap[i] = est_bs
-    }
-    if (return_se) {
-      se_bootstrap[i] = sqrt((t(vec_1) %*% inv_vcov_gls %*% vec_1)**(-1))
+      if (return_se) {
+        se_bootstrap[i] = sqrt((t(vec_1) %*% inv_vcov_gls %*% vec_1)**(-1))
+      }
     }
   }
   return(list(estimates_bootstrap  = estimates_bootstrap,
