@@ -124,6 +124,24 @@ linear_interpolation_f_factory = function(x_ref, y_ref) {
   }
 }
 
+four_pl_f_factory = function(x_ref, y_ref) {
+  # fit 4PL model
+  # four_pl_fun = fit_4pl(x_ref, y_ref)
+
+  # compute derivative of 4PL model
+  # four_pl_deriv_fun =
+
+  # combine both into a single function
+}
+
+fit_4PL = function(x_ref, y_ref) {
+  # fit model and return parameters
+}
+
+predict_4PL = function(theta) {
+  # compute function value of 4PL function given the four parameters in theta
+}
+
 ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun, deriv = 0) {
   ref_fun = function(x, deriv = 0) {
     ifelse(test = (x < min(.x_ref)) | (x > max(.x_ref)),
