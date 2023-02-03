@@ -135,12 +135,35 @@ four_pl_f_factory = function(x_ref, y_ref) {
 }
 
 fit_4PL = function(x_ref, y_ref) {
-  # fit model and return parameters
+  # Fit the 4PL function by minimizing the squared loss.
+
+  # Data-based starting values
+  inits = c(min(y_ref), mean(x_ref), 1, max(y_ref))
+  optim_return = optim(
+    par = inits,
+    fn = function(par) {
+      sum((predict_4PL(x_ref, par) - y_ref) ** 2)
+    },
+    method = "BFGS"
+  )
+  # Return estimated 4PL model parameters
+  return(optim_return$par)
 }
 
-predict_4PL = function(theta) {
-  # compute function value of 4PL function given the four parameters in theta
+predict_4PL = function(x, theta) {
+  # The 4PL function is evaluated in x, given the four parameters in theta.
+  z = exp(x)
+  return(
+    theta[1] + (theta[4] - theta[1]) / (1 + (z / theta[2])**theta[3])
+  )
 }
+
+deriv_4PL = function(x, theta) {
+  # Return the derivative of the 4PL function parameterized by theta at the
+  # points in x.
+
+}
+
 
 ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun, deriv = 0) {
   ref_fun = function(x, deriv = 0) {
