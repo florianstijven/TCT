@@ -496,8 +496,9 @@ pm_bootstrap_vertical_to_common = function(time_points,
                   diag(x = 1, nrow = length(exp_estimates)))
     # Generalized Least Squares estimate of common vertical parameters. First,
     # do a precomputation to prevent doing computations twice.
+    vcov_gls[lower.tri(vcov_gls)] = t(vcov_gls)[lower.tri(vcov_gls)]
     A = t(X_gls) %*% mnormt::pd.solve(vcov_gls)
-    alpha_gls = mnormt::pd.solve( A %*% X_gls ) %*% A %*% matrix(c(ctrl_estimates[-1], exp_estimates), ncol = 1)
+    alpha_gls = solve( A %*% X_gls ) %*% A %*% matrix(c(ctrl_estimates[-1], exp_estimates), ncol = 1)
     # The first element in ctrl_estimates is always the estimated common vertical
     # parameter at time of randomization.
     alpha_gls = c(
