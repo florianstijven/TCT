@@ -114,6 +114,8 @@ g_Delta_bis = function(par,
 #'   estimates in the `c(ctrl_estimates, exp_estimates)` vector.
 #' @param interpolation Interpolation method; see [TCT()].
 #' @param B number of bootstrap replications.
+#' @param null (boolean): conduct the bootstrap under the null hypothesis of no
+#'   treatment effect?
 #'
 #' @return Matrix where each row corresponds to the bootstrap replicates of the
 #'   acceleration factors.
@@ -122,15 +124,42 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                exp_estimates,
                                                vcov,
                                                interpolation = "spline",
-                                               B = 100) {
+                                               B = 100,
+                                               null = FALSE) {
   if (B == 0)
     return(NULL)
 
-  par_sampled = mvtnorm::rmvnorm(
-    n = B,
-    mean = c(ctrl_estimates, exp_estimates),
-    sigma = vcov
-  )
+  if (null) {
+    # estimated covariance matrix of arm-specific vertical estimates
+    vcov_gls = vcov[-1, -1]
+    # "covariate" matrix for gls that maps the corresponding vertical estimates
+    # in both treatment arms to the same value.
+    X_gls = rbind(diag(x = 1, nrow = length(exp_estimates)),
+                       diag(x = 1, nrow = length(exp_estimates)))
+    # Generalized Least Squares estimate of common vertical parameters. First,
+    # do a precomputation to prevent doing computations twice.
+    A = t(X_gls) %*% solve(vcov_gls)
+    alpha_gls = ( A %*% X_gls ) %*% A %*% matrix(c(ctrl_estimates[-1], exp_estimates), ncol = 1)
+    # The first element in ctrl_estimates is always the estimated common vertical
+    # parameter at time of randomization.
+    alpha_gls = c(
+      ctrl_estimates[1],
+      alpha_gls
+    )
+    par_sampled = mvtnorm::rmvnorm(
+      n = B,
+      mean = alpha_gls,
+      sigma = vcov
+    )
+  }
+  else {
+    par_sampled = mvtnorm::rmvnorm(
+      n = B,
+      mean = c(ctrl_estimates, exp_estimates),
+      sigma = vcov
+    )
+  }
+
   estimates = matrix(0, nrow = B, ncol = 4)
   for (i in 1:B) {
     estimates[i, ] = g_Delta_bis(par = par_sampled[i, ],
@@ -447,7 +476,8 @@ pm_bootstrap_vertical_to_common = function(time_points,
                                            interpolation = "spline",
                                            B = 100,
                                            bs_fix_vcov = TRUE,
-                                           return_se = TRUE) {
+                                           return_se = TRUE,
+                                           null = FALSE) {
   if (B == 0)
     return(NULL)
 
@@ -456,11 +486,37 @@ pm_bootstrap_vertical_to_common = function(time_points,
   vec_1 = matrix(1, nrow = p, ncol = 1)
   estimates_bootstrap = 1:B
   se_bootstrap = rep(NA, B)
-  par_sampled = mvtnorm::rmvnorm(
-    n = B,
-    mean = c(ctrl_estimates, exp_estimates),
-    sigma = vcov
-  )
+  if (null) {
+    # estimated covariance matrix of arm-specific vertical estimates
+    vcov_gls = vcov[-1, -1]
+    # "covariate" matrix for gls that maps the corresponding vertical estimates
+    # in both treatment arms to the same value.
+    X_gls = rbind(diag(x = 1, nrow = length(exp_estimates)),
+                  diag(x = 1, nrow = length(exp_estimates)))
+    # Generalized Least Squares estimate of common vertical parameters. First,
+    # do a precomputation to prevent doing computations twice.
+    A = t(X_gls) %*% solve(vcov_gls)
+    alpha_gls = solve( A %*% X_gls ) %*% A %*% matrix(c(ctrl_estimates[-1], exp_estimates), ncol = 1)
+    # The first element in ctrl_estimates is always the estimated common vertical
+    # parameter at time of randomization.
+    alpha_gls = c(
+      ctrl_estimates[1],
+      alpha_gls,
+      alpha_gls
+    )
+    par_sampled = mvtnorm::rmvnorm(
+      n = B,
+      mean = alpha_gls,
+      sigma = vcov
+    )
+  }
+  else {
+    par_sampled = mvtnorm::rmvnorm(
+      n = B,
+      mean = c(ctrl_estimates, exp_estimates),
+      sigma = vcov
+    )
+  }
   for (i in seq_along(estimates_bootstrap)) {
     if (bs_fix_vcov) {
       vcov_gls = TCT_vcov
@@ -515,7 +571,8 @@ pm_bootstrap_vertical_to_common = function(time_points,
 TCT_common = function(TCT_Fit,
                       B = 0,
                       bs_fix_vcov = FALSE,
-                      select_coef = 1:length(coef(TCT_Fit))) {
+                      select_coef = 1:length(coef(TCT_Fit)),
+                      null_bs = FALSE) {
 
   estimates = coef(TCT_Fit)[select_coef]
   vcov = TCT_Fit$vcov[select_coef, select_coef]
@@ -541,6 +598,22 @@ TCT_common = function(TCT_Fit,
     return_se = TRUE
   )
 
+  bs_estimates_null = NULL
+  if (null_bs) {
+    bs_estimates_null = pm_bootstrap_vertical_to_common(
+      time_points = TCT_Fit$vertical_model$time_points,
+      ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
+      exp_estimates = TCT_Fit$vertical_model$exp_estimates[select_coef],
+      vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
+      TCT_vcov = vcov,
+      interpolation = TCT_Fit$interpolation,
+      B = B,
+      bs_fix_vcov = bs_fix_vcov,
+      return_se = TRUE,
+      null = TRUE
+    )
+  }
+
   # Test for common slowing parameter
   lht_matrix = matrix(0, nrow = length(estimates) - 1, ncol = length(estimates) - 1)
   diag(lht_matrix) = -1
@@ -559,6 +632,7 @@ TCT_common = function(TCT_Fit,
     coefficients = est_delta,
     vcov = vcov_delta,
     bootstrap_estimates = bs_estimates,
+    bootstrap_estimates_null = bs_estimates_null,
     interpolation = TCT_Fit$interpolation,
     lht_common = lht_common
   )
@@ -567,6 +641,7 @@ TCT_common = function(TCT_Fit,
 new_TCT_common = function(coefficients,
                           vcov,
                           bootstrap_estimates,
+                          bootstrap_estimates_null,
                           interpolation,
                           lht_common
                           ) {
@@ -575,6 +650,7 @@ new_TCT_common = function(coefficients,
       coefficients = coefficients,
       vcov = vcov,
       bootstrap_estimates = bootstrap_estimates,
+      bootstrap_estimates_null = bootstrap_estimates_null,
       interpolation = interpolation,
       lht_common = lht_common
     ),

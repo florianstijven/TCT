@@ -102,7 +102,9 @@ interpol_fun_factory = function(x_ref, y_ref, method) {
                               method = "natural"),
     monoH.FC = stats::splinefun(x_ref,
                                 y_ref,
-                                method = "monoH.FC") # Methods can be added here
+                                method = "monoH.FC"),
+    fourPL = four_pl_f_factory(x_ref,
+                               y_ref)# Methods can be added here
   )
 }
 
@@ -126,25 +128,38 @@ linear_interpolation_f_factory = function(x_ref, y_ref) {
 
 four_pl_f_factory = function(x_ref, y_ref) {
   # fit 4PL model
-  # four_pl_fun = fit_4pl(x_ref, y_ref)
-
+  theta = fit_4PL(x_ref, y_ref)
+  four_pl_fun = function(x) {
+    predict_4PL(x, theta)
+  }
   # compute derivative of 4PL model
-  # four_pl_deriv_fun =
-
+  four_pl_deriv_fun = function(x) {
+    deriv_4PL(x, theta)
+  }
   # combine both into a single function
+  function(x, deriv = 0) {
+    ifelse(
+      deriv == 0,
+      four_pl_fun(x),
+      four_pl_deriv_fun(x)
+    )
+  }
 }
 
 fit_4PL = function(x_ref, y_ref) {
   # Fit the 4PL function by minimizing the squared loss.
 
   # Data-based starting values
-  inits = c(min(y_ref), mean(x_ref), 1, max(y_ref))
+  p = length(y_ref)
+  a = (y_ref[p] - y_ref[1]) / (x_ref[p] - x_ref[1])
+  inits = c(min(y_ref), mean(x_ref), (4 * a) / (y_ref[1] - y_ref[p]), max(y_ref))
   optim_return = optim(
     par = inits,
     fn = function(par) {
       sum((predict_4PL(x_ref, par) - y_ref) ** 2)
     },
-    method = "BFGS"
+    method = "BFGS",
+    control = list(reltol = 1e-5)
   )
   # Return estimated 4PL model parameters
   return(optim_return$par)
@@ -161,7 +176,12 @@ predict_4PL = function(x, theta) {
 deriv_4PL = function(x, theta) {
   # Return the derivative of the 4PL function parameterized by theta at the
   # points in x.
-
+  z = exp(x)
+  # Save intermediate computation in derivative formula.
+  a = (z / theta[2])**theta[3]
+  return(
+    ((theta[1] - theta[4]) / (1 + a)**2) * theta[3] * a
+  )
 }
 
 
