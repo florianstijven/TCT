@@ -101,11 +101,17 @@ test_that("TCT_common() function works with monoH.FC spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE)
+  TCT_common_fit = TCT_common(
+    TCT_Fit = TCT_Fit,
+    B = 1e1,
+    bs_fix_vcov = FALSE,
+    null_bs = TRUE
+  )
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
-                      TCT_common_fit$vcov)
-  check_vctr = c(0.812935193, 0.824029215, 0.840300615, 0.003978323)
+                      TCT_common_fit$vcov,
+                      TCT_common_fit$bootstrap_estimates_null$estimates_bootstrap[1:2])
+  check_vctr = c(0.812935193, 0.824029215, 0.840300615, 0.003978323, 0.775201628, 1.213386432)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-5)
 })
@@ -222,4 +228,5 @@ test_that("TCT_common() function works with fourPL interpolation", {
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-5)
 })
+
 
