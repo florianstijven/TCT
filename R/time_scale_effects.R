@@ -134,8 +134,9 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
     vcov_gls = vcov[-1, -1]
     # "covariate" matrix for gls that maps the corresponding vertical estimates
     # in both treatment arms to the same value.
-    X_gls = rbind(diag(x = 1, nrow = length(exp_estimates)),
-                       diag(x = 1, nrow = length(exp_estimates)))
+    X_gls = rbind(matrix(),
+                  diag(x = 1, nrow = length(exp_estimates)),
+                  diag(x = 1, nrow = length(exp_estimates)))
     # Generalized Least Squares estimate of common vertical parameters. First,
     # do a precomputation to prevent doing computations twice.
     vcov_gls[lower.tri(vcov_gls)] = t(vcov_gls)[lower.tri(vcov_gls)]
@@ -145,6 +146,7 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
     # parameter at time of randomization.
     alpha_gls = c(
       ctrl_estimates[1],
+      alpha_gls,
       alpha_gls
     )
     par_sampled = mvtnorm::rmvnorm(
