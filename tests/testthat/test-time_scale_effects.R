@@ -195,8 +195,8 @@ test_that("TCT() function works with fourPL interpolation", {
   TCT_output_vctr = c(TCT_Fit$coefficients,
                       TCT_Fit$bootstrap_estimates[1:2],
                       TCT_Fit$vcov[1, 2])
-  check_vctr = c(0.4888728, 0.8896605, 0.8004555, 0.7428343,
-                 0.4196660, 0.9506724, 0.1495742)
+  check_vctr = c(0.4888728, 0.8896603, 0.8004555, 0.7428344,
+                 0.4196664, 0.9506719, 0.1495659)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-3)
 })
@@ -224,7 +224,7 @@ test_that("TCT_common() function works with fourPL interpolation", {
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
-  check_vctr = c(0.77765995, 0.78485808, 1.01569197, 0.08541957)
+  check_vctr = c(0.77765914, 0.78482953, 1.01569215, 0.08541886)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-5)
 })

@@ -88,6 +88,7 @@ g_Delta_bis = function(par,
   n_points = length(time_points)
   y_ref = par[1:n_points]
   y_obs = par[(n_points + 1):length(par)]
+
   t_mapped = sapply(
     X = y_obs,
     FUN = get_new_time,
@@ -95,6 +96,8 @@ g_Delta_bis = function(par,
     x_ref = time_points,
     method = method
   )
+
+
   return(t_mapped/time_points[(n_points - length(y_obs) + 1):length(time_points)])
 }
 
@@ -480,12 +483,14 @@ pm_bootstrap_vertical_to_common = function(time_points,
                                            B = 100,
                                            bs_fix_vcov = TRUE,
                                            return_se = TRUE,
-                                           null = FALSE) {
+                                           null = FALSE,
+                                           gls_est = TRUE,
+                                           select_coef) {
   if (B == 0)
     return(NULL)
 
   n_points = length(time_points)
-  p = length(exp_estimates)
+  p = length(exp_estimates[select_coef])
   vec_1 = matrix(1, nrow = p, ncol = 1)
   estimates_bootstrap = 1:B
   se_bootstrap = rep(NA, B)
@@ -537,7 +542,12 @@ pm_bootstrap_vertical_to_common = function(time_points,
         interpolation = interpolation,
         B = 0
       )
-      vcov_gls = tct_results$vcov
+      if (gls_est) {
+        vcov_gls = tct_results$vcov
+      }
+      else {
+        vcov_gls = diag(diag(tct_results$vcov))
+      }
       coef_gls = stats::coef(tct_results)
     }
     # If vcov cannot be computed (eg, derivative is infinite) NA is returned.
@@ -576,10 +586,17 @@ TCT_common = function(TCT_Fit,
                       B = 0,
                       bs_fix_vcov = FALSE,
                       select_coef = 1:length(coef(TCT_Fit)),
-                      null_bs = FALSE) {
+                      null_bs = FALSE,
+                      gls_est = TRUE) {
 
   estimates = coef(TCT_Fit)[select_coef]
-  vcov = TCT_Fit$vcov[select_coef, select_coef]
+  if (gls_est) {
+    vcov = TCT_Fit$vcov[select_coef, select_coef]
+  }
+  else {
+    vcov = diag(diag(TCT_Fit$vcov[select_coef, select_coef]))
+  }
+
   n_points = length(TCT_Fit$vertical_model$time_points)
 
   # delta method
@@ -593,13 +610,16 @@ TCT_common = function(TCT_Fit,
   bs_estimates = pm_bootstrap_vertical_to_common(
     time_points = TCT_Fit$vertical_model$time_points,
     ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-    exp_estimates = TCT_Fit$vertical_model$exp_estimates[select_coef],
-    vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
+    exp_estimates = TCT_Fit$vertical_model$exp_estimates,
+    vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + 1:length(coef(TCT_Fit))),
+                                       c(1:n_points, n_points + 1:length(coef(TCT_Fit)))],
     TCT_vcov = vcov,
     interpolation = TCT_Fit$interpolation,
     B = B,
     bs_fix_vcov = bs_fix_vcov,
-    return_se = TRUE
+    return_se = TRUE,
+    gls_est = gls_est,
+    select_coef = select_coef
   )
 
   bs_estimates_null = NULL

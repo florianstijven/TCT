@@ -30,6 +30,18 @@
 #' @return A vector of the time-mapped values.
 #'
 get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
+  # For fourPL, analytic solution exists.
+  if (method == "fourPL") {
+    theta = fit_4PL(x_ref, y_ref)
+    inv_extraplation = inv_linear(x_ref, y_ref)
+    x_mapped = ifelse(
+      test = (y_obs < y_ref[1]) | (y_obs > y_ref[length(y_ref)]),
+      yes = inv_extraplation(y_obs),
+      no = inv_4PL(y_obs, theta)
+    )
+    return(x_mapped)
+  }
+
   # amount of extrapolation
   extrapol = 1e5
   # Only the first first value in y_obs is used. This enables us to use
@@ -159,10 +171,29 @@ fit_4PL = function(x_ref, y_ref) {
       sum((predict_4PL(x_ref, par) - y_ref) ** 2)
     },
     method = "BFGS",
-    control = list(reltol = 1e-5)
+    control = list(reltol = 1e-5),
+    gr = function(par) {
+      grad_4PL(x_ref, y_ref, par)
+    }
   )
   # Return estimated 4PL model parameters
   return(optim_return$par)
+}
+
+
+grad_4PL = function(x_ref, y_ref, theta) {
+  # save 2 * (f(x_i|theta) - y_i)
+  A = 2 * (predict_4PL(x_ref, theta) - y_ref)
+  # save {1 - (exp(x_i)/theta_2)^theta_3}^-1
+  B = (1 + (exp(x_ref) / theta[2])**theta[3])**(-1)
+
+  grad1 = A %*% (1 - B)
+  grad2 = sum(A *(theta[4] - theta[1]) * (B**2) * exp(x_ref * theta[3]) * theta[3] *
+    theta[2]**(-theta[3] - 1))
+  grad3 = sum(A * (theta[1] - theta[4]) * (B**2) * (exp(x_ref) / theta[2])**theta[3] *
+                (x_ref - log(theta[2])))
+  grad4 = sum(A * B)
+  return(c(grad1, grad2, grad3, grad4))
 }
 
 predict_4PL = function(x, theta) {
@@ -170,6 +201,29 @@ predict_4PL = function(x, theta) {
   z = exp(x)
   return(
     theta[1] + (theta[4] - theta[1]) / (1 + (z / theta[2])**theta[3])
+  )
+}
+
+inv_4PL = function(y, theta) {
+  (1 / theta[3]) * log(((theta[4] - theta[1]) / (y - theta[1])) - 1) + log(theta[2])
+}
+
+inv_linear = function(x_ref, y_ref) {
+  # standard function does not do extrapolation, this extrapolation is
+  # implemented here. In addition, we compute the inverse function here.
+  p = length(y_ref)
+  y2 = y_ref[p]
+  y1 = y_ref[1]
+  x2 = x_ref[p]
+  x1 = x_ref[1]
+  # slope
+  a = (y2 - y1) / (x2 - x1)
+  # intercept
+  b = y2 - a * x2
+  return(
+    function(y) {
+      (y - b) / a
+    }
   )
 }
 

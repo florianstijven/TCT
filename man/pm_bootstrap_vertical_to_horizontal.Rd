@@ -10,7 +10,8 @@ pm_bootstrap_vertical_to_horizontal(
   exp_estimates,
   vcov,
   interpolation = "spline",
-  B = 100
+  B = 100,
+  null = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ estimates in the \code{c(ctrl_estimates, exp_estimates)} vector.}
 \item{interpolation}{Interpolation method; see \code{\link[=TCT]{TCT()}}.}
 
 \item{B}{number of bootstrap replications.}
+
+\item{null}{(boolean): conduct the bootstrap under the null hypothesis of no
+treatment effect?}
 }
 \value{
 Matrix where each row corresponds to the bootstrap replicates of the

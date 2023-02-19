@@ -13,7 +13,8 @@ pm_bootstrap_vertical_to_common(
   interpolation = "spline",
   B = 100,
   bs_fix_vcov = TRUE,
-  return_se = TRUE
+  return_se = TRUE,
+  null = FALSE
 )
 }
 \arguments{
