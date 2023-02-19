@@ -528,10 +528,10 @@ pm_bootstrap_vertical_to_common = function(time_points,
   }
   for (i in seq_along(estimates_bootstrap)) {
     if (bs_fix_vcov) {
-      vcov_gls = TCT_vcov
+      vcov_gls = TCT_vcov[select_coef, select_coef]
       coef_gls = g_Delta_bis(par = par_sampled[i, ],
                              time_points = time_points,
-                             method = interpolation)
+                             method = interpolation)[select_coef]
     }
     else {
       tct_results = TCT(
@@ -542,13 +542,15 @@ pm_bootstrap_vertical_to_common = function(time_points,
         interpolation = interpolation,
         B = 0
       )
-      if (gls_est) {
-        vcov_gls = tct_results$vcov
+      if (!is.na(tct_results$vcov[[1]])) {
+        if (gls_est) {
+          vcov_gls = tct_results$vcov[select_coef, select_coef]
+        }
+        else {
+          vcov_gls = diag(diag(tct_results$vcov))[select_coef, select_coef]
+        }
       }
-      else {
-        vcov_gls = diag(diag(tct_results$vcov))
-      }
-      coef_gls = stats::coef(tct_results)
+      coef_gls = stats::coef(tct_results)[select_coef]
     }
     # If vcov cannot be computed (eg, derivative is infinite) NA is returned.
     if (is.na(vcov_gls)[[1]]) {
