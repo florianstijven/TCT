@@ -49,7 +49,7 @@ Let \eqn{y^{\ast}} denote the observed (mean) outcome. The time-mapping is
 then defined as \eqn{t^{\ast} = f^{-1}_{0}(y^{\ast})}. This is equivalent to
 solving \eqn{f_{0}(t^{\ast}) = y^{\ast}} for \eqn{t^{\ast}}. The latter
 approach is implemented numerically with \code{\link[stats:uniroot]{stats::uniroot()}} for all
-\code{methods}s, expect for \code{"fourPL"}. For the latter method,
-\eqn{f^{-1}_{0}(\cdot)} can be obtained analytically.
+\code{method}s, expect for \code{"fourPL"}. For the latter method,
+\eqn{f^{-1}_{0}(\cdot)} is obtained analytically.
 }
 

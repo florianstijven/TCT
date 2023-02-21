@@ -94,14 +94,25 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   return(x_mapped)
 }
 
-extrapol_fun_factory = function(.x_ref, .y_ref) {
+#' Function factory for the extrapolating part of the reference profile
+#'
+#' This functions returns a function that extrapolates beyond the range of the
+#' observed time points in `.x_ref`. This function is the linear function
+#' through the first and last point of the reference profile. This ensures some
+#' stability in the extrapolation which is not present when some interpolation
+#' methods are used for extrapolation.
+#'
+#' @inheritParams get_new_time
+#'
+#' @return A (linear) R function.
+extrapol_fun_factory = function(x_ref, y_ref) {
   # standard function does not do extrapolation, this extrapolation is
   # implemented here.
-  p = length(.y_ref)
-  y2 = .y_ref[p]
-  y1 = .y_ref[1]
-  x2 = .x_ref[p]
-  x1 = .x_ref[1]
+  p = length(y_ref)
+  y2 = y_ref[p]
+  y1 = y_ref[1]
+  x2 = x_ref[p]
+  x1 = x_ref[1]
   # slope
   a = (y2 - y1) / (x2 - x1)
   # intercept
@@ -113,6 +124,16 @@ extrapol_fun_factory = function(.x_ref, .y_ref) {
   )
 }
 
+#' Function factory for the interpolating part of the reference profile
+#'
+#' This function returns a function that interpolates within the range of the
+#' observed time points in `x_ref`. This is done using the interpolation method
+#' in the `method` argument.
+#'
+#'
+#' @return An interpolating R function.
+#'
+#' @inheritParams get_new_time
 interpol_fun_factory = function(x_ref, y_ref, method) {
   switch(
     method,
@@ -129,6 +150,11 @@ interpol_fun_factory = function(x_ref, y_ref, method) {
   )
 }
 
+#' Function factory for linear interpolation function
+#'
+#' @inheritParams get_new_time
+#'
+#' @return A linear interpolation R function.
 linear_interpolation_f_factory = function(x_ref, y_ref) {
   linear_spline_fun = stats::approxfun(x_ref,
                                        y_ref,
@@ -147,6 +173,11 @@ linear_interpolation_f_factory = function(x_ref, y_ref) {
   }
 }
 
+#' Function factory for 4 PL function
+#'
+#' @inheritParams get_new_time
+#'
+#' @return A 4 PL function.
 four_pl_f_factory = function(x_ref, y_ref) {
   # fit 4PL model
   theta = fit_4PL(x_ref, y_ref)
@@ -167,6 +198,16 @@ four_pl_f_factory = function(x_ref, y_ref) {
   }
 }
 
+#' Fit 4 PL function to observed reference profile.
+#'
+#' The [fit_4PL()] function fits the four parameter logistic function to the
+#' data points in `x_ref` and `y_ref`. This is done by minimizing the sum of
+#' deviations between the 4PL function and the values in `y_ref`.
+#'
+#' @inheritParams get_new_time
+#'
+#' @return A vector containing the four estimates for the 4PL function
+#'   parameters.
 fit_4PL = function(x_ref, y_ref) {
   # Fit the 4PL function by minimizing the squared loss.
 
