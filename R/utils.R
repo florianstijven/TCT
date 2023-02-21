@@ -5,17 +5,20 @@
 #' time-outcome pairs in the reference group. These pairs are usually the
 #' estimated mean outcomes at fixed time-points in the control group.
 #'
-#' @details Let \eqn{f_{0}(t)} denote the reference profile. This profiles is
-#'   estimated as the interpolation curve between the points specified in
-#'   `x_ref` and `y_ref`. The interpolating curve is constructed with natural
-#'   cubic splines or a piecewise linear function.
+#' @details
+#' # Reference Profile
+#'  Let \eqn{f_{0}(t)} denote the reference profile. This
+#' profile is estimated as the interpolating curve between the points specified
+#' in `x_ref` and `y_ref`. The interpolation method is specified in the `method`
+#' argument.
 #'
-#'   Let \eqn{y^{\ast}} denote the observed (mean) outcome. The time-mapping is
-#'   then defined as \eqn{t^{\ast} = f^{-1}_{0}(y^{\ast})}. This is equivalent
-#'   to solving \eqn{f_{0}(t^{\ast}) = y^{\ast}} for \eqn{t^{\ast}}. The latter
-#'   approach is implemented numerically with [stats::uniroot()]. Although
-#'   \eqn{f^{-1}_{0}(\cdot)} can be obtained analytically in some cases, the
-#'   numerical method is fully general.
+#' # Time Mapping
+#'  Let \eqn{y^{\ast}} denote the observed (mean) outcome. The time-mapping is
+#'  then defined as \eqn{t^{\ast} = f^{-1}_{0}(y^{\ast})}. This is equivalent to
+#'  solving \eqn{f_{0}(t^{\ast}) = y^{\ast}} for \eqn{t^{\ast}}. The latter
+#'  approach is implemented numerically with [stats::uniroot()] for all
+#'  `method`s, expect for `"fourPL"`. For the latter method,
+#'  \eqn{f^{-1}_{0}(\cdot)} is obtained analytically.
 #'
 #' @param y_ref Vector of reference (mean) outcome values.
 #' @param x_ref Vector of reference time values.
@@ -26,6 +29,12 @@
 #' * `"spline"`: natural cubic spline interpolation
 #' * `"monoH.FC`: monotone Hermite spline according to the method of Fritsch and
 #'      Carlson.
+#' * `"fourPL`: four parameter logistic regression. This can only be used when
+#'      the reference profile contains four or more means, i.e.,
+#'      `length(y_ref) >= 4`. When there are more than four means, this is
+#'      strictly speaking no longer interpolation. The corresponding parameters
+#'      are found by minimizing the sum of squared deviations from the four PL
+#'      curve.
 #'
 #' @return A vector of the time-mapped values.
 #'

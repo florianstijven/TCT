@@ -14,7 +14,9 @@ pm_bootstrap_vertical_to_common(
   B = 100,
   bs_fix_vcov = TRUE,
   return_se = TRUE,
-  null = FALSE
+  null = FALSE,
+  gls_est = TRUE,
+  select_coef
 )
 }
 \arguments{
