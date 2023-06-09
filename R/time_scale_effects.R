@@ -57,7 +57,7 @@ DeltaMethod = function (time_points,
 {
   # Vector of estimated acceleration factors
   gamma_est = g_Delta_bis(par = c(ctrl_estimates, exp_estimates),
-                          method = interpolation,
+                          interpolation = interpolation,
                           time_points = time_points)
   # Jacobian matrix
   # Condition handler is used here since derivatives may not exist in special
@@ -100,29 +100,40 @@ DeltaMethod = function (time_points,
 #'   The `length(time_points)` first elements correspond to the reference group.
 #'   The `length(time_points) - 1` remaining elements correspond to the active
 #'   treatment group.
-#' @param method Interpolation method; see [TCT()].
 #' @param time_points Time points to which the first `length(time_points)`
 #'   elements in `par` correspond.
+#' @inheritParams TCT
 #'
-#' @return A vector of length `length(time_points) - 1` containing the estimated
-#'   acceleration factors for the estimates in the active treatment group.
+#' @details
+#' We can write the slowing factor at \eqn{t_j} as a function of the the mean
+#' parameters,
+#' \deqn{
+#' \boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
+#' }
+#' The [g_Delta_bis()] function computes \eqn{\boldsymbol{\gamma}} where `par`
+#' corresponds to \eqn{(\boldsymbol{\alpha}, \boldsymbol{\beta})'} and
+#' `time_points` corresponds to \eqn{\boldsymbol{t}}.
+#'
+#'
+#'
+#' @return A (numeric) vector of length `length(time_points) - 1` that
+#' corresponds to \eqn{\boldsymbol{\gamma}}.
 g_Delta_bis = function(par,
-                       method,
+                       interpolation,
                        time_points) {
   n_points = length(time_points)
-  y_ref = par[1:n_points]
-  y_obs = par[(n_points + 1):length(par)]
+  ctrl_estimates = par[1:n_points]
+  exp_estimates = par[(n_points + 1):length(par)]
 
   t_mapped = sapply(
-    X = y_obs,
+    X = exp_estimates,
     FUN = get_new_time,
-    y_ref = y_ref,
+    y_ref = ctrl_estimates,
     x_ref = time_points,
-    method = method
+    method = interpolation
   )
 
-
-  return(t_mapped/time_points[(n_points - length(y_obs) + 1):length(time_points)])
+  return(t_mapped/time_points[(n_points - length(exp_estimates) + 1):length(time_points)])
 }
 
 #' Parametric Bootstrap for Time-Specific Acceleration Factors
@@ -210,7 +221,7 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
   estimates = matrix(0, nrow = B, ncol = 4)
   for (i in 1:B) {
     estimates[i, ] = g_Delta_bis(par = par_sampled[i, ],
-                                 method = interpolation,
+                                 interpolation = interpolation,
                                  time_points = time_points)
   }
   return(estimates)
@@ -651,7 +662,7 @@ pm_bootstrap_vertical_to_common = function(time_points,
       vcov_gls = TCT_vcov[select_coef, select_coef]
       coef_gls = g_Delta_bis(par = par_sampled[i, ],
                              time_points = time_points,
-                             method = interpolation)[select_coef]
+                             interpolation = interpolation)[select_coef]
     }
     else {
       tct_results = TCT(

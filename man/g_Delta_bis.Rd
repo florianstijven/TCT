@@ -4,7 +4,7 @@
 \alias{g_Delta_bis}
 \title{Compute acceleration factor}
 \usage{
-g_Delta_bis(par, method, time_points)
+g_Delta_bis(par, interpolation, time_points)
 }
 \arguments{
 \item{par}{Vector with estimated points of the trajectories at \code{time_points}.
@@ -13,16 +13,32 @@ The \code{length(time_points)} first elements correspond to the reference group.
 The \code{length(time_points) - 1} remaining elements correspond to the active
 treatment group.}
 
-\item{method}{Interpolation method; see \code{\link[=TCT]{TCT()}}.}
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation
+\item \code{"spline"}: natural cubic spline interpolation
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson
+}}
 
 \item{time_points}{Time points to which the first \code{length(time_points)}
 elements in \code{par} correspond.}
 }
 \value{
-A vector of length \code{length(time_points) - 1} containing the estimated
-acceleration factors for the estimates in the active treatment group.
+A (numeric) vector of length \code{length(time_points) - 1} that
+corresponds to \eqn{\boldsymbol{\gamma}}.
 }
 \description{
 The \code{\link[=g_Delta_bis]{g_Delta_bis()}} function computes the time-specific acceleration factor
 from the estimated trajectories in both treatment groups.
+}
+\details{
+We can write the slowing factor at \eqn{t_j} as a function of the the mean
+parameters,
+\deqn{
+\boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
+}
+The \code{\link[=g_Delta_bis]{g_Delta_bis()}} function computes \eqn{\boldsymbol{\gamma}} where \code{par}
+corresponds to \eqn{(\boldsymbol{\alpha}, \boldsymbol{\beta})'} and
+\code{time_points} corresponds to \eqn{\boldsymbol{t}}.
 }
