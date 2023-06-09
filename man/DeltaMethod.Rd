@@ -4,38 +4,84 @@
 \alias{DeltaMethod}
 \title{Delta method}
 \usage{
-DeltaMethod(time_points, y_ref, y_obs, ref_fun, method, vcov)
+DeltaMethod(
+  time_points,
+  ctrl_estimates,
+  exp_estimates,
+  ref_fun,
+  interpolation,
+  vcov
+)
 }
 \arguments{
-\item{time_points}{Time points to which the estimates in \code{y_ref} correspond.}
+\item{time_points}{Ordered vector that contains the times corresponding to
+the estimated means in the \code{ctrl_estimates} vector.}
 
-\item{y_ref}{Vector with estimated values for reference trajectory at
-\code{time_points}. This vector should thus have the same length as
-\code{time_points}.}
+\item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
+occasions.}
 
-\item{y_obs}{Vector with estimated values for the active treatment group at
-\code{time_points}. This vector should thus have length \code{length(time_points) - 1} since the baseline values are assumed to be equal in both treatment
-groups.}
+\item{exp_estimates}{Estimated mean outcomes in the experimental group at
+fixed occasions.}
 
 \item{ref_fun}{Intra- and extrapolation function that is returned by
 \code{ref_fun_constructor()}.}
 
-\item{method}{Interpolation method; see \code{\link[=TCT]{TCT()}}.}
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation
+\item \code{"spline"}: natural cubic spline interpolation
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson
+}}
 
-\item{vcov}{The (estimated) variance-covariance matrix of the parameter
-estimates in the \code{c(y_ref, y_obs)} vector.}
+\item{vcov}{The variance-covariance matrix for the means. In order to map to
+the correct estimates, this matrix should be the variance-covariance matrix
+of \code{c(ctrl_means, exp_means)}.}
 }
 \value{
 A list with three element:
 \itemize{
-\item \code{estimate}: the transformed parameter estimates
+\item \code{estimate}: the transformed parameter estimates, \eqn{\hat{\boldsymbol{\gamma}}}.
 \item \code{variance}: the (estimated) variance-covariance matrix for the transformed parameter
-estimates
-\item \code{partial}: the Jacobian matrix
+estimates, \eqn{\Sigma_{\boldsymbol{\gamma}}}.
+\item \code{partial}: the Jacobian matrix, \eqn{J(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})}.
 }
 }
 \description{
-The DeltaMethod() function applies the delta-method in the context of the
+The \code{\link[=DeltaMethod]{DeltaMethod()}} function applies the delta-method in the context of the
 time-component tests. This function is based on a combination of analytical
 (where possible) and numerical derivatives.
+}
+\details{
+We can write the slowing factor at \eqn{t_j} as a function of the the mean
+parameters,
+\deqn{
+\boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
+}
+Further assume that \eqn{\hat{\boldsymbol{\alpha}}} and \eqn{\hat{\boldsymbol{\beta}}}
+are normally distributed,
+\deqn{
+(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \sim N\left( (\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})', D \right)
+}
+where \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'} is the true
+parameter vector. We can apply the delta method to obtain that \eqn{\hat{\boldsymbol{\gamma}}}
+is approximately distributed as
+\deqn{
+\hat{\boldsymbol{\gamma}} \sim N\left( \boldsymbol{\gamma_0},  J(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}) \cdot D \cdot J(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})^t \right)
+}
+where \eqn{J(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})} is the Jacobian
+matrix of \eqn{\boldsymbol{\gamma}( \boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta})}
+evaluated in \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}.
+
+To obtain the approximate sampling distribution of \eqn{\hat{\boldsymbol{\gamma}}}
+in practice, we replace the true parameters by the estimated counterparts,
+\deqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \text{ and } \hat{D}.}
+We thus obtain the following quantities,
+\deqn{
+\hat{\boldsymbol{\gamma}} = \boldsymbol{\gamma}(\boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})
+}
+and
+\deqn{
+\Sigma_{\boldsymbol{\gamma}} = J(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) \cdot \hat{D} \cdot J(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t.
+}
 }

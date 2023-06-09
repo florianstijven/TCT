@@ -1,31 +1,63 @@
 #' Delta method
 #'
-#' The DeltaMethod() function applies the delta-method in the context of the
+#' The [DeltaMethod()] function applies the delta-method in the context of the
 #' time-component tests. This function is based on a combination of analytical
 #' (where possible) and numerical derivatives.
 #'
 #' @param ref_fun Intra- and extrapolation function that is returned by
 #'   `ref_fun_constructor()`.
-#' @param method Interpolation method; see [TCT()].
-#' @param vcov The (estimated) variance-covariance matrix of the parameter
-#'   estimates in the `c(y_ref, y_obs)` vector.
+#' @inheritParams TCT
+#'
+#' @details
+#'
+#' We can write the slowing factor at \eqn{t_j} as a function of the the mean
+#' parameters,
+#' \deqn{
+#' \boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
+#' }
+#' Further assume that \eqn{\hat{\boldsymbol{\alpha}}} and \eqn{\hat{\boldsymbol{\beta}}}
+#'are normally distributed,
+#'\deqn{
+#' (\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \sim N\left( (\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})', D \right)
+#' }
+#' where \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'} is the true
+#' parameter vector. We can apply the delta method to obtain that \eqn{\hat{\boldsymbol{\gamma}}}
+#' is approximately distributed as
+#' \deqn{
+#' \hat{\boldsymbol{\gamma}} \sim N\left( \boldsymbol{\gamma_0},  J(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}) \cdot D \cdot J(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})^t \right)
+#' }
+#' where \eqn{J(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})} is the Jacobian
+#' matrix of \eqn{\boldsymbol{\gamma}( \boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta})}
+#' evaluated in \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}.
+#'
+#' To obtain the approximate sampling distribution of \eqn{\hat{\boldsymbol{\gamma}}}
+#' in practice, we replace the true parameters by the estimated counterparts,
+#' \deqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \text{ and } \hat{D}.}
+#' We thus obtain the following quantities,
+#' \deqn{
+#' \hat{\boldsymbol{\gamma}} = \boldsymbol{\gamma}(\boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})
+#' }
+#' and
+#' \deqn{
+#' \Sigma_{\boldsymbol{\gamma}} = J(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) \cdot \hat{D} \cdot J(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t.
+#' }
 #'
 #' @return A list with three element:
-#'  * `estimate`: the transformed parameter estimates
+#'  * `estimate`: the transformed parameter estimates, \eqn{\hat{\boldsymbol{\gamma}}}.
 #'  * `variance`: the (estimated) variance-covariance matrix for the transformed parameter
-#'   estimates
-#'  * `partial`: the Jacobian matrix
+#'   estimates, \eqn{\Sigma_{\boldsymbol{\gamma}}}.
+#'  * `partial`: the Jacobian matrix, \eqn{J(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})}.
 #'
 DeltaMethod = function (time_points,
                         ctrl_estimates,
                         exp_estimates,
                         ref_fun,
-                        method,
+                        interpolation,
                         vcov)
 {
   # Vector of estimated acceleration factors
   gamma_est = g_Delta_bis(par = c(ctrl_estimates, exp_estimates),
-                          method = method,
+                          method = interpolation,
                           time_points = time_points)
   # Jacobian matrix
   # Condition handler is used here since derivatives may not exist in special
@@ -39,7 +71,7 @@ DeltaMethod = function (time_points,
         x_ref = time_points,
         y_ref = ctrl_estimates,
         ref_fun = ref_fun,
-        method = method
+        method = interpolation
       )
     )
     # Apply delta method to obtain the variance-covariance matrix of the estimated
@@ -308,7 +340,7 @@ TCT = function(time_points,
     ctrl_estimates = ctrl_estimates,
     exp_estimates = exp_estimates,
     ref_fun = ref_fun,
-    method = interpolation,
+    interpolation = interpolation,
     vcov = vcov
   )
 

@@ -31,12 +31,21 @@ in both treatment groups.}
 \item{vcov}{The (estimated) variance-covariance matrix of the parameter
 estimates in the \code{c(ctrl_estimates, exp_estimates)} vector.}
 
-\item{interpolation}{Interpolation method; see \code{\link[=TCT]{TCT()}}.}
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation
+\item \code{"spline"}: natural cubic spline interpolation
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson
+}}
 
 \item{B}{number of bootstrap replications.}
 
 \item{null}{(boolean): conduct the bootstrap under the null hypothesis of no
 treatment effect?}
+
+\item{constraints}{Use the constrained generalized least squares estimator
+for the vertical treatment effects.}
 }
 \value{
 Matrix where each row corresponds to the bootstrap replicates of the
