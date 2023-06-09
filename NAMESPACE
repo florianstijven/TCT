@@ -3,6 +3,7 @@
 S3method(print,TCT_common)
 S3method(print,summary.TCT)
 S3method(print,summary.TCT_common)
+S3method(summary,TCT)
 S3method(summary,TCT_common)
 export(TCT)
 export(TCT_common)

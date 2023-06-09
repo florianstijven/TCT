@@ -358,6 +358,16 @@ print.TCT = function(x, ...) {
 }
 
 
+#' Title
+#'
+#' @param x
+#' @param alpha
+#' @param delta_transformation
+#'
+#' @return
+#' @export
+#'
+#' @examples
 summary.TCT = function(x,
                        alpha = 0.05,
                        delta_transformation = "identity") {
