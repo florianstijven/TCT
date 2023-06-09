@@ -2,7 +2,7 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{TCT_common}
 \alias{TCT_common}
-\title{Title}
+\title{Estimate Common Acceleration Factor}
 \usage{
 TCT_common(
   TCT_Fit,
@@ -18,5 +18,5 @@ TCT_common(
 \item{bs_fix_vcov}{}
 }
 \description{
-Title
+The \code{\link[=TCT_common]{TCT_common()}} function estimates the common acceleration factor.
 }
