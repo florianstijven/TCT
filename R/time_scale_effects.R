@@ -4,14 +4,6 @@
 #' time-component tests. This function is based on a combination of analytical
 #' (where possible) and numerical derivatives.
 #'
-#' @param time_points Time points to which the estimates in `y_ref` correspond.
-#' @param y_ref Vector with estimated values for reference trajectory at
-#'   `time_points`. This vector should thus have the same length as
-#'   `time_points`.
-#' @param y_obs Vector with estimated values for the active treatment group at
-#'   `time_points`. This vector should thus have length `length(time_points) -
-#'   1` since the baseline values are assumed to be equal in both treatment
-#'   groups.
 #' @param ref_fun Intra- and extrapolation function that is returned by
 #'   `ref_fun_constructor()`.
 #' @param method Interpolation method; see [TCT()].
@@ -25,14 +17,14 @@
 #'  * `partial`: the Jacobian matrix
 #'
 DeltaMethod = function (time_points,
-                        y_ref,
-                        y_obs,
+                        ctrl_estimates,
+                        exp_estimates,
                         ref_fun,
                         method,
                         vcov)
 {
   # Vector of estimated acceleration factors
-  gamma_est = g_Delta_bis(par = c(y_ref, y_obs),
+  gamma_est = g_Delta_bis(par = c(ctrl_estimates, exp_estimates),
                           method = method,
                           time_points = time_points)
   # Jacobian matrix
@@ -45,7 +37,7 @@ DeltaMethod = function (time_points,
         t_m = gamma_est * time_points[-1],
         t_j = time_points[-1],
         x_ref = time_points,
-        y_ref = y_ref,
+        y_ref = ctrl_estimates,
         ref_fun = ref_fun,
         method = method
       )
@@ -115,10 +107,10 @@ g_Delta_bis = function(par,
 #'   in both treatment groups.
 #' @param vcov The (estimated) variance-covariance matrix of the parameter
 #'   estimates in the `c(ctrl_estimates, exp_estimates)` vector.
-#' @param interpolation Interpolation method; see [TCT()].
 #' @param B number of bootstrap replications.
 #' @param null (boolean): conduct the bootstrap under the null hypothesis of no
 #'   treatment effect?
+#' @inheritParams TCT
 #'
 #' @return Matrix where each row corresponds to the bootstrap replicates of the
 #'   acceleration factors.
@@ -313,8 +305,8 @@ TCT = function(time_points,
                                 interpolation)
   se_delta = DeltaMethod(
     time_points = time_points,
-    y_ref = ctrl_estimates,
-    y_obs = exp_estimates,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
     ref_fun = ref_fun,
     method = interpolation,
     vcov = vcov
