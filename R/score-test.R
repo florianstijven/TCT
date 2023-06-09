@@ -100,11 +100,123 @@ score_conf_int = function(time_points,
   )
 }
 
-score_test_common = function(){
-
+score_test_common = function(time_points,
+                             ctrl_estimates,
+                             exp_estimates,
+                             ref_fun,
+                             interpolation,
+                             vcov,
+                             gamma_0 = 1,
+                             type = "omnibus"){
+  # Number of measurement occasions in the experimental group.
+  K = length(exp_estimates)
+  # The Jacobian matrix is computed in two parts. First, the (K x K + 1) part is
+  # computed.
+  J_f0_alpha_t  = -1 * attr(
+    deriv_f0_alpha(
+      t_m = gamma_0 * time_points[-1],
+      x_ref = time_points,
+      y_ref = ctrl_estimates,
+      method = interpolation
+    ),
+    "gradient"
+  )
+  # Next, the second part of the Jacobian. This corresponds to the identify
+  # matrix. We join both parts two get the Jacobian.
+  J = t(cbind(J_f0_alpha_t, diag(x = 1, nrow = K)))
+  # Compute the variance of the test statistic under the null.
+  Sigma_g = t(J) %*% vcov %*% J
+  g = (exp_estimates - ref_fun(gamma_0 * time_points[-1]))
+  if (type == "omnibus") {
+    # Compute test-statistic
+    t_sq =  g %*% solve(Sigma_g) %*% g
+    return(t_sq)
+  }
+  else if (type == "directional") {
+    # SHOULD BE WEIGHTED IN SOME OTHER WAY!!!!!!!!!!
+    ones = matrix(1, nrow = K)
+    sigma_sum_g = as.numeric(t(ones) %*% Sigma_g %*% ones)
+    z_value = sum(g) / sqrt(sigma_sum_g)
+    return(z_value)
+  }
 }
 
-score_conf_int_common = function(){
+score_conf_int_common = function(time_points,
+                                 ctrl_estimates,
+                                 exp_estimates,
+                                 ref_fun,
+                                 interpolation,
+                                 vcov,
+                                 gamma_est, type = "omnibus"){
+  # Number of measurements after treatment.
+  K = length(exp_estimates)
+  if (type == "omnibus") {
+    # Construct function of gamma that return the z-value.
+    t_sq_value = function(gamma) {
+      return(score_test_common(time_points,
+                               ctrl_estimates,
+                               exp_estimates,
+                               ref_fun,
+                               interpolation,
+                               vcov,
+                               gamma_0 = gamma))
+    }
+    # Find upper limit
+    t_sq_critical = qchisq(p = 1 - alpha / 2, df = K)
+    upper_limit = stats::uniroot(
+      f = function(gamma)
+        t_sq_value(gamma) - t_sq_critical,
+      interval = c(gamma_est,
+                   5),
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+    # Find lower limit
+    lower_limit = stats::uniroot(
+      f = function(gamma)
+        t_sq_value(gamma) - t_sq_critical,
+      interval = c(-5,
+                   gamma_est),
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+  }
+  else if (type == "directional") {
+    # Construct function of gamma that return the z-value.
+    z_value = function(gamma) {
+      return(score_test_common(time_points,
+                        ctrl_estimates,
+                        exp_estimates,
+                        ref_fun,
+                        interpolation,
+                        vcov,
+                        gamma_0 = gamma,
+                        type = "directional"))
+    }
+    # Find upper limit
+    z_critical = qnorm(p = 1 - alpha / 2)
+    upper_limit = stats::uniroot(
+      f = function(gamma)
+        z_value(gamma) + z_critical,
+      interval = c(-5,
+                   5),
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+    # Find lower limit
+    lower_limit = stats::uniroot(
+      f = function(gamma)
+        z_value(gamma) - z_critical,
+      interval = c(-5,
+                   5),
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+  }
 
+  # Return estimated confidence interval.
+  return(
+    c(lower_limit, upper_limit)
+  )
 }
 
