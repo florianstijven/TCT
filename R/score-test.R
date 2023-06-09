@@ -8,7 +8,8 @@
 #' @inheritParams DeltaMethod
 #'
 #'
-#' @return (numeric) z-value
+#' @return (numeric) z-value. This test-statistic follows a standard normal
+#'   distribution under the null hypothesis.
 score_test = function(time_points,
                       ctrl_estimates,
                       exp_estimates,
@@ -44,8 +45,59 @@ score_test = function(time_points,
   return(as.numeric(z))
 }
 
-score_conf_int = function(){
-
+#' Compute Confidence Interval Based on Score Test
+#'
+#' The [score_conf_int()] function computes the confidence interval for the
+#' score test at measurement `j`.
+#'
+#' @param alpha `1 - alpha` represent the two-sided confidence level. Defaults
+#'   to `0.05`.
+#' @inheritParams score_test
+#'
+#' @return (numeric) vector with two elements. The first element is the lower
+#'   confidence limit, the second element is the upper confidence limit.
+score_conf_int = function(time_points,
+                          ctrl_estimates,
+                          exp_estimates,
+                          ref_fun,
+                          interpolation,
+                          vcov,
+                          j,
+                          alpha = 0.05){
+  # Construct function of gamma that return the z-value.
+  z_value = function(gamma) {
+    return(score_test(time_points,
+                      ctrl_estimates,
+                      exp_estimates,
+                      ref_fun,
+                      interpolation,
+                      vcov,
+                      j,
+                      gamma_0 = gamma))
+  }
+  # Find upper limit
+  z_critical = qnorm(p = 1 - alpha / 2)
+  upper_limit = stats::uniroot(
+    f = function(gamma)
+      z_value(gamma) + z_critical,
+    interval = c(-5,
+                 5),
+    tol = .Machine$double.eps ^ 0.5,
+    maxiter = 1e3
+  )$root
+  # Find lower limit
+  lower_limit = stats::uniroot(
+    f = function(gamma)
+      z_value(gamma) - z_critical,
+    interval = c(-5,
+                 5),
+    tol = .Machine$double.eps ^ 0.5,
+    maxiter = 1e3
+  )$root
+  # Return estimated confidence interval.
+  return(
+    c(lower_limit, upper_limit)
+  )
 }
 
 score_test_common = function(){
@@ -56,16 +108,3 @@ score_conf_int_common = function(){
 
 }
 
-#' Compute Gradient for Score Test
-#'
-#' The [gradient_g()] function computes
-#' \eqn{\nabla g_{\gamma}(\boldsymbol{\alpha}, \boldsymbol{\beta}; t_j)^t} where
-#' \eqn{g_{\gamma}(\boldsymbol{\alpha}, \boldsymbol{\beta}; t_j) = \beta_j - f_0( \gamma \cdot t_{j}; \boldsymbol{\alpha})}.
-#'
-#' @return
-#' @export
-#'
-#' @examples
-gradient_g = function(t_m, x_ref, y_ref, method = "spline" ){
-
-}
