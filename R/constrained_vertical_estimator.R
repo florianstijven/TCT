@@ -9,10 +9,10 @@ constrained_vertical_estimator = function(alpha_obs, beta_obs, Sigma_obs) {
   # the inverse would otherwise be computed multiple time.
   Sigma_inv = solve(Sigma_obs)
   length_alpha = length(alpha_obs)
-  obj_function = function(theta) {
+  obj_function = function(theta, alpha_beta_obs) {
     alpha = theta[1:length_alpha]
     beta = theta[(length_alpha + 1):length(theta)]
-    mahalanobis(x = c(alpha_obs, beta_obs),
+    mahalanobis(x = alpha_beta_obs,
                 center = c(alpha, beta),
                 cov = Sigma_inv, inverted = TRUE)
   }
@@ -27,17 +27,20 @@ constrained_vertical_estimator = function(alpha_obs, beta_obs, Sigma_obs) {
   # constants, this is just the zero vector.
   constraint_vector = matrix(0, nrow = nrow(constraint_matrix), ncol = 1)
 
-  starting_values = c(alpha_obs, beta_obs)
+  # Custom starting values that automatically satisfy the linear inequalities.
+  starting_values = starting_values_constrained_optimization(alpha_obs, beta_obs)
+
   constrOptim(
     theta = starting_values,
     f = obj_function,
     grad = gradient_mahalanobis,
     ui = constraint_matrix,
-    ci = constraint_vector
-  )
+    ci = constraint_vector,
+    alpha_beta_obs = c(alpha_obs, beta_obs)
+  )$par
 }
 
-#' Return constrain matrix for Assumption 1
+#' Return constraint matrix for Assumption 1
 #'
 #' @param length_alpha
 #' @param length_beta
@@ -83,8 +86,19 @@ constraint_matrix_A2 = function(length_alpha, length_beta) {
   return(A2_matrix)
 }
 
-gradient_mahalanobis = function(alpha_obs, beta_obs, alpha, beta) {
-  y = c(alpha_obs, beta_obs)
-  alpha_beta = c(alpha, beta)
+gradient_mahalanobis = function(alpha_beta, alpha_beta_obs) {
+  y = alpha_beta_obs
   return(-2 * y + 2 * alpha_beta)
+}
+
+starting_values_constrained_optimization = function(alpha_obs, beta_obs) {
+  # order both vectors to satisify assumption 1
+  alpha_obs = sort(alpha_obs)
+  beta_obs = sort(beta_obs)
+  for (i in seq_along(beta_obs)) {
+    if (beta_obs[i] < alpha_obs[1]) {
+      beta_obs[i] = alpha_obs[1] + i * 1e-5
+    }
+  }
+  return(c(alpha_obs, beta_obs))
 }

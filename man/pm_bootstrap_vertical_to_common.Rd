@@ -16,7 +16,8 @@ pm_bootstrap_vertical_to_common(
   return_se = TRUE,
   null = FALSE,
   gls_est = TRUE,
-  select_coef
+  select_coef,
+  constraints = FALSE
 )
 }
 \arguments{

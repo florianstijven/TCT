@@ -11,7 +11,8 @@ pm_bootstrap_vertical_to_horizontal(
   vcov,
   interpolation = "spline",
   B = 100,
-  null = FALSE
+  null = FALSE,
+  constraints
 )
 }
 \arguments{

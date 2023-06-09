@@ -10,7 +10,8 @@ TCT(
   exp_estimates,
   vcov,
   interpolation = "spline",
-  B = 0
+  B = 0,
+  constraints = FALSE
 )
 }
 \arguments{
@@ -37,22 +38,53 @@ and Carlson
 
 \item{B}{Number of bootstrap replications. If \code{B = 0}, no bootstrap is
 performed (default).}
+
+\item{constraints}{Use the constrained generalized least squares estimator
+for the vertical treatment effects.}
 }
 \value{
 An object from the TCT-class
 }
 \description{
-The \code{\link[=TCT]{TCT()}} function transforms the vertical parameter estimates to parameter
-estimates on the time scale. These treatment effect estimates are
-acceleration factors. This is an application of the Time-Component Test (TCT)
-methodology.
+The \code{\link[=TCT]{TCT()}} function transforms so-called vertical parameter estimates to
+parameter estimates on the time scale. These treatment effect estimates on
+the time scale are so-called acceleration factors. This is an application of
+the Time-Component Test (TCT) methodology.
 }
-\details{
-# Time-Component Test
-Explanation of TCT
+\section{Time-Component Tests}{
+Time-component tests (TCT) constitutes a general methodology to evaluating
+treatment effects with longitudinal data on the time scale. Conventional
+treatment effects with longitudinal data are so-called vertical treatment
+effects; these are comparisons of group means at fixed measurement occasions.
 
-# Inference
+Let \eqn{\boldsymbol{t} = (t_0 = 0, t_1, ..., t_K)'} be the fixed measurement
+occasions (\code{timepoints} in this function). Let \eqn{\boldsymbol{\alpha} =
+(\alpha_0, \alpha_1, ..., \alpha_K)'} be the corresponding means in the
+control group. Let \eqn{\boldsymbol{\beta} = (\beta_1, ..., \beta_{K})} be
+the corresponding means in the experimental group. Note that the index starts
+here at 1, i.e., the first measurement \emph{after} start of the treatment. Let
+the mean trajectory in the control and experimental group be, respectively,
+\eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}
+
+The treatment effects on the time scale are acceleration factors, analogous
+to accelerated failure time models. These are defined as follows at
+\eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
+\boldsymbol{\alpha})}
+where \eqn{\gamma_j} is the so-called acceleration factor at \eqn{t_j}, i.e.,
+treatment causes a acceleration of \eqn{\gamma_j}. For example, if
+\eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
+slow as patients in the control group.
 }
+
+\section{Inference}{
+Following options for inference are available:
+\itemize{
+\item Delta method
+\item Parametric bootstrap
+\item Score test
+}
+}
+
 \examples{
 # transform example data set to desired format
 library(dplyr)

@@ -128,7 +128,8 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                vcov,
                                                interpolation = "spline",
                                                B = 100,
-                                               null = FALSE) {
+                                               null = FALSE,
+                                               constraints) {
   if (B == 0)
     return(NULL)
 
@@ -166,6 +167,22 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
     )
   }
 
+  # If constraints option is selected, first apply the constrained GLS
+  # modification.
+  if (constraints) {
+    length_alpha = length(ctrl_estimates)
+    par_sampled = apply(
+      X = par_sampled,
+      MARGIN = 1,
+      FUN = function(x) {
+        constrained_vertical_estimator(x[1:length_alpha],
+                                       x[-1 * (1:length_alpha)],
+                                       vcov)
+      }
+    )
+    par_sampled = t(par_sampled)
+  }
+
   estimates = matrix(0, nrow = B, ncol = 4)
   for (i in 1:B) {
     estimates[i, ] = g_Delta_bis(par = par_sampled[i, ],
@@ -194,10 +211,10 @@ new_TCT = function(coefficients,
 
 #' Transform vertical Treatment Effect Estimates to the Time Scale
 #'
-#' The [TCT()] function transforms the vertical parameter estimates to parameter
-#' estimates on the time scale. These treatment effect estimates are
-#' acceleration factors. This is an application of the Time-Component Test (TCT)
-#' methodology.
+#' The [TCT()] function transforms so-called vertical parameter estimates to
+#' parameter estimates on the time scale. These treatment effect estimates on
+#' the time scale are so-called acceleration factors. This is an application of
+#' the Time-Component Test (TCT) methodology.
 #'
 #' @param time_points Ordered vector that contains the times corresponding to
 #'   the estimated means in the `ctrl_estimates` vector.
@@ -215,15 +232,44 @@ new_TCT = function(coefficients,
 #'   and Carlson
 #' @param B Number of bootstrap replications. If `B = 0`, no bootstrap is
 #'   performed (default).
-#'
+#' @param constraints Use the constrained generalized least squares estimator
+#'   for the vertical treatment effects.
 #' @return An object from the TCT-class
 #' @export
 #'
 #' @details
-#' # Time-Component Test
-#' Explanation of TCT
+#'
+#' # Time-Component Tests
+#'
+#' Time-component tests (TCT) constitutes a general methodology to evaluating
+#' treatment effects with longitudinal data on the time scale. Conventional
+#' treatment effects with longitudinal data are so-called vertical treatment
+#' effects; these are comparisons of group means at fixed measurement occasions.
+#'
+#' Let \eqn{\boldsymbol{t} = (t_0 = 0, t_1, ..., t_K)'} be the fixed measurement
+#' occasions (`timepoints` in this function). Let \eqn{\boldsymbol{\alpha} =
+#' (\alpha_0, \alpha_1, ..., \alpha_K)'} be the corresponding means in the
+#' control group. Let \eqn{\boldsymbol{\beta} = (\beta_1, ..., \beta_{K})} be
+#' the corresponding means in the experimental group. Note that the index starts
+#' here at 1, i.e., the first measurement *after* start of the treatment. Let
+#' the mean trajectory in the control and experimental group be, respectively,
+#' \eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}
+#'
+#' The treatment effects on the time scale are acceleration factors, analogous
+#' to accelerated failure time models. These are defined as follows at
+#' \eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
+#' \boldsymbol{\alpha})}
+#' where \eqn{\gamma_j} is the so-called acceleration factor at \eqn{t_j}, i.e.,
+#' treatment causes a acceleration of \eqn{\gamma_j}. For example, if
+#' \eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
+#' slow as patients in the control group.
 #'
 #' # Inference
+#'
+#' Following options for inference are available:
+#' * Delta method
+#' * Parametric bootstrap
+#' * Score test
 #'
 #' @examples
 #' # transform example data set to desired format
@@ -251,7 +297,17 @@ TCT = function(time_points,
                exp_estimates,
                vcov,
                interpolation = "spline",
-               B = 0) {
+               B = 0,
+               constraints = FALSE) {
+  # Apply constraint GLS estimator if asked.
+  if (constraints) {
+    contrained_estimates = constrained_vertical_estimator(ctrl_estimates,
+                                                          exp_estimates,
+                                                          vcov)
+    ctrl_estimates = contrained_estimates[1:length(ctrl_estimates)]
+    exp_estimates = contrained_estimates[(length(ctrl_estimates) + 1):(length(ctrl_estimates) + length(exp_estimates))]
+  }
+
   ref_fun = ref_fun_constructor(time_points,
                                 ctrl_estimates,
                                 interpolation)
@@ -270,7 +326,8 @@ TCT = function(time_points,
     exp_estimates = exp_estimates,
     vcov = vcov,
     interpolation = interpolation,
-    B = B
+    B = B,
+    constraints = constraints
   )
 
   return(new_TCT(coefficients = se_delta$estimate,
@@ -365,18 +422,21 @@ summary.TCT = function(x,
     p_bootstrap = NULL
   }
 
-  new_summary.TCT(
-    x = x,
-    se_delta = se_delta,
-    z_delta = z_delta,
-    ci_delta = ci_delta,
-    p_delta = p_delta,
-    lht_delta = lht_delta,
-    vcov_bootstrap = vcov_bootstrap,
-    se_bootstrap = se_bootstrap,
-    ci_bootstrap = ci_bootstrap,
-    p_bootstrap = p_bootstrap,
-    alpha = alpha
+
+  return(
+    new_summary.TCT(
+      x = x,
+      se_delta = se_delta,
+      z_delta = z_delta,
+      ci_delta = ci_delta,
+      p_delta = p_delta,
+      lht_delta = lht_delta,
+      vcov_bootstrap = vcov_bootstrap,
+      se_bootstrap = se_bootstrap,
+      ci_bootstrap = ci_bootstrap,
+      p_bootstrap = p_bootstrap,
+      alpha = alpha
+    )
   )
 }
 
@@ -411,6 +471,14 @@ new_summary.TCT = function(
   class = "summary.TCT")
 }
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
 print.summary.TCT = function(x) {
   cat(
     paste0(
@@ -485,7 +553,8 @@ pm_bootstrap_vertical_to_common = function(time_points,
                                            return_se = TRUE,
                                            null = FALSE,
                                            gls_est = TRUE,
-                                           select_coef) {
+                                           select_coef,
+                                           constraints = FALSE) {
   if (B == 0)
     return(NULL)
 
@@ -526,6 +595,23 @@ pm_bootstrap_vertical_to_common = function(time_points,
       sigma = vcov
     )
   }
+
+  # If constraints option is selected, first apply the constrained GLS
+  # modification.
+  if (constraints) {
+    length_alpha = length(ctrl_estimates)
+    par_sampled = apply(
+      X = par_sampled,
+      MARGIN = 1,
+      FUN = function(x) {
+        constrained_vertical_estimator(x[1:length_alpha],
+                                       x[-1 * (1:length_alpha)],
+                                       vcov)
+      }
+    )
+    par_sampled = t(par_sampled)
+  }
+
   for (i in seq_along(estimates_bootstrap)) {
     if (bs_fix_vcov) {
       vcov_gls = TCT_vcov[select_coef, select_coef]
@@ -540,7 +626,8 @@ pm_bootstrap_vertical_to_common = function(time_points,
         exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],
         vcov = vcov,
         interpolation = interpolation,
-        B = 0
+        B = 0,
+        constraints = constraints
       )
       if (!is.na(tct_results$vcov[[1]])) {
         if (gls_est) {
@@ -589,7 +676,8 @@ TCT_common = function(TCT_Fit,
                       bs_fix_vcov = FALSE,
                       select_coef = 1:length(coef(TCT_Fit)),
                       null_bs = FALSE,
-                      gls_est = TRUE) {
+                      gls_est = TRUE,
+                      constraints = FALSE) {
 
   estimates = coef(TCT_Fit)[select_coef]
   if (gls_est) {
@@ -621,7 +709,8 @@ TCT_common = function(TCT_Fit,
     bs_fix_vcov = bs_fix_vcov,
     return_se = TRUE,
     gls_est = gls_est,
-    select_coef = select_coef
+    select_coef = select_coef,
+    constraints = constraints
   )
 
   bs_estimates_null = NULL

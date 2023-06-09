@@ -10,7 +10,8 @@ TCT_common(
   bs_fix_vcov = FALSE,
   select_coef = 1:length(coef(TCT_Fit)),
   null_bs = FALSE,
-  gls_est = TRUE
+  gls_est = TRUE,
+  constraints = FALSE
 )
 }
 \arguments{
