@@ -16,20 +16,18 @@ pm_bootstrap_vertical_to_horizontal(
 )
 }
 \arguments{
-\item{time_points}{Time points to which the estimates in \code{ctrl_estimates}
-correspond.}
+\item{time_points}{Ordered vector that contains the times corresponding to
+the estimated means in the \code{ctrl_estimates} vector.}
 
-\item{ctrl_estimates}{Vector with estimated values for reference trajectory
-at \code{time_points}. This vector should thus have the same length as
-\code{time_points}.}
+\item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
+occasions.}
 
-\item{exp_estimates}{Vector with estimated values for the active treatment
-group at \code{time_points}. This vector should thus have length
-\code{length(time_points) - 1} since the baseline values are assumed to be equal
-in both treatment groups.}
+\item{exp_estimates}{Estimated mean outcomes in the experimental group at
+fixed occasions.}
 
-\item{vcov}{The (estimated) variance-covariance matrix of the parameter
-estimates in the \code{c(ctrl_estimates, exp_estimates)} vector.}
+\item{vcov}{The variance-covariance matrix for the means. In order to map to
+the correct estimates, this matrix should be the variance-covariance matrix
+of \code{c(ctrl_means, exp_means)}.}
 
 \item{interpolation}{Which interpolation method to use?
 \itemize{
@@ -39,18 +37,46 @@ estimates in the \code{c(ctrl_estimates, exp_estimates)} vector.}
 and Carlson
 }}
 
-\item{B}{number of bootstrap replications.}
+\item{B}{Number of bootstrap replications.}
 
 \item{null}{(boolean): conduct the bootstrap under the null hypothesis of no
-treatment effect?}
+treatment effect? Defaults to \code{FALSE}.}
 
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
 }
 \value{
-Matrix where each row corresponds to the bootstrap replicates of the
-acceleration factors.
+A \eqn{(B \times K)} matrix where the \eqn{b}'th row corresponds to
+\eqn{\hat{\boldsymbol{\gamma}}^b} and \eqn{K = } \code{length(exp_estimates)}.
 }
 \description{
-Parametric Bootstrap for Time-Specific Acceleration Factors
+The \code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}} function implements a parametric
+bootstrap for the time-specific acceleration factors.
+}
+\details{
+We can write the slowing factor at \eqn{\boldsymbol{t} = (t_1, ..., t_K)'}
+as a function of the the mean parameters,
+\deqn{
+\boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
+}
+Further assume that \eqn{\hat{\boldsymbol{\alpha}}} and \eqn{\hat{\boldsymbol{\beta}}}
+are normally distributed,
+\deqn{
+(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \sim N\left( (\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})', D \right)
+}
+where \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'} is the true
+parameter vector. We can obtain an approximate sampling distribution for
+\eqn{\hat{\boldsymbol{\gamma}}} by a parametric bootstrap in two steps,
+\enumerate{
+\item Sample \eqn{B} bootstrap replications of the vertical parameters from
+\deqn{
+(\hat{\boldsymbol{\alpha}}^b, \hat{\boldsymbol{\beta}}^b)' \sim N \left( (\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})', \hat{D}  \right)
+}
+where \eqn{b} refers to the \eqn{b}'th bootstrap replicate.
+\item Transform the bootstrap replicates to the time scale,
+\deqn{
+\hat{\boldsymbol{\gamma}}^b = \boldsymbol{\gamma}(\boldsymbol{t}; \hat{\boldsymbol{\alpha}}^b, \hat{\boldsymbol{\beta}}^b).
+}
+This transformation is implemented in \code{\link[=g_Delta_bis]{g_Delta_bis()}}.
+}
 }

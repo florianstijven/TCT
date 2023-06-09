@@ -138,25 +138,41 @@ g_Delta_bis = function(par,
 
 #' Parametric Bootstrap for Time-Specific Acceleration Factors
 #'
+#' The [pm_bootstrap_vertical_to_horizontal()] function implements a parametric
+#' bootstrap for the time-specific acceleration factors.
 #'
-#' @param time_points Time points to which the estimates in `ctrl_estimates`
-#'   correspond.
-#' @param ctrl_estimates Vector with estimated values for reference trajectory
-#'   at `time_points`. This vector should thus have the same length as
-#'   `time_points`.
-#' @param exp_estimates Vector with estimated values for the active treatment
-#'   group at `time_points`. This vector should thus have length
-#'   `length(time_points) - 1` since the baseline values are assumed to be equal
-#'   in both treatment groups.
-#' @param vcov The (estimated) variance-covariance matrix of the parameter
-#'   estimates in the `c(ctrl_estimates, exp_estimates)` vector.
-#' @param B number of bootstrap replications.
+#' @param B Number of bootstrap replications.
 #' @param null (boolean): conduct the bootstrap under the null hypothesis of no
-#'   treatment effect?
+#'   treatment effect? Defaults to `FALSE`.
 #' @inheritParams TCT
 #'
-#' @return Matrix where each row corresponds to the bootstrap replicates of the
-#'   acceleration factors.
+#' @details
+#' We can write the slowing factor at \eqn{\boldsymbol{t} = (t_1, ..., t_K)'}
+#' as a function of the the mean parameters,
+#' \deqn{
+#' \boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
+#' }
+#' Further assume that \eqn{\hat{\boldsymbol{\alpha}}} and \eqn{\hat{\boldsymbol{\beta}}}
+#' are normally distributed,
+#'\deqn{
+#' (\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \sim N\left( (\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})', D \right)
+#' }
+#' where \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'} is the true
+#' parameter vector. We can obtain an approximate sampling distribution for
+#' \eqn{\hat{\boldsymbol{\gamma}}} by a parametric bootstrap in two steps,
+#' 1. Sample \eqn{B} bootstrap replications of the vertical parameters from
+#' \deqn{
+#' (\hat{\boldsymbol{\alpha}}^b, \hat{\boldsymbol{\beta}}^b)' \sim N \left( (\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})', \hat{D}  \right)
+#' }
+#'  where \eqn{b} refers to the \eqn{b}'th bootstrap replicate.
+#' 2. Transform the bootstrap replicates to the time scale,
+#' \deqn{
+#' \hat{\boldsymbol{\gamma}}^b = \boldsymbol{\gamma}(\boldsymbol{t}; \hat{\boldsymbol{\alpha}}^b, \hat{\boldsymbol{\beta}}^b).
+#' }
+#' This transformation is implemented in [g_Delta_bis()].
+#'
+#' @return A \eqn{(B \times K)} matrix where the \eqn{b}'th row corresponds to
+#' \eqn{\hat{\boldsymbol{\gamma}}^b} and \eqn{K = } `length(exp_estimates)`.
 pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                ctrl_estimates,
                                                exp_estimates,
@@ -218,7 +234,7 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
     par_sampled = t(par_sampled)
   }
 
-  estimates = matrix(0, nrow = B, ncol = 4)
+  estimates = matrix(0, nrow = B, ncol = length(exp_estimates))
   for (i in 1:B) {
     estimates[i, ] = g_Delta_bis(par = par_sampled[i, ],
                                  interpolation = interpolation,
