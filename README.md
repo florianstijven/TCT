@@ -1,6 +1,7 @@
 
-# TCT The goal the TCT package is to provide a set of easy to use functions to
+# TCT
 
+The goal the TCT package is to provide a set of easy to use functions to
 perform time components test. \## Installation You can install the
 development version of TCT from [GitHub](https://github.com/) with:
 
@@ -9,8 +10,9 @@ development version of TCT from [GitHub](https://github.com/) with:
 devtools::install_github("florianstijven/TCT")
 ```
 
-## Example This is a basic example which shows you how to use the time-component
+## Example
 
+This is a basic example which shows you how to use the time-component
 test methodology in combination with an estimated MMRM model. First the
 MMRM is estimated. All we need from this estimated model is the
 estimated mean vector and estimated variance-covariance matrix for this
@@ -19,20 +21,6 @@ estimated vector.
 ``` r
 library(TCT)
 library(dplyr)
-```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 # Example data set transformed to format required by TCT()
 data_test = simulated_test_trial %>%
   mutate(
@@ -74,11 +62,11 @@ summary(TCT_fit)
     ## arm_time1:3 0.87351           0.101608         1.24491       0.2131653
     ## arm_time1:4 0.79369           0.080397         2.56612       0.0102844
     ## arm_time1:5 0.75101           0.096568         2.57841       0.0099256
-    ##                      CI (delta)     CI (bootstrap)
-    ## arm_time1:2 (-0.48366, 1.94902) (-0.28498, 1.3522)
-    ## arm_time1:3 ( 0.67436, 1.07266) ( 0.66815, 1.0731)
-    ## arm_time1:4 ( 0.63612, 0.95127) ( 0.64753, 0.9755)
-    ## arm_time1:5 ( 0.56174, 0.94028) ( 0.60534, 1.0356)
+    ##                      CI (delta)      CI (bootstrap)
+    ## arm_time1:2 (-0.48366, 1.94902) (-0.28320, 1.35117)
+    ## arm_time1:3 ( 0.67436, 1.07266) ( 0.66286, 1.07517)
+    ## arm_time1:4 ( 0.63612, 0.95127) ( 0.64171, 0.98018)
+    ## arm_time1:5 ( 0.56174, 0.94028) ( 0.60092, 1.03826)
     ## alpha = 0.05
     ##  Interpolation Method: spline
 
@@ -87,7 +75,7 @@ The next step is to estimate a common slowing factor.
 ``` r
 # The object returned by TCT() can be used as argument to the TCT_common() function.
 # This function estimates a single common slowing factor.
-TCT_common_fit = TCT_common(TCT_fit, B = 1e4, TRUE)
+TCT_common_fit = TCT_common(TCT_fit, B = 1e4, bs_fix_vcov = FALSE)
 summary(TCT_common_fit)
 ```
 
@@ -96,8 +84,8 @@ summary(TCT_common_fit)
     ## Coefficients: 
     ##     Value Std. Error (delta) z-value (delta) p-value (delta)         CI (delta)
     ## 1 0.80275           0.067897          2.9051       0.0036714 (0.66968, 0.93583)
-    ##      CI (bootstrap) p-value (bootstrap)
-    ## 1 (0.68494, 0.9832)               0.035
+    ##       CI (bootstrap) p-value (bootstrap)
+    ## 1 (0.58799, 0.97627)                0.03
     ## alpha = 0.05
     ## 
     ## Test for proportional slowing factor:
