@@ -38,6 +38,7 @@
 #'
 #' @return A vector of the time-mapped values.
 #'
+#' @import stats
 get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   # For fourPL, analytic solution exists.
   if (method == "fourPL") {
@@ -215,7 +216,7 @@ fit_4PL = function(x_ref, y_ref) {
   p = length(y_ref)
   a = (y_ref[p] - y_ref[1]) / (x_ref[p] - x_ref[1])
   inits = c(min(y_ref), mean(x_ref), (4 * a) / (y_ref[1] - y_ref[p]), max(y_ref))
-  optim_return = optim(
+  optim_return = stats::optim(
     par = inits,
     fn = function(par) {
       sum((predict_4PL(x_ref, par) - y_ref) ** 2)
@@ -324,7 +325,7 @@ deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline") {
   myenv$method <- method
   myenv$t_m <- t_m
   myenv$ref_fun_constructor <- ref_fun_constructor
-  numericDeriv(expr = quote({
+  stats::numericDeriv(expr = quote({
     ref_fun = ref_fun_constructor(x_ref, y_ref, method)
     ref_fun(t_m)
   }),
@@ -332,6 +333,16 @@ deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline") {
   rho = myenv)
 }
 
+#' Title
+#'
+#' @param t_m
+#' @param x_ref
+#' @param y_ref
+#' @param finite_diff
+#' @param method
+#'
+#' @return
+#' @importFrom numDeriv jacobian
 deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "spline") {
   numDeriv::jacobian(
     func = function(y_ref) {

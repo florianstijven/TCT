@@ -30,7 +30,7 @@ constrained_vertical_estimator = function(alpha_obs, beta_obs, Sigma_obs) {
   # Custom starting values that automatically satisfy the linear inequalities.
   starting_values = starting_values_constrained_optimization(alpha_obs, beta_obs)
 
-  constrOptim(
+  stats::constrOptim(
     theta = starting_values,
     f = obj_function,
     grad = gradient_mahalanobis,

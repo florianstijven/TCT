@@ -35,6 +35,9 @@
 #'
 #' @return A \eqn{(B \times K)} matrix where the \eqn{b}'th row corresponds to
 #' \eqn{\hat{\boldsymbol{\gamma}}^b} and \eqn{K = } `length(exp_estimates)`.
+#'
+#' @importFrom mnormt pd.solve
+#' @importFrom mvtnorm rmvnorm
 pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                ctrl_estimates,
                                                exp_estimates,
