@@ -50,7 +50,7 @@ score_test = function(time_points,
 #' The [score_conf_int()] function computes the confidence interval for the
 #' score test at measurement `j`.
 #'
-#' @param alpha `1 - alpha` represent the two-sided confidence level. Defaults
+#' @param alpha `1 - alpha` represents the two-sided confidence level. Defaults
 #'   to `0.05`.
 #' @inheritParams score_test
 #'
@@ -100,6 +100,15 @@ score_conf_int = function(time_points,
   )
 }
 
+#' Title
+#'
+#' @param type Which type of test statistic should be used. See Details.
+#' @inheritParams score_test
+#'
+#' @return
+#' @export
+#'
+#' @examples
 score_test_common = function(time_points,
                              ctrl_estimates,
                              exp_estimates,
@@ -107,14 +116,16 @@ score_test_common = function(time_points,
                              interpolation,
                              vcov,
                              gamma_0 = 1,
-                             type = "omnibus"){
+                             type = "omnibus",
+                             j = 1:length(exp_estimates),
+                             weights = NULL){
   # Number of measurement occasions in the experimental group.
-  K = length(exp_estimates)
+  K = length(j)
   # The Jacobian matrix is computed in two parts. First, the (K x K + 1) part is
   # computed.
   J_f0_alpha_t  = -1 * attr(
     deriv_f0_alpha(
-      t_m = gamma_0 * time_points[-1],
+      t_m = gamma_0 * time_points[j + 1],
       x_ref = time_points,
       y_ref = ctrl_estimates,
       method = interpolation
@@ -124,20 +135,35 @@ score_test_common = function(time_points,
   # Next, the second part of the Jacobian. This corresponds to the identify
   # matrix. We join both parts two get the Jacobian.
   J = t(cbind(J_f0_alpha_t, diag(x = 1, nrow = K)))
-  # Compute the variance of the test statistic under the null.
-  Sigma_g = t(J) %*% vcov %*% J
-  g = (exp_estimates - ref_fun(gamma_0 * time_points[-1]))
+  # Compute the variance of the "test statistic "score vector", g_gamma_0 under
+  # the null. The inverse of this matrix is also computed.
+  Sigma_g = t(J) %*% vcov[c(1:length(time_points), length(time_points) + j),
+                          c(1:length(time_points), length(time_points) + j)] %*% J
+  Sigma_g_inv = solve(Sigma_g)
+  # Compute the score vector.
+  g = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1]))
   if (type == "omnibus") {
     # Compute test-statistic
-    t_sq =  g %*% solve(Sigma_g) %*% g
-    return(t_sq)
+    t_sq =  g %*% Sigma_g_inv %*% g
+    return(as.numeric(t_sq))
   }
   else if (type == "directional") {
-    # SHOULD BE WEIGHTED IN SOME OTHER WAY!!!!!!!!!!
+    # Colmun vector of ones.
     ones = matrix(1, nrow = K)
-    sigma_sum_g = as.numeric(t(ones) %*% Sigma_g %*% ones)
-    z_value = sum(g) / sqrt(sigma_sum_g)
-    return(z_value)
+    z_value = ((t(ones) %*% Sigma_g_inv %*% ones)**(-1 / 2)) * t(ones) %*% Sigma_g_inv %*% g
+    return(as.numeric(z_value))
+  }
+  else if (type == "inverse variance") {
+    # Colmun vector of ones.
+    ones = matrix(1, nrow = K)
+    D = solve(diag(diag(Sigma_g)))
+    z_value = (1 / sqrt(t(ones) %*% D %*% Sigma_g %*% t(D) %*% ones)) * t(ones) %*% D %*% g
+    return(as.numeric(z_value))
+  }
+  else if (type == "custom") {
+    weights = matrix(weights, ncol = 1)
+    z_value = ( 1 / sqrt(t(weights) %*% Sigma_g %*% weights)) * t(weights) %*% g
+    return(as.numeric(z_value))
   }
 }
 
