@@ -1,4 +1,5 @@
 test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
+  library(dplyr)
   # Example data set transformed to format required by TCT()
   data_test = simulated_test_trial %>%
     mutate(
@@ -28,6 +29,7 @@ test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
 })
 
 test_that("score TCT CI is correct", {
+  library(dplyr)
   # Example data set transformed to format required by TCT()
   data_test = simulated_test_trial %>%
     mutate(
@@ -56,6 +58,7 @@ test_that("score TCT CI is correct", {
 })
 
 test_that("score TCT test for common treatment effect is correct", {
+  library(dplyr)
   # Example data set transformed to format required by TCT()
   data_test = simulated_test_trial %>%
     mutate(
@@ -78,5 +81,5 @@ test_that("score TCT test for common treatment effect is correct", {
                        interpolation = "spline",
                        ref_fun = ref_fun,
                        gamma_0 = 1)
-  expect_equal(t_sq, 6.2673327)
+  expect_equal(as.numeric(t_sq), 6.2673327)
 })
