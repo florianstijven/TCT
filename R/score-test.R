@@ -103,7 +103,18 @@ score_conf_int = function(time_points,
 #' Title
 #'
 #' @param type Which type of test statistic should be used. See Details.
+#' @param j description
+#' @param weights description
 #' @inheritParams score_test
+#' @details
+#'
+#' Four types of test statistics are implemented in the [score_test_common()]
+#' function:
+#' 1. `type = "omnibus"`: This corresponds to a classic chi-squared test.
+#' 2. `type = "directional"`:
+#' 3. `type = "inverse variance"`:
+#' 4. `type = "custom"`:
+#'
 #'
 #' @return
 #' @export
@@ -156,7 +167,8 @@ score_test_common = function(time_points,
   else if (type == "inverse variance") {
     # Colmun vector of ones.
     ones = matrix(1, nrow = K)
-    D = solve(diag(diag(Sigma_g)))
+    if (nrow(Sigma_g) == 1) D = 1 / as.numeric(Sigma_g)
+    else D = solve(diag(diag(Sigma_g)))
     z_value = (1 / sqrt(t(ones) %*% D %*% Sigma_g %*% t(D) %*% ones)) * t(ones) %*% D %*% g
     return(as.numeric(z_value))
   }
@@ -244,5 +256,63 @@ score_conf_int_common = function(time_points,
   return(
     c(lower_limit, upper_limit)
   )
+}
+
+#' Estimate the common acceleration factor by minimizing the squared score
+#' statistic
+#'
+#' @inheritParams score_test_common
+#'
+#' @return
+score_estimate_common = function(time_points,
+                                 ctrl_estimates,
+                                 exp_estimates,
+                                 ref_fun,
+                                 interpolation,
+                                 vcov,
+                                 type = "omnibus",
+                                 j = 1:length(exp_estimates),
+                                 weights = NULL) {
+  # Help function that computes the squared test statistics for a given gamma.
+  # If the test statistic is a chi-squared value, then we do not have to square.
+  # For a z-statistic, we compute the square.
+  if (type == "omnibus") {
+    objective_function = function(gamma) {
+      score_test_common(
+        time_points,
+        ctrl_estimates,
+        exp_estimates,
+        ref_fun,
+        interpolation,
+        vcov,
+        gamma,
+        type,
+        j,
+        weights
+      )
+    }
+  }
+  else {
+    objective_function = function(gamma) {
+      score_test_common(
+        time_points,
+        ctrl_estimates,
+        exp_estimates,
+        ref_fun,
+        interpolation,
+        vcov,
+        gamma,
+        type,
+        j,
+        weights
+      ) ** 2
+    }
+  }
+
+  # Find the gamma-value that minimizes the (squared) test-statistic.
+  optimise(
+    f = objective_function,
+    interval = c(0, 2)
+  )$minimum
 }
 
