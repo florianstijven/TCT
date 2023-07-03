@@ -290,7 +290,7 @@ deriv_4PL = function(x, theta) {
 }
 
 
-ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun, deriv = 0) {
+ref_fun_factory = function(.x_ref, extrapol_fun, interpol_fun) {
   ref_fun = function(x, deriv = 0) {
     ifelse(test = (x < min(.x_ref)) | (x > max(.x_ref)),
            yes = extrapol_fun(x, deriv),
