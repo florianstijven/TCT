@@ -161,8 +161,8 @@ score_test_common = function(time_points,
   else if (type == "directional") {
     # Colmun vector of ones.
     ones = matrix(1, nrow = K)
-    z_value = ((t(ones) %*% Sigma_g_inv %*% ones)**(-1 / 2)) * t(ones) %*% Sigma_g_inv %*% g
-    return(as.numeric(z_value))
+    t_sq = (1 / t(ones) %*% Sigma_g_inv %*% ones) * (t(ones) %*% Sigma_g_inv %*% g)**2
+    return(as.numeric(t_sq))
   }
   else if (type == "inverse variance") {
     # Colmun vector of ones.
@@ -185,25 +185,41 @@ score_conf_int_common = function(time_points,
                                  ref_fun,
                                  interpolation,
                                  vcov,
-                                 gamma_est, type = "omnibus"){
-  # Number of measurements after treatment.
-  K = length(exp_estimates)
-  if (type == "omnibus") {
+                                 gamma_est,
+                                 type = "omnibus",
+                                 j = 1:length(exp_estimates),
+                                 weights = NULL,
+                                 alpha = 0.05){
+  # Force argument values. This is required because we're using these arguments
+  # in a function factory.
+  force(time_points); force(ctrl_estimates); force(exp_estimates)
+  force(ref_fun); force(interpolation); force(vcov); force(gamma_est)
+  force(type); force(j); force(weights); force(alpha)
+  if (type %in% c("omnibus", "directional")) {
     # Construct function of gamma that return the z-value.
     t_sq_value = function(gamma) {
-      return(score_test_common(time_points,
-                               ctrl_estimates,
-                               exp_estimates,
-                               ref_fun,
-                               interpolation,
-                               vcov,
-                               gamma_0 = gamma))
+      t_sq = score_test_common(
+        time_points,
+        ctrl_estimates,
+        exp_estimates,
+        ref_fun,
+        interpolation,
+        vcov,
+        gamma,
+        type,
+        j,
+        weights
+      )
+      return(t_sq)
     }
+    # Degrees of freedom for chi-squared statistic.
+    if (type == "omnibus") df = length(j)
+    else df = 1
     # Find upper limit
-    t_sq_critical = qchisq(p = 1 - alpha / 2, df = K)
+    t_sq_critical = qchisq(p = 1 - alpha, df = df)
     upper_limit = stats::uniroot(
       f = function(gamma)
-        t_sq_value(gamma) - t_sq_critical,
+        sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
       interval = c(gamma_est,
                    5),
       tol = .Machine$double.eps ^ 0.5,
@@ -212,14 +228,14 @@ score_conf_int_common = function(time_points,
     # Find lower limit
     lower_limit = stats::uniroot(
       f = function(gamma)
-        t_sq_value(gamma) - t_sq_critical,
+        sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
       interval = c(-5,
                    gamma_est),
       tol = .Machine$double.eps ^ 0.5,
       maxiter = 1e3
     )$root
   }
-  else if (type == "directional") {
+  else {
     # Construct function of gamma that return the z-value.
     z_value = function(gamma) {
       return(score_test_common(time_points,
@@ -229,7 +245,9 @@ score_conf_int_common = function(time_points,
                         interpolation,
                         vcov,
                         gamma_0 = gamma,
-                        type = "directional"))
+                        type,
+                        j,
+                        weights))
     }
     # Find upper limit
     z_critical = qnorm(p = 1 - alpha / 2)
@@ -276,7 +294,7 @@ score_estimate_common = function(time_points,
   # Help function that computes the squared test statistics for a given gamma.
   # If the test statistic is a chi-squared value, then we do not have to square.
   # For a z-statistic, we compute the square.
-  if (type == "omnibus") {
+  if (type %in% c("omnibus", "directional")) {
     objective_function = function(gamma) {
       score_test_common(
         time_points,

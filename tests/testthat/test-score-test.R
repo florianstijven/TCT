@@ -189,7 +189,7 @@ test_that("all type of score TCT test for common treatment effect are correct", 
     weights = c(0.2, 1, 1, 2)
   )
   output_vector = c(z_omnibus, z_directional, z_inv_var, z_custom)
-  expect_vector = c(6.26733272, -0.04865092, -1.41203381, -1.78553411)
+  expect_vector = c(6.26733272, 0.00236691, -1.41203381, -1.78553411)
   expect_equal(output_vector, expect_vector)
 })
 
@@ -264,10 +264,190 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
     j = 4,
     weights = c(10)
   )
-  output_vector = c(z_omnibus, z_directional ** 2, z_inv_var ** 2, z_custom ** 2)
+  output_vector = c(z_omnibus, z_directional, z_inv_var ** 2, z_custom ** 2)
   expect_equal(output_vector, rep(z_omnibus, 4))
 })
 
-# Score based estimates
+test_that("all type of mutlivariate score TCT confidence intervals for common treatment effect are correct", {
+  library(dplyr)
+  # Example data set transformed to format required by TCT()
+  data_test = simulated_test_trial %>%
+    mutate(
+      time_int = (Week %/% 25) + 1,
+      arm_time = ifelse(time_int == 1L,
+                        "baseline",
+                        paste0(arm, ":", time_int))
+    )
+  # Fit a MMRM model to the data set. The parameter estimates of this model form
+  # the basis to perform the time component tests.
+  mmrm_fit = analyze_mmrm(data_test)
+  ref_fun = ref_fun_constructor(0:4,
+                                coef(mmrm_fit)[c(9, 1:4)],
+                                "spline")
+
+  TCT_Fit = TCT(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    B = 0
+  )
+
+  test = function(x) {
+    score_test_common(
+      time_points = 0:4,
+      ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+      exp_estimates = coef(mmrm_fit)[5:8],
+      vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+      interpolation = "spline",
+      ref_fun = ref_fun,
+      type = "directional",
+      j = 1:4,
+      gamma_0 = x
+    )
+  }
+  gammas = seq(from = -10, to = 10, length.out = 1e3)
+  zs = sapply(gammas, test)
+  plot(gammas, zs)
+
+
+  # z-value for TCT score test
+  conf_int_omnibus = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "omnibus",
+    j = 1:4,
+    gamma_est = 0.8,
+  )
+  conf_int_directional = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "directional",
+    j = 1:4,
+    gamma_est = 0.8,
+  )
+  conf_int_inv_var = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "inverse variance",
+    j = 1:4,
+    gamma_est = 0.8,
+  )
+  conf_int_custom = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "custom",
+    j = 1:4,
+    gamma_est = 0.8,
+    weights = c(0, 1, 1, 2)
+  )
+  output_vector = c(conf_int_omnibus, conf_int_directional, conf_int_inv_var, conf_int_custom)
+  expect_vector = c(0.66475028, 1.08446326, 0.36763236, 1.5162254, 0.57461092, 1.08179608, 0.62504568, 1.02042558)
+  expect_equal(output_vector, expect_vector)
+})
+
+test_that("all type of multivariate score TCT confidence intervals for common treatment effect are equivalent to their univariate counterparts", {
+  library(dplyr)
+  # Example data set transformed to format required by TCT()
+  data_test = simulated_test_trial %>%
+    mutate(
+      time_int = (Week %/% 25) + 1,
+      arm_time = ifelse(time_int == 1L,
+                        "baseline",
+                        paste0(arm, ":", time_int))
+    )
+  # Fit a MMRM model to the data set. The parameter estimates of this model form
+  # the basis to perform the time component tests.
+  mmrm_fit = analyze_mmrm(data_test)
+  ref_fun = ref_fun_constructor(0:4,
+                                coef(mmrm_fit)[c(9, 1:4)],
+                                "spline")
+
+  TCT_Fit = TCT(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    B = 0
+  )
+
+  # z-value for TCT score test
+  conf_int_omnibus = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "omnibus",
+    j = 2,
+    gamma_est = 0.8,
+  )
+  conf_int_directional = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "directional",
+    j = 2,
+    gamma_est = 0.8,
+  )
+  conf_int_inv_var = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "inverse variance",
+    j = 2,
+    gamma_est = 0.8,
+  )
+  conf_int_custom = score_conf_int_common(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "custom",
+    j = 2,
+    gamma_est = 0.8,
+    weights = 10
+  )
+  conf_int_univariate = score_conf_int(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    j = 2
+  )
+  output_vector = c(conf_int_omnibus, conf_int_directional, conf_int_inv_var, conf_int_custom)
+  expect_vector = rep(conf_int_univariate, 4)
+  expect_equal(output_vector, expect_vector)
+})
+
 
 # Score based CI for common gamma
