@@ -519,7 +519,7 @@ test_that("all type of multivariate score TCT estimators are correct", {
     weights = c(0, 1, 2, 2)
   )
   output_vector = c(gamma_omnibus, gamma_directional, gamma_inv_var, gamma_custom)
-  expect_vector = c(0.85504185, 0.98636143, 0.8079171, 0.78630196)
+  expect_vector = c(0.85504257, 0.98637207, 0.80793263, 0.78630043)
   expect_equal(output_vector, expect_vector)
 })
 

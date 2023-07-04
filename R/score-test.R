@@ -179,6 +179,12 @@ score_test_common = function(time_points,
   }
 }
 
+#' Confidence interval based on score test
+#'
+#' @inheritParams score_estimate_common
+#' @param gamma_est Estimate for the common acceleration factor.
+#'
+#' @return
 score_conf_int_common = function(time_points,
                                  ctrl_estimates,
                                  exp_estimates,
@@ -212,63 +218,47 @@ score_conf_int_common = function(time_points,
       )
       return(t_sq)
     }
-    # Degrees of freedom for chi-squared statistic.
-    if (type == "omnibus") df = length(j)
-    else df = 1
-    # Find upper limit
-    t_sq_critical = qchisq(p = 1 - alpha, df = df)
-    upper_limit = stats::uniroot(
-      f = function(gamma)
-        sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-      interval = c(gamma_est,
-                   5),
-      tol = .Machine$double.eps ^ 0.5,
-      maxiter = 1e3
-    )$root
-    # Find lower limit
-    lower_limit = stats::uniroot(
-      f = function(gamma)
-        sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-      interval = c(-5,
-                   gamma_est),
-      tol = .Machine$double.eps ^ 0.5,
-      maxiter = 1e3
-    )$root
   }
   else {
     # Construct function of gamma that return the z-value.
-    z_value = function(gamma) {
-      return(score_test_common(time_points,
-                        ctrl_estimates,
-                        exp_estimates,
-                        ref_fun,
-                        interpolation,
-                        vcov,
-                        gamma_0 = gamma,
-                        type,
-                        j,
-                        weights))
+    t_sq_value = function(gamma) {
+      t_sq = score_test_common(
+        time_points,
+        ctrl_estimates,
+        exp_estimates,
+        ref_fun,
+        interpolation,
+        vcov,
+        gamma,
+        type,
+        j,
+        weights
+      ) ** 2
+      return(t_sq)
     }
-    # Find upper limit
-    z_critical = qnorm(p = 1 - alpha / 2)
-    upper_limit = stats::uniroot(
-      f = function(gamma)
-        z_value(gamma) + z_critical,
-      interval = c(-5,
-                   5),
-      tol = .Machine$double.eps ^ 0.5,
-      maxiter = 1e3
-    )$root
-    # Find lower limit
-    lower_limit = stats::uniroot(
-      f = function(gamma)
-        z_value(gamma) - z_critical,
-      interval = c(-5,
-                   5),
-      tol = .Machine$double.eps ^ 0.5,
-      maxiter = 1e3
-    )$root
   }
+  # Degrees of freedom for chi-squared statistic.
+  if (type == "omnibus") df = length(j)
+  else df = 1
+  # Find upper limit
+  t_sq_critical = qchisq(p = 1 - alpha, df = df)
+  upper_limit = stats::uniroot(
+    f = function(gamma)
+      sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
+    interval = c(gamma_est,
+                 5),
+    tol = .Machine$double.eps ^ 0.5,
+    maxiter = 1e3
+  )$root
+  # Find lower limit
+  lower_limit = stats::uniroot(
+    f = function(gamma)
+      sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
+    interval = c(-5,
+                 gamma_est),
+    tol = .Machine$double.eps ^ 0.5,
+    maxiter = 1e3
+  )$root
 
   # Return estimated confidence interval.
   return(
@@ -280,6 +270,10 @@ score_conf_int_common = function(time_points,
 #' statistic
 #'
 #' @inheritParams score_test_common
+#' @param penalty This a function that is added to the (squared) test
+#'   statistics. Defaults to a constant function. This is mostly useful for
+#'   small samples to put a penalty on values of gamma outside the unit
+#'   interval.
 #'
 #' @return
 score_estimate_common = function(time_points,
