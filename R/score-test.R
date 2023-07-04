@@ -290,13 +290,15 @@ score_estimate_common = function(time_points,
                                  vcov,
                                  type = "omnibus",
                                  j = 1:length(exp_estimates),
-                                 weights = NULL) {
+                                 weights = NULL,
+                                 penalty = function(x) 0,
+                                 ...) {
   # Help function that computes the squared test statistics for a given gamma.
   # If the test statistic is a chi-squared value, then we do not have to square.
   # For a z-statistic, we compute the square.
   if (type %in% c("omnibus", "directional")) {
     objective_function = function(gamma) {
-      score_test_common(
+      test_statistic = score_test_common(
         time_points,
         ctrl_estimates,
         exp_estimates,
@@ -308,11 +310,12 @@ score_estimate_common = function(time_points,
         j,
         weights
       )
+      return(test_statistic + penalty(gamma))
     }
   }
   else {
     objective_function = function(gamma) {
-      score_test_common(
+      test_statistic = score_test_common(
         time_points,
         ctrl_estimates,
         exp_estimates,
@@ -324,13 +327,24 @@ score_estimate_common = function(time_points,
         j,
         weights
       ) ** 2
+      return(test_statistic + penalty(gamma))
     }
   }
 
-  # Find the gamma-value that minimizes the (squared) test-statistic.
-  optimise(
-    f = objective_function,
-    interval = c(0, 2)
-  )$minimum
+  # Find the gamma-value that minimizes the (squared) test-statistic. Starting
+  # value is found by simple grid search.
+  gammas = seq(from = -0.5, to = 1.5, length.out = 15)
+  objectives = sapply(X = gammas, FUN = objective_function)
+  # Select starting value
+  gamma_start = gammas[which.min(objectives)]
+  optim(
+    par = gamma_start,
+    fn = objective_function,
+    hessian = FALSE,
+    method = "L-BFGS-B",
+    lower = -2,
+    upper = 4,
+    ...
+  )$par
 }
 
