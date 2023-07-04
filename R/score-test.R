@@ -242,23 +242,37 @@ score_conf_int_common = function(time_points,
   else df = 1
   # Find upper limit
   t_sq_critical = qchisq(p = 1 - alpha, df = df)
-  upper_limit = stats::uniroot(
-    f = function(gamma)
-      sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-    interval = c(gamma_est,
-                 5),
-    tol = .Machine$double.eps ^ 0.5,
-    maxiter = 1e3
-  )$root
+  # If the right limit of the test statistic, as a function of gamma, does not
+  # cross the critical value, the upper confidence limit is infinity. The same
+  # principle applies to the lower limit.
+  if (t_sq_value(10) < t_sq_critical) {
+    upper_limit = +Inf
+  }
+  else {
+    upper_limit = stats::uniroot(
+      f = function(gamma)
+        sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
+      interval = c(gamma_est,
+                   10),
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+  }
+
   # Find lower limit
-  lower_limit = stats::uniroot(
-    f = function(gamma)
-      sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-    interval = c(-5,
-                 gamma_est),
-    tol = .Machine$double.eps ^ 0.5,
-    maxiter = 1e3
-  )$root
+  if (t_sq_value(-10) < t_sq_critical) {
+    lower_limit = -Inf
+  }
+  else {
+    lower_limit = stats::uniroot(
+      f = function(gamma)
+        sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
+      interval = c(-10,
+                   gamma_est),
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+  }
 
   # Return estimated confidence interval.
   return(
@@ -327,7 +341,7 @@ score_estimate_common = function(time_points,
 
   # Find the gamma-value that minimizes the (squared) test-statistic. Starting
   # value is found by simple grid search.
-  gammas = seq(from = -0.5, to = 1.5, length.out = 15)
+  gammas = seq(from = -0.5, to = 1.5, length.out = 20)
   objectives = sapply(X = gammas, FUN = objective_function)
   # Select starting value
   gamma_start = gammas[which.min(objectives)]

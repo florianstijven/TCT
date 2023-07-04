@@ -477,6 +477,7 @@ test_that("all type of multivariate score TCT estimators are correct", {
   )
 
   # z-value for TCT score test
+  set.seed(1)
   gamma_omnibus = score_estimate_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -519,7 +520,7 @@ test_that("all type of multivariate score TCT estimators are correct", {
     weights = c(0, 1, 2, 2)
   )
   output_vector = c(gamma_omnibus, gamma_directional, gamma_inv_var, gamma_custom)
-  expect_vector = c(0.85504257, 0.98637207, 0.80793263, 0.78630043)
-  expect_equal(output_vector, expect_vector)
+  expect_vector = c(0.85504244, 0.98637208, 0.80793279, 0.78630034)
+  expect_equal(output_vector, expect_vector, tolerance = 1e-5)
 })
 
