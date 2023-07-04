@@ -179,6 +179,8 @@ score_test_common = function(time_points,
   }
 }
 
+
+
 #' Confidence interval based on score test
 #'
 #' @inheritParams score_estimate_common
@@ -240,8 +242,17 @@ score_conf_int_common = function(time_points,
   # Degrees of freedom for chi-squared statistic.
   if (type == "omnibus") df = length(j)
   else df = 1
-  # Find upper limit
+  # Compute critical value.
   t_sq_critical = qchisq(p = 1 - alpha, df = df)
+  # If the test statistic evaluated in the estimated value is larger than the
+  # critical value, then we cannot compute the confidence interval. This means
+  # that a common acceleration factor is not consistent with the data.
+  # Nonetheless, the score-based estimator remains well-defined. A confidence
+  # interval can still be computed from the bootstrap. However, this should be
+  # done with care.
+  if (t_sq_value(gamma_est) > t_sq_critical) return(NA)
+  # Find upper limit.
+
   # If the right limit of the test statistic, as a function of gamma, does not
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
@@ -354,5 +365,96 @@ score_estimate_common = function(time_points,
     upper = 4,
     ...
   )$par
+}
+
+
+
+
+
+v_function = function(time_points,
+                      ctrl_estimates,
+                      exp_estimates,
+                      interpolation,
+                      vcov,
+                      gamma_0,
+                      j,
+                      weights) {
+  ref_fun = ref_fun_constructor(time_points,
+                                ctrl_estimates,
+                                interpolation)
+  # Number of measurement occasions in the experimental group.
+  K = length(j)
+  # The Jacobian matrix is computed in two parts. First, the (K x K + 1) part is
+  # computed.
+  J_f0_alpha_t  = -1 * attr(
+    deriv_f0_alpha(
+      t_m = gamma_0 * time_points[j + 1],
+      x_ref = time_points,
+      y_ref = ctrl_estimates,
+      method = interpolation
+    ),
+    "gradient"
+  )
+  # Next, the second part of the Jacobian. This corresponds to the identify
+  # matrix. We join both parts two get the Jacobian.
+  J = t(cbind(J_f0_alpha_t, diag(x = 1, nrow = K)))
+  # Compute the variance of the "test statistic "score vector", g_gamma_0 under
+  # the null. The inverse of this matrix is also computed.
+  Sigma_g = t(J) %*% vcov[c(1:length(time_points), length(time_points) + j),
+                          c(1:length(time_points), length(time_points) + j)] %*% J
+  Sigma_g_inv = solve(Sigma_g)
+  # Compute the score vector.
+  g = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1]))
+  weights = matrix(weights, ncol = 1)
+  v = t(weights) %*% g
+  return(as.numeric(v))
+}
+
+gradient_gamma_w = function(time_points,
+                            ctrl_estimates,
+                            exp_estimates,
+                            interpolation,
+                            vcov,
+                            gamma_0,
+                            j = 1:length(exp_estimates),
+                            weights){
+  K = length(time_points)
+  force(time_points); force(ctrl_estimates); force(exp_estimates)
+  force(interpolation); force(vcov);
+  force(j); force(weights); force(K); force(ref_fun); force(gamma_0)
+  v = function(theta) {
+    v_function(
+    time_points,
+    theta[1:K],
+    theta[K + j],
+    interpolation,
+    vcov,
+    gamma_0,
+    j,
+    weights)
+  }
+
+  f = function(theta) {
+    v_gamma = function(gamma) {
+      v_function(
+        time_points,
+        theta[1:K],
+        theta[K + j],
+        interpolation,
+        vcov,
+        gamma,
+        j,
+        weights)
+    }
+    v_deriv_gamma = numDeriv::grad(
+      func = v_gamma,
+      x = gamma_0
+    )
+    v(theta) * (1 / v_deriv_gamma)
+  }
+  numDeriv::grad(
+    func = f,
+    x = c(ctrl_estimates, exp_estimates[j])
+  )
 }
 

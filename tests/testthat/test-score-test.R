@@ -294,23 +294,6 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
     B = 0
   )
 
-  test = function(x) {
-    score_test_common(
-      time_points = 0:4,
-      ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-      exp_estimates = coef(mmrm_fit)[5:8],
-      vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-      interpolation = "spline",
-      ref_fun = ref_fun,
-      type = "directional",
-      j = 1:4,
-      gamma_0 = x
-    )
-  }
-  gammas = seq(from = -10, to = 10, length.out = 1e3)
-  zs = sapply(gammas, test)
-  plot(gammas, zs)
-
 
   # z-value for TCT score test
   conf_int_omnibus = score_conf_int_common(
@@ -524,3 +507,30 @@ test_that("all type of multivariate score TCT estimators are correct", {
   expect_equal(output_vector, expect_vector, tolerance = 1e-5)
 })
 
+
+v_function(
+  time_points = 0:4,
+  ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+  exp_estimates = coef(mmrm_fit)[5:8],
+  vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+  interpolation = "spline",
+  ref_fun = ref_fun,
+  gamma_0 = 0.78630034,
+  j = 1:4,
+  weights = c(0, 1, 2, 2)
+)
+
+gr_gamma_w = gradient_gamma_w(
+  time_points = 0:4,
+  ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+  exp_estimates = coef(mmrm_fit)[5:8],
+  vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+  interpolation = "spline",
+  gamma_0 = 0.78630034,
+  j = 1:4,
+  weights = c(1, 1, 2, 1.7)
+)
+
+matrix(gr_gamma_w, nrow = 1) %*%
+  vcov %*%
+  matrix(gr_gamma_w, ncol = 1)
