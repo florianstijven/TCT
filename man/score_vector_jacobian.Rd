@@ -4,16 +4,7 @@
 \alias{score_vector_jacobian}
 \title{Compute Jacobian of the score vector}
 \usage{
-score_vector_jacobian(
-  time_points,
-  ctrl_estimates,
-  exp_estimates,
-  interpolation,
-  vcov,
-  gamma_0,
-  j,
-  weights
-)
+score_vector_jacobian(time_points, ctrl_estimates, interpolation, gamma_0, j)
 }
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
@@ -21,9 +12,6 @@ the estimated means in the \code{ctrl_estimates} vector.}
 
 \item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
 occasions.}
-
-\item{exp_estimates}{Estimated mean outcomes in the experimental group at
-fixed occasions.}
 
 \item{interpolation}{Which interpolation method to use?
 \itemize{
@@ -33,15 +21,9 @@ fixed occasions.}
 and Carlson
 }}
 
-\item{vcov}{The variance-covariance matrix for the means. In order to map to
-the correct estimates, this matrix should be the variance-covariance matrix
-of \code{c(ctrl_means, exp_means)}.}
-
 \item{gamma_0}{Value under the null hypothesis for the acceleration factor.}
 
 \item{j}{description}
-
-\item{weights}{description}
 }
 \description{
 The \code{\link[=score_vector_jacobian]{score_vector_jacobian()}} function computes the Jacobian of the score

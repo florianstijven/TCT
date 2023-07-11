@@ -130,26 +130,18 @@ score_test_common = function(time_points,
                              type = "omnibus",
                              j = 1:length(exp_estimates),
                              weights = NULL){
-  # Number of measurement occasions in the experimental group.
   K = length(j)
-  # The Jacobian matrix is computed in two parts. First, the (K x K + 1) part is
-  # computed.
-  J_f0_alpha_t  = -1 * attr(
-    deriv_f0_alpha(
-      t_m = gamma_0 * time_points[j + 1],
-      x_ref = time_points,
-      y_ref = ctrl_estimates,
-      method = interpolation
-    ),
-    "gradient"
+  J = score_vector_jacobian(
+    time_points,
+    ctrl_estimates,
+    interpolation,
+    gamma_0,
+    j
   )
-  # Next, the second part of the Jacobian. This corresponds to the identify
-  # matrix. We join both parts two get the Jacobian.
-  J = t(cbind(J_f0_alpha_t, diag(x = 1, nrow = K)))
   # Compute the variance of the "test statistic "score vector", g_gamma_0 under
   # the null. The inverse of this matrix is also computed.
-  Sigma_g = t(J) %*% vcov[c(1:length(time_points), length(time_points) + j),
-                          c(1:length(time_points), length(time_points) + j)] %*% J
+  Sigma_g = J %*% vcov[c(1:length(time_points), length(time_points) + j),
+                          c(1:length(time_points), length(time_points) + j)] %*% t(J)
   Sigma_g_inv = solve(Sigma_g)
   # Compute the score vector.
   g = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1]))

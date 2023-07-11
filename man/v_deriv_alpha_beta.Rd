@@ -7,9 +7,7 @@
 v_deriv_alpha_beta(
   time_points,
   ctrl_estimates,
-  exp_estimates,
   interpolation,
-  vcov,
   gamma_0,
   j,
   weights
@@ -22,9 +20,6 @@ the estimated means in the \code{ctrl_estimates} vector.}
 \item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
 occasions.}
 
-\item{exp_estimates}{Estimated mean outcomes in the experimental group at
-fixed occasions.}
-
 \item{interpolation}{Which interpolation method to use?
 \itemize{
 \item \code{"linear"}: linear interpolation
@@ -32,10 +27,6 @@ fixed occasions.}
 \item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
 and Carlson
 }}
-
-\item{vcov}{The variance-covariance matrix for the means. In order to map to
-the correct estimates, this matrix should be the variance-covariance matrix
-of \code{c(ctrl_means, exp_means)}.}
 
 \item{gamma_0}{Value under the null hypothesis for the acceleration factor.}
 
