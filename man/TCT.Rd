@@ -10,6 +10,7 @@ TCT(
   exp_estimates,
   vcov,
   interpolation = "spline",
+  inference = "wald",
   B = 0,
   constraints = FALSE
 )
@@ -35,6 +36,9 @@ of \code{c(ctrl_means, exp_means)}.}
 \item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
 and Carlson
 }}
+
+\item{inference}{Which approach is used for estimation and inference? Should
+be \code{"wald"} or \code{"score"}.}
 
 \item{B}{Number of bootstrap replications. If \code{B = 0}, no bootstrap is
 performed (default).}
@@ -81,7 +85,7 @@ Following options for inference are available:
 \itemize{
 \item Delta method
 \item Parametric bootstrap
-\item Score test
+\item Score test: More information in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}
 }
 }
 

@@ -1,5 +1,6 @@
 new_TCT = function(coefficients,
                    vcov,
+                   inference,
                    bootstrap_estimates,
                    interpolation,
                    type,
@@ -10,7 +11,8 @@ new_TCT = function(coefficients,
                  bootstrap_estimates = bootstrap_estimates,
                  interpolation = interpolation,
                  type = type,
-                 vertical_model = vertical_model),
+                 vertical_model = vertical_model,
+                 inference = inference),
             class = "TCT")
 }
 
@@ -31,6 +33,8 @@ new_TCT = function(coefficients,
 #' @param vcov The variance-covariance matrix for the means. In order to map to
 #'   the correct estimates, this matrix should be the variance-covariance matrix
 #'   of `c(ctrl_means, exp_means)`.
+#' @param inference Which approach is used for estimation and inference? Should
+#'   be `"wald"` or `"score"`.
 #' @param interpolation Which interpolation method to use?
 #'  * `"linear"`: linear interpolation
 #'  * `"spline"`: natural cubic spline interpolation
@@ -75,7 +79,7 @@ new_TCT = function(coefficients,
 #' Following options for inference are available:
 #' * Delta method
 #' * Parametric bootstrap
-#' * Score test
+#' * Score test: More information in [score_test()] and [score_test_common()]
 #'
 #' @examples
 #' # transform example data set to desired format
@@ -103,6 +107,7 @@ TCT = function(time_points,
                exp_estimates,
                vcov,
                interpolation = "spline",
+               inference = "wald",
                B = 0,
                constraints = FALSE) {
   # Apply constraint GLS estimator if asked.
@@ -117,6 +122,7 @@ TCT = function(time_points,
   ref_fun = ref_fun_constructor(time_points,
                                 ctrl_estimates,
                                 interpolation)
+
   se_delta = DeltaMethod(
     time_points = time_points,
     ctrl_estimates = ctrl_estimates,
@@ -125,6 +131,10 @@ TCT = function(time_points,
     interpolation = interpolation,
     vcov = vcov
   )
+  coefficients = se_delta$estimate
+  vcov_matrix = se_delta$variance
+
+
 
   bootstrap_estimates = pm_bootstrap_vertical_to_horizontal(
     time_points = time_points,
@@ -136,8 +146,9 @@ TCT = function(time_points,
     constraints = constraints
   )
 
-  return(new_TCT(coefficients = se_delta$estimate,
-                 vcov = se_delta$variance,
+  return(new_TCT(coefficients = coefficients,
+                 vcov = vcov_matrix,
+                 inference = inference,
                  bootstrap_estimates = bootstrap_estimates,
                  interpolation = interpolation,
                  type = "time-based treatment effects",
@@ -152,7 +163,8 @@ TCT = function(time_points,
 print.TCT = function(x, ...) {
   cat(
     paste0(
-      "Time Component Test: ",
+      "Time Component Test ",
+      "(", x$inference, ")",
       x$type,
       "\n\n"
     )
@@ -164,41 +176,93 @@ print.TCT = function(x, ...) {
 }
 
 
-#' Title
+#' Summarize fitted Time Component Test model
 #'
-#' @param x
-#' @param alpha
-#' @param delta_transformation
+#' @param x Object returned by [TCT()].
+#' @param alpha Two-sided confidence level for confidence intervals.
+#' @param delta_transformation Transformation when applying the delta-method to
+#'   obtain confidence intervals.
 #'
 #' @return
+#' @export
 #' @import stats
 summary.TCT = function(x,
                        alpha = 0.05,
                        delta_transformation = "identity") {
-  # inference based on delta method
-  if (delta_transformation == "identity") {
+  # Wald-based inference if the inference option is equal to "wald".
+  if (x$inference == "wald") {
+    if (delta_transformation == "identity") {
+      se_delta = sqrt(diag(x$vcov))
+      z_values = (1 - coef(x)) / se_delta
+      ci_delta_lower = coef(x) - stats::qnorm(1 - (alpha / 2)) * se_delta
+      ci_delta_upper = coef(x) + stats::qnorm(1 - (alpha / 2)) * se_delta
+    }
+    else if (delta_transformation == "log") {
+      se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
+      z_values = (log(coef(x))) / se_delta
+      ci_delta_lower = exp(log(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
+      ci_delta_upper = exp(log(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
+    }
+    else if (delta_transformation == "log10") {
+      se_delta = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
+      z_values = (log10(coef(x))) / se_delta
+      ci_delta_lower = 10**(log10(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
+      ci_delta_upper = 10**(log10(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
+    }
+    ci_matrix = matrix(
+      data = c(ci_delta_lower, ci_delta_upper),
+      ncol = 2,
+      byrow = FALSE
+    )
+  }
+  # Score-based inference if the inference option is equal to "score".
+  if (x$inference == "score") {
     se_delta = sqrt(diag(x$vcov))
-    z_delta = (1 - coef(x)) / se_delta
-    ci_delta_lower = coef(x) - stats::qnorm(1 - (alpha / 2)) * se_delta
-    ci_delta_upper = coef(x) + stats::qnorm(1 - (alpha / 2)) * se_delta
+    # (Re)construct reference trajectory.
+    ref_fun = ref_fun_constructor(
+      x$vertical_model$time_points,
+      x$vertical_model$ctrl_estimates,
+      x$interpolation
+    )
+    # Compute confidence intervals for the measurement occasion-specific
+    # acceleration factors based on the score test.
+    ci_list = lapply(
+      X = 1:length(x$vertical_model$exp_estimates),
+      FUN = function(j) {
+        score_conf_int(
+          time_points = x$vertical_model$time_points,
+          ctrl_estimates = x$vertical_model$ctrl_estimates,
+          exp_estimates = x$vertical_model$exp_estimates,
+          ref_fun = ref_fun,
+          interpolation = x$interpolation,
+          vcov = x$vertical_model$vcov,
+          j = j,
+          alpha = alpha
+        )
+      }
+    )
+    # Convert list of confidence intervals to a matrix. The first column
+    # contains the lower limits, the second column contains the upper limits.
+    ci_matrix = matrix(unlist(ci_list), ncol = 2, byrow = TRUE)
+    # Compute the z-statistics for the measurement occasion-specific
+    # acceleration factors based on the score test.
+    z_values = vapply(
+      X = 1:length(x$vertical_model$exp_estimates),
+      FUN = function(j) {
+        score_test(
+          time_points = x$vertical_model$time_points,
+          ctrl_estimates = x$vertical_model$ctrl_estimates,
+          exp_estimates = x$vertical_model$exp_estimates,
+          ref_fun = ref_fun,
+          interpolation = x$interpolation,
+          vcov = x$vertical_model$vcov,
+          j = j,
+          gamma_0 = 1
+        )[1]
+      },
+      FUN.VALUE = 1.1
+    )
   }
-  else if (delta_transformation == "log") {
-    se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
-    z_delta = (log(coef(x))) / se_delta
-    ci_delta_lower = exp(log(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
-    ci_delta_upper = exp(log(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
-  }
-  else if (delta_transformation == "log10") {
-    se_delta = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
-    z_delta = (log10(coef(x))) / se_delta
-    ci_delta_lower = 10**(log10(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
-    ci_delta_upper = 10**(log10(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
-  }
-  ci_delta = matrix(
-    data = c(ci_delta_lower, ci_delta_upper),
-    ncol = 2,
-    byrow = FALSE
-  )
 
   lht_delta = linearHypothesis.default(
     model = x,
@@ -207,7 +271,7 @@ summary.TCT = function(x,
     rhs = rep(1, length(coef(x))),
     hypothesis.matrix = diag(1, nrow = length(coef(x)), ncol = length(coef(x)))
   )
-  p_delta =  (1 - pnorm(abs(z_delta))) * 2
+  p_values =  (1 - pnorm(abs(z_values))) * 2
 
   # inference based on parametric bootstrap
   if (!(is.null(x$bootstrap_estimates))) {
@@ -241,9 +305,9 @@ summary.TCT = function(x,
     new_summary.TCT(
       x = x,
       se_delta = se_delta,
-      z_delta = z_delta,
-      ci_delta = ci_delta,
-      p_delta = p_delta,
+      z_values = z_values,
+      ci_matrix = ci_matrix,
+      p_values = p_values,
       lht_delta = lht_delta,
       vcov_bootstrap = vcov_bootstrap,
       se_bootstrap = se_bootstrap,
@@ -257,9 +321,9 @@ summary.TCT = function(x,
 new_summary.TCT = function(
     x,
     se_delta,
-    z_delta,
-    ci_delta,
-    p_delta,
+    z_values,
+    ci_matrix,
+    p_values,
     lht_delta,
     vcov_bootstrap,
     se_bootstrap,
@@ -271,9 +335,9 @@ new_summary.TCT = function(
     x,
     list(
       se_delta = se_delta,
-      z_delta = z_delta,
-      ci_delta = ci_delta,
-      p_delta = p_delta,
+      z_values = z_values,
+      ci_matrix = ci_matrix,
+      p_values = p_values,
       lht_delta = lht_delta,
       vcov_bootstrap = vcov_bootstrap,
       se_bootstrap = se_bootstrap,
@@ -306,12 +370,12 @@ print.summary.TCT = function(x) {
     coefficients_df = data.frame(
       Value = coef(x),
       "Std. Error (delta)" = x$se_delta,
-      "z-value (delta)" = x$z_delta,
-      "p-value (delta)" = x$p_delta,
+      "z-value (delta)" = x$z_values,
+      "p-value (delta)" = x$p_values,
       "CI (delta)" = paste0("(",
-                            format(x$ci_delta[, 1], digits = 5),
+                            format(x$ci_matrix[, 1], digits = 5),
                             ", ",
-                            format(x$ci_delta[, 2], digits = 5),
+                            format(x$ci_matrix[, 2], digits = 5),
                             ")"),
       check.names = FALSE
     )
@@ -320,12 +384,12 @@ print.summary.TCT = function(x) {
     coefficients_df = data.frame(
       Value = coef(x),
       `Std. Error (delta)` = x$se_delta,
-      `z-value (delta)` = x$z_delta,
-      `p-value (delta)` = x$p_delta,
+      `z-value (delta)` = x$z_values,
+      `p-value (delta)` = x$p_values,
       `CI (delta)` = paste0("(",
-                            format(x$ci_delta[, 1], digits = 5),
+                            format(x$ci_matrix[, 1], digits = 5),
                             ", ",
-                            format(x$ci_delta[, 2], digits = 5),
+                            format(x$ci_matrix[, 2], digits = 5),
                             ")"),
       `CI (bootstrap)` = paste0("(",
                                 format(x$ci_bootstrap[, 1], digits = 5),
@@ -334,6 +398,14 @@ print.summary.TCT = function(x) {
                                 ")"),
       check.names = FALSE
     )
+
+  }
+  # Change column names if inference is based on the score test.
+  if (x$inference == "score") {
+    colnames(coefficients_df)[2:5] = c("Std. Error (delta)",
+                                  "z-value (score)",
+                                  "p-value (score)",
+                                  "CI (score)")
   }
 
   print(coefficients_df, digits = 5)
@@ -355,13 +427,22 @@ print.summary.TCT = function(x) {
 #'
 #' @examples
 TCT_common = function(TCT_Fit,
+                      inference = "wald",
                       B = 0,
                       bs_fix_vcov = FALSE,
                       select_coef = 1:length(coef(TCT_Fit)),
                       null_bs = FALSE,
                       gls_est = TRUE,
-                      constraints = FALSE) {
-
+                      constraints = FALSE,
+                      type = NULL,
+                      weights = NULL) {
+  # (Re)construct reference trajectory.
+  ref_fun = ref_fun_constructor(
+    TCT_Fit$vertical_model$time_points,
+    TCT_Fit$vertical_model$ctrl_estimates,
+    TCT_Fit$interpolation
+  )
+  # Use wald-based inference if this is asked by the user.
   estimates = coef(TCT_Fit)[select_coef]
   if (gls_est) {
     vcov = TCT_Fit$vcov[select_coef, select_coef]
@@ -369,15 +450,32 @@ TCT_common = function(TCT_Fit,
   else {
     vcov = diag(diag(TCT_Fit$vcov[select_coef, select_coef]))
   }
+  if (inference == "wald") {
+    n_points = length(TCT_Fit$vertical_model$time_points)
 
-  n_points = length(TCT_Fit$vertical_model$time_points)
+    # delta method
+    p = length(estimates)
+    vec_1 = matrix(1, nrow = p, ncol = 1)
+    gamma_common_estimate = (t(vec_1) %*% solve(vcov) %*% matrix(estimates, ncol = 1) ) /
+      (t(vec_1) %*% solve(vcov) %*% vec_1)
+    gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
+  }
+  else if (inference == "score") {
+    gamma_common_estimate = score_estimate_common(
+      time_points = TCT_Fit$vertical_model$time_points,
+      ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
+      exp_estimates = TCT_Fit$vertical_model$exp_estimates,
+      ref_fun = ref_fun,
+      interpolation = TCT_Fit$interpolation,
+      vcov = TCT_Fit$vertical_model$vcov,
+      type = type,
+      j = select_coef,
+      weights = weights
+    )
+    gamma_common_vcov = NA
+  }
 
-  # delta method
-  p = length(estimates)
-  vec_1 = matrix(1, nrow = p, ncol = 1)
-  est_delta = (t(vec_1) %*% solve(vcov) %*% matrix(estimates, ncol = 1) ) /
-    (t(vec_1) %*% solve(vcov) %*% vec_1)
-  vcov_delta = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
+
 
 
   bs_estimates = pm_bootstrap_vertical_to_common(
@@ -427,30 +525,45 @@ TCT_common = function(TCT_Fit,
 
 
   new_TCT_common(
-    coefficients = est_delta,
-    vcov = vcov_delta,
+    coefficients = gamma_common_estimate,
+    inference = inference,
+    vcov = gamma_common_vcov,
     bootstrap_estimates = bs_estimates,
     bootstrap_estimates_null = bs_estimates_null,
     interpolation = TCT_Fit$interpolation,
-    lht_common = lht_common
+    lht_common = lht_common,
+    type = type,
+    weights = weights,
+    vertical_model = TCT_Fit$vertical_model,
+    select_coef = select_coef
   )
 }
 
 new_TCT_common = function(coefficients,
+                          inference,
                           vcov,
                           bootstrap_estimates,
                           bootstrap_estimates_null,
                           interpolation,
-                          lht_common
+                          lht_common,
+                          type,
+                          weights,
+                          vertical_model,
+                          select_coef
                           ) {
   structure(
     list(
       coefficients = coefficients,
+      inference = inference,
       vcov = vcov,
       bootstrap_estimates = bootstrap_estimates,
       bootstrap_estimates_null = bootstrap_estimates_null,
       interpolation = interpolation,
-      lht_common = lht_common
+      lht_common = lht_common,
+      type = type,
+      weights = weights,
+      vertical_model = vertical_model,
+      select_coef = select_coef
     ),
     class = "TCT_common"
   )
@@ -492,32 +605,76 @@ print.TCT_common = function(x) {
 summary.TCT_common = function(x,
                               alpha = 0.05,
                               delta_transformation = "identity") {
-  # inference based on delta method
+  # Wald-based inference
+  if (x$inference == "wald") {
+    if (delta_transformation == "identity") {
+      gamma_common_se = sqrt(diag(x$vcov))
+      z_value = (1 - coef(x)) / gamma_common_se
+      gamma_ci_lower = coef(x) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se
+      gamma_ci_upper = coef(x) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se
+    }
+    else if (delta_transformation == "log") {
+      gamma_common_se = (1 / coef(x)) * sqrt(diag(x$vcov))
+      z_value = (log(coef(x))) / gamma_common_se
+      gamma_ci_lower = exp(log(coef(x)) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+      gamma_ci_upper = exp(log(coef(x)) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+    }
+    else if (delta_transformation == "log10") {
+      gamma_common_se = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
+      z_value = log10(coef(x)) / gamma_common_se
+      gamma_ci_lower = 10 ** (log10(coef(x)) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+      gamma_ci_upper = 10 ** (log10(coef(x)) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+    }
+    gamma_common_ci = matrix(
+      data = c(gamma_ci_lower, ci_delta_upper),
+      ncol = 2,
+      byrow = FALSE
+    )
+    p_value =  (1 - stats::pnorm(abs(z_value))) * 2
+  }
+  # Score based inference
+  if (x$inference == "score") {
+    # (Re)construct reference trajectory.
+    ref_fun = ref_fun_constructor(
+      x$vertical_model$time_points,
+      x$vertical_model$ctrl_estimates,
+      x$interpolation
+    )
+    # Compute confidence interval
+    gamma_common_ci = matrix(
+      data = score_conf_int_common(
+        time_points = x$vertical_model$time_points,
+        ctrl_estimates = x$vertical_model$ctrl_estimates,
+        exp_estimates = x$vertical_model$exp_estimates,
+        ref_fun = ref_fun,
+        interpolation = x$interpolation,
+        vcov = x$vertical_model$vcov,
+        gamma_est = x$coefficients,
+        type = x$type,
+        j = x$select_coef,
+        weights = x$weights,
+        alpha = alpha
+      ),
+      ncol = 2
+    )
+    # Compute score test statistic and p-value
+    temp = score_test_common(
+      time_points = x$vertical_model$time_points,
+      ctrl_estimates = x$vertical_model$ctrl_estimates,
+      exp_estimates = x$vertical_model$exp_estimates,
+      ref_fun = ref_fun,
+      interpolation = x$interpolation,
+      vcov = x$vertical_model$vcov,
+      gamma_0 = 1,
+      type = x$type,
+      j = x$select_coef,
+      weights = x$weights)
+    z_value = temp[1]
+    p_value = temp[2]
+    # SE not yet implemented
+    gamma_common_se = NA
+  }
 
-  if (delta_transformation == "identity") {
-    se_delta = sqrt(diag(x$vcov))
-    z_delta = (1 - coef(x)) / se_delta
-    ci_delta_lower = coef(x) - stats::qnorm(1 - (alpha / 2)) * se_delta
-    ci_delta_upper = coef(x) + stats::qnorm(1 - (alpha / 2)) * se_delta
-  }
-  else if (delta_transformation == "log") {
-    se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
-    z_delta = (log(coef(x))) / se_delta
-    ci_delta_lower = exp(log(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
-    ci_delta_upper = exp(log(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
-  }
-  else if (delta_transformation == "log10") {
-    se_delta = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
-    z_delta = log10(coef(x)) / se_delta
-    ci_delta_lower = 10**(log10(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
-    ci_delta_upper = 10**(log10(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
-  }
-  ci_delta = matrix(
-    data = c(ci_delta_lower, ci_delta_upper),
-    ncol = 2,
-    byrow = FALSE
-  )
-  p_delta =  (1 - stats::pnorm(abs(z_delta))) * 2
 
   # inference based on parametric bootstrap
   if (!(is.null(x$bootstrap_estimates))) {
@@ -541,10 +698,10 @@ summary.TCT_common = function(x,
 
   new_summary.TCT_common(
     x = x,
-    se_delta = se_delta,
-    z_delta = z_delta,
-    ci_delta = ci_delta,
-    p_delta = p_delta,
+    gamma_common_se = gamma_common_se,
+    z_value = z_value,
+    gamma_common_ci = gamma_common_ci,
+    p_value = p_value,
     vcov_bootstrap = vcov_bootstrap,
     se_bootstrap = se_bootstrap,
     ci_bootstrap = ci_bootstrap,
@@ -555,10 +712,10 @@ summary.TCT_common = function(x,
 
 new_summary.TCT_common = function(
     x,
-    se_delta,
-    z_delta,
-    ci_delta,
-    p_delta,
+    gamma_common_se,
+    z_value,
+    gamma_common_ci,
+    p_value,
     vcov_bootstrap,
     se_bootstrap,
     ci_bootstrap,
@@ -568,10 +725,10 @@ new_summary.TCT_common = function(
   structure(append(
     x,
     list(
-      se_delta = se_delta,
-      z_delta = z_delta,
-      ci_delta = ci_delta,
-      p_delta = p_delta,
+      gamma_common_se = gamma_common_se,
+      z_value = z_value,
+      gamma_common_ci = gamma_common_ci,
+      p_value = p_value,
       vcov_bootstrap = vcov_bootstrap,
       se_bootstrap = se_bootstrap,
       ci_bootstrap = ci_bootstrap,
@@ -602,13 +759,13 @@ print.summary.TCT_common = function(x) {
   if (is.null(x$vcov_bootstrap)) {
     coefficients_df = data.frame(
       Value = coef(x),
-      `Std. Error (delta)` = x$se_delta,
-      `z-value (delta)` = x$z_delta,
-      `p-value (delta)` = x$p_delta,
+      `Std. Error (delta)` = x$gamma_common_se,
+      `z-value (delta)` = x$z_value,
+      `p-value (delta)` = x$p_value,
       `CI (delta)` = paste0("(",
-                            format(x$ci_delta[1], digits = 5),
+                            format(x$gamma_common_ci[1], digits = 5),
                             ", ",
-                            format(x$ci_delta[2], digits = 5),
+                            format(x$gamma_common_ci[2], digits = 5),
                             ")"),
       check.names = FALSE
     )
@@ -616,13 +773,13 @@ print.summary.TCT_common = function(x) {
   else {
     coefficients_df = data.frame(
       Value = coef(x),
-      `Std. Error (delta)` = x$se_delta,
-      `z-value (delta)` = x$z_delta,
-      `p-value (delta)` = x$p_delta,
+      `Std. Error (delta)` = x$gamma_common_se,
+      `z-value (delta)` = x$z_value,
+      `p-value (delta)` = x$p_value,
       `CI (delta)` = paste0("(",
-                            format(x$ci_delta[1], digits = 5),
+                            format(x$gamma_common_ci[1], digits = 5),
                             ", ",
-                            format(x$ci_delta[2], digits = 5),
+                            format(x$gamma_common_ci[2], digits = 5),
                             ")"),
       `CI (bootstrap)` = paste0("(",
                                 format(x$ci_bootstrap[1], digits = 5),

@@ -14,6 +14,7 @@ test_that("TCT() function works with cubic spline interpolation", {
       ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
       exp_estimates = coef(mmrm_fit)[5:8],
       vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+      inference = "wald",
       interpolation = "spline",
       B = 1e3
     )
