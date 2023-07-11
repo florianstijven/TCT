@@ -32,17 +32,21 @@ optimize_weights = function(time_points,
                             interpolation,
                             vcov,
                             j = 1:length(exp_estimates),
-                            weights = NULL,
+                            weights = rep(1, length(exp_estimates)),
                             penalty = function(x) 0,
+                            epsilon = 1e-6,
                             ...) {
-  epsilon = 0.001
-  # Let the weights sum to one and leave out the last element. The last element
-  # is known if the other elements are known and the vector sums to one.
+  # The weights multiplied by a constant are equivalent. So, we let the weights
+  # sum to one.
   w_new = weights / sum(weights)
+  # Because the weights sum to one, the last weight parameter is redundant.
   w_new = w_new[-length(weights)]
-  # Transform weights to logit scale. This ensure that the weights are always in
-  # the unit interval.
-  logit_w_new = log(w_new / ( 1 - w_new))
+  # Log-transform the weight "odds" with the last category is reference. This
+  # ensure that the weights are always positive and sum to one. In principle,
+  # negative weights still lead to valid estimators and inferences. However,
+  # they make no sense in practice. We therefore do not allow for negative
+  # weights in this procedure.
+  log_odds_w_new = log(w_new / (1 - sum(w_new)))
   gamma_new = update_gamma(
     time_points,
     ctrl_estimates,
@@ -54,36 +58,38 @@ optimize_weights = function(time_points,
     j,
     weights
   )
-  sigma_squared = function(logit_w) {
-    w = 1 / (1 + exp(-logit_w))
-    # ANALYTICAL GRADIENT SHOULD STILL BE IMPLEMENTED!!!
-    gr_gamma_w = gradient_gamma_w(
+  sigma_squared = function(log_odds_w) {
+    w_K = 1 / (1 + sum(exp(log_odds_w)))
+    w = c(w_K * exp(log_odds_w),
+          w_K)
+    gr_gamma_w = gradient_gamma_w_analytical(
       time_points = time_points,
       ctrl_estimates = ctrl_estimates,
       exp_estimates = exp_estimates,
-      vcov = vcov,
       interpolation = interpolation,
       gamma_0 = gamma_old,
       j = j,
-      weights = c(w, 1 - sum(w))
+      weights = w
     )
-    se = matrix(gr_gamma_w, nrow = 1) %*%
+    se = t(gr_gamma_w) %*%
       vcov %*%
-      matrix(gr_gamma_w, ncol = 1)
+      gr_gamma_w
     return(as.numeric(se))
   }
   stoppping_criterion = FALSE
 
   while (!(stoppping_criterion)) {
-    logit_w_old = logit_w_new
-    w_old = 1 / (1 + exp(-logit_w_old))
+    log_odds_w_old = log_odds_w_new
+    w_K_old = 1 / (1 + sum(exp(log_odds_w_old)))
+    w_old = w_K_old * exp(log_odds_w_old)
     gamma_old = gamma_new
-    logit_w_new = optim(
+    log_odds_w_new = optim(
       f = sigma_squared,
-      par = logit_w_old,
+      par = log_odds_w_old,
       control = list(maxit = 30)
     )$par
-    w_new = 1 / (1 + exp(-logit_w_new))
+    w_K_new = 1 / (1 + sum(exp(log_odds_w_new)))
+    w_new = w_K_new * exp(log_odds_w_new)
     gamma_new = update_gamma(
       time_points,
       ctrl_estimates,
@@ -93,10 +99,10 @@ optimize_weights = function(time_points,
       vcov,
       "custom",
       j,
-      c(w_new, 1 - sum(w_new))
+      c(w_new, w_K_new)
     )
     stoppping_criterion = sum((w_old - w_new) ** 2) < epsilon
   }
-  return(w_new)
+  return(c(w_new, w_K_new))
 }
 
