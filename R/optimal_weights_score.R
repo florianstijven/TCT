@@ -20,11 +20,21 @@ update_gamma = function(time_points,
   )
 }
 
-update_weights = function() {
 
-}
-
-
+#' Find the "optimal" weights for the score estimator
+#'
+#' The [optimize_weights()] function finds the weights for the score estimator
+#' that minimize the estimated variance of this estimator. The estimated
+#' variance is based in the delta method.
+#'
+#'
+#' @inheritParams score_test_common
+#' @param weights Staring values for the weights vector.
+#' @param epsilon Tolerance to stop optimization algorithm. If the l2-norm of
+#'   the difference in weights from two subsequent iterations is smaller than
+#'   `epsilon`, the optimization algorithm stops.
+#'
+#' @return (numeric) vector with optimal weights.
 optimize_weights = function(time_points,
                             ctrl_estimates,
                             exp_estimates,
@@ -33,7 +43,6 @@ optimize_weights = function(time_points,
                             vcov,
                             j = 1:length(exp_estimates),
                             weights = rep(1, length(exp_estimates)),
-                            penalty = function(x) 0,
                             epsilon = 1e-6,
                             ...) {
   # The weights multiplied by a constant are equivalent. So, we let the weights
@@ -76,9 +85,9 @@ optimize_weights = function(time_points,
       gr_gamma_w
     return(as.numeric(se))
   }
-  stoppping_criterion = FALSE
+  stopping_criterion = FALSE
 
-  while (!(stoppping_criterion)) {
+  while (!(stopping_criterion)) {
     log_odds_w_old = log_odds_w_new
     w_K_old = 1 / (1 + sum(exp(log_odds_w_old)))
     w_old = w_K_old * exp(log_odds_w_old)
