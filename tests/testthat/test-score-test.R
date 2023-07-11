@@ -508,29 +508,65 @@ test_that("all type of multivariate score TCT estimators are correct", {
 })
 
 
-v_function(
-  time_points = 0:4,
-  ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-  exp_estimates = coef(mmrm_fit)[5:8],
-  vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-  interpolation = "spline",
-  ref_fun = ref_fun,
-  gamma_0 = 0.78630034,
-  j = 1:4,
-  weights = c(0, 1, 2, 2)
-)
-
-gr_gamma_w = gradient_gamma_w(
-  time_points = 0:4,
-  ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-  exp_estimates = coef(mmrm_fit)[5:8],
-  vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-  interpolation = "spline",
-  gamma_0 = 0.78630034,
-  j = 1:4,
-  weights = c(1, 1, 2, 1.7)
-)
-
-matrix(gr_gamma_w, nrow = 1) %*%
-  vcov %*%
-  matrix(gr_gamma_w, ncol = 1)
+# v_function(
+#   time_points = 0:4,
+#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+#   exp_estimates = coef(mmrm_fit)[5:8],
+#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#   interpolation = "spline",
+#   ref_fun = ref_fun,
+#   gamma_0 = 0.78630034,
+#   j = 1:4,
+#   weights = c(0, 1, 2, 2)
+# )
+#
+# gr_gamma_w = gradient_gamma_w(
+#   time_points = 0:4,
+#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+#   exp_estimates = coef(mmrm_fit)[5:8],
+#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#   interpolation = "spline",
+#   gamma_0 = 0.8743958,
+#   j = 1:4,
+#   weights = c(w_opt, 1 - sum(w_opt))
+#
+#
+# gr_gamma_w = gradient_gamma_w(
+#   time_points = 0:4,
+#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+#   exp_estimates = coef(mmrm_fit)[5:8],
+#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#   interpolation = "spline",
+#   gamma_0 = 0.8743958,
+#   j = 1:4,
+#   weights = c(0, 0, 1, 0))
+#
+#
+#
+# matrix(gr_gamma_w, nrow = 1) %*%
+#   vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)] %*%
+#   matrix(gr_gamma_w, ncol = 1)
+#
+#
+# score_estimate_common(
+#   time_points = 0:4,
+#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+#   exp_estimates = coef(mmrm_fit)[5:8],
+#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#   interpolation = "spline",
+#   ref_fun = ref_fun,
+#   type = "custom",
+#   j = 1:4,
+#   weights = c(w_opt, 1 - sum(w_opt))
+# )
+#
+# w_opt = optimize_weights(
+#   time_points = 0:4,
+#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+#   exp_estimates = coef(mmrm_fit)[5:8],
+#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#   interpolation = "spline",
+#   ref_fun = ref_fun,
+#   weights = c(0.2, 1, 3, 1),
+#   j = 1:4
+# )
