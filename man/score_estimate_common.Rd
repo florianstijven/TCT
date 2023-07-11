@@ -44,18 +44,36 @@ and Carlson
 the correct estimates, this matrix should be the variance-covariance matrix
 of \code{c(ctrl_means, exp_means)}.}
 
-\item{type}{Which type of test statistic should be used. See Details.}
+\item{type}{Which type of test statistic should be used. See Test Statistic
+Variants. Should be one of
+\enumerate{
+\item \code{type = "omnibus"}
+\item \code{type = "directional"}
+\item \code{type = "inverse variance"}
+\item \code{type = "custom"}
+}}
 
-\item{j}{description}
+\item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
+should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+i.e., all elements are used.}
 
-\item{weights}{description}
+\item{weights}{If \code{type == "custom"}, the user should specify a weight
+vector for weighting estimates at different time points differently.}
 
 \item{penalty}{This a function that is added to the (squared) test
 statistics. Defaults to a constant function. This is mostly useful for
 small samples to put a penalty on values of gamma outside the unit
 interval.}
+
+\item{...}{Tuning parameters that are passed to \code{\link[=optim]{optim()}}.}
+}
+\value{
+(numeric) estimated for the common acceleration factor.
 }
 \description{
-Estimate the common acceleration factor by minimizing the squared score
-statistic
+The \code{\link[=score_estimate_common]{score_estimate_common()}} function estimates the common acceleration
+factor. The estimate is the common acceleration factor which minimizes the
+test statistic for the corresponding null hypothesis, i.e., the most likely
+value of \eqn{\gamma} where "likelihood" is defined in terms of a test
+statistic.
 }

@@ -24,8 +24,8 @@ test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
              interpolation = "spline",
              ref_fun = ref_fun,
              j = 1,
-             gamma_0 = 1)
-  expect_equal(z_score, z_mean)
+             gamma_0 = 1)[1]
+  expect_equal(z_score, c("z" = z_mean))
 })
 
 test_that("score TCT CI is correct", {
@@ -80,7 +80,7 @@ test_that("omnibus score TCT test for common treatment effect is correct", {
                        vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
                        interpolation = "spline",
                        ref_fun = ref_fun,
-                       gamma_0 = 1)
+                       gamma_0 = 1)[1]
   expect_equal(as.numeric(t_sq), 6.2673327)
 })
 
@@ -113,7 +113,7 @@ test_that("omnibus score TCT test for common treatment effect is equivalent to t
                            vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
                            interpolation = "spline",
                            ref_fun = ref_fun,
-                           gamma_0 = 1)
+                           gamma_0 = 1)[1]
   expect_equal(as.numeric(t_sq), chi_linear_test)
 })
 
@@ -153,7 +153,7 @@ test_that("all type of score TCT test for common treatment effect are correct", 
     gamma_0 = 1,
     type = "omnibus",
     j = 1:4
-  )
+  )[1]
   z_directional = score_test_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -164,7 +164,7 @@ test_that("all type of score TCT test for common treatment effect are correct", 
     gamma_0 = 1,
     type = "directional",
     j = 1:4
-  )
+  )[1]
   z_inv_var = score_test_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -175,7 +175,7 @@ test_that("all type of score TCT test for common treatment effect are correct", 
     gamma_0 = 1,
     type = "inverse variance",
     j = 1:4
-  )
+  )[1]
   z_custom = score_test_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -187,10 +187,10 @@ test_that("all type of score TCT test for common treatment effect are correct", 
     type = "custom",
     j = 1:4,
     weights = c(0.2, 1, 1, 2)
-  )
+  )[1]
   output_vector = c(z_omnibus, z_directional, z_inv_var, z_custom)
   expect_vector = c(6.26733272, 0.00236691, -1.41203381, -1.78553411)
-  expect_equal(output_vector, expect_vector)
+  expect_equal(output_vector, expect_vector, ignore_attr = "names")
 })
 
 test_that("one-dimensional score TCT tests for common treatment effect are equivalent", {
@@ -229,7 +229,7 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
     gamma_0 = 1,
     type = "omnibus",
     j = 4
-  )
+  )[1]
   z_directional = score_test_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -240,7 +240,7 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
     gamma_0 = 1,
     type = "directional",
     j = 4
-  )
+  )[1]
   z_inv_var = score_test_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -251,7 +251,7 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
     gamma_0 = 1,
     type = "inverse variance",
     j = 4
-  )
+  )[1]
   z_custom = score_test_common(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
@@ -263,9 +263,9 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
     type = "custom",
     j = 4,
     weights = c(10)
-  )
+  )[1]
   output_vector = c(z_omnibus, z_directional, z_inv_var ** 2, z_custom ** 2)
-  expect_equal(output_vector, rep(z_omnibus, 4))
+  expect_equal(output_vector, rep(z_omnibus, 4), ignore_attr = "names")
 })
 
 test_that("all type of mutlivariate score TCT confidence intervals for common treatment effect are correct", {

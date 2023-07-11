@@ -42,7 +42,9 @@ and Carlson
 the correct estimates, this matrix should be the variance-covariance matrix
 of \code{c(ctrl_means, exp_means)}.}
 
-\item{j}{description}
+\item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
+should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+i.e., all elements are used.}
 
 \item{weights}{Staring values for the weights vector.}
 

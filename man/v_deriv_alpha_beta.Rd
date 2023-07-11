@@ -28,11 +28,14 @@ occasions.}
 and Carlson
 }}
 
-\item{gamma_0}{Value under the null hypothesis for the acceleration factor.}
+\item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
 
-\item{j}{description}
+\item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
+should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+i.e., all elements are used.}
 
-\item{weights}{description}
+\item{weights}{If \code{type == "custom"}, the user should specify a weight
+vector for weighting estimates at different time points differently.}
 }
 \description{
 This function computes

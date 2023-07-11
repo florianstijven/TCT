@@ -40,7 +40,8 @@ and Carlson
 the correct estimates, this matrix should be the variance-covariance matrix
 of \code{c(ctrl_means, exp_means)}.}
 
-\item{j}{Measurement occasion to test acceleration factor for.}
+\item{j}{Measurement occasion to test acceleration factor for. This
+corresponds to \code{exp_estimates[j]}.}
 
 \item{alpha}{\code{1 - alpha} represents the two-sided confidence level. Defaults
 to \code{0.05}.}
@@ -51,5 +52,22 @@ confidence limit, the second element is the upper confidence limit.
 }
 \description{
 The \code{\link[=score_conf_int]{score_conf_int()}} function computes the confidence interval for the
-score test at measurement \code{j}.
+score test at measurement \code{j}. This confidence interval is based on the
+score test implemented in \code{\link[=score_test]{score_test()}}.
 }
+\section{Score Test Confidence Intervals}{
+For the construction of a confidence interval based on the scores, we make
+use of the relationship between confidence intervals and hypothesis tests. A
+\eqn{1 − α} confidence interval can be defined as follows, \deqn{\left\{
+\gamma : p(\gamma) > \alpha \right\}} where \eqn{p(\gamma)} is the p-value
+for the null that the acceleration factor is equal to \eqn{\gamma}. This
+p-value can be based on the time-specific score test implemented in
+\code{\link[=score_test]{score_test()}}, or can be based on the joint score test implemented in
+\code{\link[=score_test_common]{score_test_common()}}. The former gives a confidence interval for the
+time-specific acceleration factor while the latter gives a confidence
+interval for the common acceleration factor. The latter interval should be
+used with some care. Indeed, the confidence interval for a common
+acceleration factor is only sensible if there is no evidence against the
+assumptions of constant slowing of the disease progression.
+}
+

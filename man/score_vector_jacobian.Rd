@@ -21,9 +21,11 @@ occasions.}
 and Carlson
 }}
 
-\item{gamma_0}{Value under the null hypothesis for the acceleration factor.}
+\item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
 
-\item{j}{description}
+\item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
+should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+i.e., all elements are used.}
 }
 \description{
 The \code{\link[=score_vector_jacobian]{score_vector_jacobian()}} function computes the Jacobian of the score

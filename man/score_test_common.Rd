@@ -2,7 +2,7 @@
 % Please edit documentation in R/score-test.R
 \name{score_test_common}
 \alias{score_test_common}
-\title{Title}
+\title{Score test for common acceleration factor}
 \usage{
 score_test_common(
   time_points,
@@ -42,24 +42,108 @@ and Carlson
 the correct estimates, this matrix should be the variance-covariance matrix
 of \code{c(ctrl_means, exp_means)}.}
 
-\item{gamma_0}{Value under the null hypothesis for the acceleration factor.}
+\item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
 
-\item{type}{Which type of test statistic should be used. See Details.}
+\item{type}{Which type of test statistic should be used. See Test Statistic
+Variants. Should be one of
+\enumerate{
+\item \code{type = "omnibus"}
+\item \code{type = "directional"}
+\item \code{type = "inverse variance"}
+\item \code{type = "custom"}
+}}
 
-\item{j}{description}
+\item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
+should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+i.e., all elements are used.}
 
-\item{weights}{description}
+\item{weights}{If \code{type == "custom"}, the user should specify a weight
+vector for weighting estimates at different time points differently.}
+}
+\value{
+Named (numeric) vector with two elements:
+\enumerate{
+\item \code{"z"} or \code{chi-squared}. The test statistic.
+\item \code{"p-value"}: two-sided p-value.
+}
 }
 \description{
-Title
+The \code{\link[=score_test_common]{score_test_common()}} function implements the score test under the
+assumption that there exists a common acceleration factor. Multiple variants
+to this test exist and are implemented.
 }
-\details{
-Four types of test statistics are implemented in the \code{\link[=score_test_common]{score_test_common()}}
+\section{Test Statistic Variants}{
+Two types of test statistics are implemented in the \code{\link[=score_test_common]{score_test_common()}}
 function:
 \enumerate{
-\item \code{type = "omnibus"}: This corresponds to a classic chi-squared test.
-\item \code{type = "directional"}:
-\item \code{type = "inverse variance"}:
-\item \code{type = "custom"}:
+\item \code{type = "omnibus"}
+\item \code{type = "custom"}
+}
+
+These are discussed in more detail next.
+\subsection{Omnibus}{
+
+The omnibus score test is based on the "classic" chi-squared statistic that is
+defined as follows,
+\deqn{t^2 = \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t \cdot \Sigma_s^{-1} \cdot \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}).}
+which follows a chi-squared distribution with K degrees of freedom under
+\eqn{H_{\gamma_0}} for all time points. An important feature of this test
+statistic is that it reduces to the chi-squared statistic for \eqn{H_0 :
+\alpha_j = \beta_j} for all \eqn{j} in \code{j} when \code{gamma_0 = 1}. However, this
+also means that there is no gain in power.
+}
+
+\subsection{Custom}{
+
+The "custom" score test allows for user-specified weights, \eqn{w}. The test
+statistic is defined as follows,
+\deqn{z = \frac{v(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}; \gamma_0)}{\sqrt{\boldsymbol{w}^t \Sigma_s \boldsymbol{w}}} \; \dot\sim \; N(0, 1).}
+As indicated above, this test statistic follows a standard normal
+distribution under the null hypothesis.
+
+Note that \code{\link[=optimize_weights]{optimize_weights()}} allows one to find optimal weights in the
+sense of minimizing the estimated standard error for the corresponding
+estimator of the common acceleration factor.
 }
 }
+
+\section{Score Test}{
+For constructing a score test, we start from the null hypothesis,
+\deqn{H_{\gamma_0}: \gamma_j = \gamma_0,} where \eqn{\gamma_j} is the
+acceleration factor at time \eqn{t_j}. Under this null hypothesis, and taking
+the control group as reference, we can
+compute the experimental treatment group mean at \eqn{t_j} as \deqn{\beta_{0,
+j} = f_0( \gamma_0 \cdot t_{j}; \boldsymbol{\alpha})} given the true control
+group mean vector, \eqn{\boldsymbol{\alpha}}. Consequently, a test for
+\eqn{H_0: \beta_j = \beta_{0, j}} is also a valid test for
+\eqn{H_{\gamma_0}}. Well-established tests are available for the former
+hypothesis. However, these cannot be applied directly since
+\eqn{\boldsymbol{\alpha}} is not known, but only estimated. Indeed, \eqn{\beta_{0,
+j}} is itself estimated by \eqn{\hat{\beta}_{0, j} =  f_0( \gamma_0 \cdot t_{j};
+\hat{\boldsymbol{\alpha}})}. Still, this provides the starting point for a
+score test that draws upon well-established statistical tests.
+
+We first define the score vector as follows, \deqn{\boldsymbol{s}(\gamma
+\cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) =
+\hat{\boldsymbol{\beta}} - \boldsymbol{f_0}(\gamma \cdot \boldsymbol{t};
+\hat{\boldsymbol{\alpha}})}
+where \eqn{\boldsymbol{t} = (t_1, ..., t_K)'} and \eqn{\boldsymbol{f_0}(\gamma \cdot
+\boldsymbol{t}; \hat{\boldsymbol{\alpha}}) = (f_0(\gamma \cdot t_1;
+\hat{\boldsymbol{\alpha}}), ..., f_0(\gamma \cdot t_K;
+\hat{\boldsymbol{\alpha}}))'}. Under \eqn{H_{\gamma_0}} for all time points and using the delta
+method, we have that \deqn{\boldsymbol{s}(\gamma \cdot \boldsymbol{t};
+\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) \; \dot\sim \; N \left(
+\boldsymbol{0}, \Sigma_s \right)} where \deqn{\Sigma_s =
+J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0) \cdot \Sigma \cdot
+J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0)^t} with
+\eqn{J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0)} the
+Jacobian of \eqn{\boldsymbol{s}(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha},
+\boldsymbol{\beta})} evaluated in the true parameter vector,
+\eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}, with \eqn{\gamma} held
+constant at \eqn{\gamma_0}. Note that this matrix is a function of
+\eqn{\boldsymbol{\alpha}}, \eqn{\boldsymbol{\beta}}, and \eqn{\gamma_0}. The
+Jacobian matrix with the true parameter vector replaced by the corresponding
+estimates, \eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})'}, is
+denoted by \eqn{\hat{\Sigma}_s}.
+}
+

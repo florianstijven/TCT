@@ -1,15 +1,74 @@
 #' Compute TCT score test z-value
 #'
 #' The [score_test()] function computes the z-value for the score test at
-#' measurement `j`. This corresponds to `exp_estimates[j]`.
+#' measurement `j`. This corresponds to `exp_estimates[j]`. For technical
+#' details on the score test, see Details.
 #'
-#' @param j Measurement occasion to test acceleration factor for.
-#' @param gamma_0 Value under the null hypothesis for the acceleration factor.
+#' @param j Measurement occasion to test acceleration factor for. This
+#'   corresponds to `exp_estimates[j]`.
+#' @param gamma_0 Value for the acceleration factor under the null hypothesis.
 #' @inheritParams DeltaMethod
 #'
+#' @details
 #'
-#' @return (numeric) z-value. This test-statistic follows a standard normal
-#'   distribution under the null hypothesis.
+#' # Score Test
+#'
+#' For constructing a score test, we start from the null hypothesis,
+#' \deqn{H_{\gamma_0}: \gamma_j = \gamma_0,} where \eqn{\gamma_j} is the
+#' acceleration factor at time \eqn{t_j}. Under this null hypothesis, and taking
+#' the control group as reference, we can
+#' compute the experimental treatment group mean at \eqn{t_j} as \deqn{\beta_{0,
+#' j} = f_0( \gamma_0 \cdot t_{j}; \boldsymbol{\alpha})} given the true control
+#' group mean vector, \eqn{\boldsymbol{\alpha}}. Consequently, a test for
+#' \eqn{H_0: \beta_j = \beta_{0, j}} is also a valid test for
+#' \eqn{H_{\gamma_0}}. Well-established tests are available for the former
+#' hypothesis. However, these cannot be applied directly since
+#' \eqn{\boldsymbol{\alpha}} is not known, but only estimated. Indeed, \eqn{\beta_{0,
+#' j}} is itself estimated by \eqn{\hat{\beta}_{0, j} =  f_0( \gamma_0 \cdot t_{j};
+#' \hat{\boldsymbol{\alpha}})}. Still, this provides the starting point for a
+#' score test that draws upon well-established statistical tests.
+#'
+#' We first define the score vector as follows, \deqn{\boldsymbol{s}(\gamma
+#' \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) =
+#' \hat{\boldsymbol{\beta}} - \boldsymbol{f_0}(\gamma \cdot \boldsymbol{t};
+#' \hat{\boldsymbol{\alpha}})}
+#' where \eqn{\boldsymbol{t} = (t_1, ..., t_K)'} and \eqn{\boldsymbol{f_0}(\gamma \cdot
+#' \boldsymbol{t}; \hat{\boldsymbol{\alpha}}) = (f_0(\gamma \cdot t_1;
+#' \hat{\boldsymbol{\alpha}}), ..., f_0(\gamma \cdot t_K;
+#' \hat{\boldsymbol{\alpha}}))'}. Under \eqn{H_{\gamma_0}} for all time points and using the delta
+#' method, we have that \deqn{\boldsymbol{s}(\gamma \cdot \boldsymbol{t};
+#' \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) \; \dot\sim \; N \left(
+#' \boldsymbol{0}, \Sigma_s \right)} where \deqn{\Sigma_s =
+#' J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0) \cdot \Sigma \cdot
+#' J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0)^t} with
+#' \eqn{J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0)} the
+#' Jacobian of \eqn{\boldsymbol{s}(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha},
+#' \boldsymbol{\beta})} evaluated in the true parameter vector,
+#' \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}, with \eqn{\gamma} held
+#' constant at \eqn{\gamma_0}. Note that this matrix is a function of
+#' \eqn{\boldsymbol{\alpha}}, \eqn{\boldsymbol{\beta}}, and \eqn{\gamma_0}. The
+#' Jacobian matrix with the true parameter vector replaced by the corresponding
+#' estimates, \eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})'}, is
+#' denoted by \eqn{\hat{\Sigma}_s}.
+#'
+#' # Time-Specific Acceleration Factor
+#'
+#' From the distributional result in the previous section follows that \deqn{z =
+#' \frac{s(\gamma_0 \cdot t_j; \hat{\boldsymbol{\alpha}},
+#' \hat{\boldsymbol{\beta}})}{\sqrt{\hat{\Sigma}_{s,jj}}} \; \dot\sim \;N(0, 1)}
+#' under \eqn{H_{\gamma_0}} where \eqn{\hat{\Sigma}_{s,jj}} is the \eqn{j}'th
+#' diagonal element of \eqn{\hat{\Sigma}_s}. Note that this result relies on the
+#' delta method and is thus only asymptotic. The finite sample properties of
+#' this test will thus depend to a large extent on the accuracy of the delta
+#' method, i.e., the degree of non-linearity of
+#' \eqn{g_{\gamma_0}(\boldsymbol{\alpha}, \boldsymbol{\beta}; t_j)} around the
+#' true parameter values. The [score_test()] function returns the above z-value.
+#'
+#' @return Named (numeric) vector with two elements:
+#'
+#' 1. `"z"`. This test-statistic follows a standard normal distribution under
+#' the null hypothesis.
+#' 2. `"p-value"`: two-sided p-value.
 score_test = function(time_points,
                       ctrl_estimates,
                       exp_estimates,
@@ -41,18 +100,40 @@ score_test = function(time_points,
   sigma_sq = t(grad_g) %*% vcov %*% grad_g
   # Compute z-value
   z = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1])) / sqrt(sigma_sq)
-  # Return z-value
-  return(as.numeric(z))
+  # Return z-value and corresponding two-sided p-value.
+  return(c("z" = as.numeric(z),
+           "p-value" = 2 * (1 - pnorm(abs(as.numeric(z))))
+           )
+         )
 }
 
 #' Compute Confidence Interval Based on Score Test
 #'
 #' The [score_conf_int()] function computes the confidence interval for the
-#' score test at measurement `j`.
+#' score test at measurement `j`. This confidence interval is based on the
+#' score test implemented in [score_test()].
 #'
 #' @param alpha `1 - alpha` represents the two-sided confidence level. Defaults
 #'   to `0.05`.
 #' @inheritParams score_test
+#'
+#' @details
+#'
+#' # Score Test Confidence Intervals
+#'
+#' For the construction of a confidence interval based on the scores, we make
+#' use of the relationship between confidence intervals and hypothesis tests. A
+#' \eqn{1 − α} confidence interval can be defined as follows, \deqn{\left\{
+#' \gamma : p(\gamma) > \alpha \right\}} where \eqn{p(\gamma)} is the p-value
+#' for the null that the acceleration factor is equal to \eqn{\gamma}. This
+#' p-value can be based on the time-specific score test implemented in
+#' [score_test()], or can be based on the joint score test implemented in
+#' [score_test_common()]. The former gives a confidence interval for the
+#' time-specific acceleration factor while the latter gives a confidence
+#' interval for the common acceleration factor. The latter interval should be
+#' used with some care. Indeed, the confidence interval for a common
+#' acceleration factor is only sensible if there is no evidence against the
+#' assumptions of constant slowing of the disease progression.
 #'
 #' @return (numeric) vector with two elements. The first element is the lower
 #'   confidence limit, the second element is the upper confidence limit.
@@ -73,7 +154,7 @@ score_conf_int = function(time_points,
                       interpolation,
                       vcov,
                       j,
-                      gamma_0 = gamma))
+                      gamma_0 = gamma)[1])
   }
   # Find upper limit
   z_critical = qnorm(p = 1 - alpha / 2)
@@ -100,26 +181,67 @@ score_conf_int = function(time_points,
   )
 }
 
-#' Title
+#' Score test for common acceleration factor
 #'
-#' @param type Which type of test statistic should be used. See Details.
-#' @param j description
-#' @param weights description
+#' The [score_test_common()] function implements the score test under the
+#' assumption that there exists a common acceleration factor. Multiple variants
+#' to this test exist and are implemented.
+#'
+#' @param type Which type of test statistic should be used. See Test Statistic
+#'   Variants. Should be one of
+#'   1. `type = "omnibus"`
+#'   2. `type = "directional"`
+#'   3. `type = "inverse variance"`
+#'   4. `type = "custom"`
+#' @param j (Integer) vector that indicates which elements in `exp_estimates`
+#'   should be used for the score test. Defaults to `1:length(exp_estimates)`,
+#'   i.e., all elements are used.
+#' @param weights If `type == "custom"`, the user should specify a weight
+#'   vector for weighting estimates at different time points differently.
 #' @inheritParams score_test
+#' @inheritSection score_test Score Test
 #' @details
 #'
-#' Four types of test statistics are implemented in the [score_test_common()]
+#' # Test Statistic Variants
+#'
+#' Two types of test statistics are implemented in the [score_test_common()]
 #' function:
-#' 1. `type = "omnibus"`: This corresponds to a classic chi-squared test.
-#' 2. `type = "directional"`:
-#' 3. `type = "inverse variance"`:
-#' 4. `type = "custom"`:
+#'
+#' 1. `type = "omnibus"`
+#' 2. `type = "custom"`
+#'
+#' These are discussed in more detail next.
+#'
+#' ## Omnibus
+#'
+#' The omnibus score test is based on the "classic" chi-squared statistic that is
+#' defined as follows,
+#' \deqn{t^2 = \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t \cdot \Sigma_s^{-1} \cdot \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}).}
+#' which follows a chi-squared distribution with K degrees of freedom under
+#' \eqn{H_{\gamma_0}} for all time points. An important feature of this test
+#' statistic is that it reduces to the chi-squared statistic for \eqn{H_0 :
+#' \alpha_j = \beta_j} for all \eqn{j} in `j` when `gamma_0 = 1`. However, this
+#' also means that there is no gain in power.
+#'
+#' ## Custom
+#'
+#' The "custom" score test allows for user-specified weights, \eqn{w}. The test
+#' statistic is defined as follows,
+#' \deqn{z = \frac{v(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}; \gamma_0)}{\sqrt{\boldsymbol{w}^t \Sigma_s \boldsymbol{w}}} \; \dot\sim \; N(0, 1).}
+#' As indicated above, this test statistic follows a standard normal
+#' distribution under the null hypothesis.
+#'
+#' Note that [optimize_weights()] allows one to find optimal weights in the
+#' sense of minimizing the estimated standard error for the corresponding
+#' estimator of the common acceleration factor.
 #'
 #'
-#' @return
+#' @return Named (numeric) vector with two elements:
+#'
+#' 1. `"z"` or `chi-squared`. The test statistic.
+#' 2. `"p-value"`: two-sided p-value.
+#'
 #' @export
-#'
-#' @examples
 score_test_common = function(time_points,
                              ctrl_estimates,
                              exp_estimates,
@@ -148,13 +270,23 @@ score_test_common = function(time_points,
   if (type == "omnibus") {
     # Compute test-statistic
     t_sq =  g %*% Sigma_g_inv %*% g
-    return(as.numeric(t_sq))
+    return(
+      c(
+        "chi-squared" = as.numeric(t_sq),
+        "p-value" = 1 - stats::pchisq(as.numeric(t_sq), K)
+      )
+    )
   }
   else if (type == "directional") {
     # Colmun vector of ones.
     ones = matrix(1, nrow = K)
     t_sq = (1 / t(ones) %*% Sigma_g_inv %*% ones) * (t(ones) %*% Sigma_g_inv %*% g)**2
-    return(as.numeric(t_sq))
+    return(
+      c(
+        "chi-squared" = as.numeric(t_sq),
+        "p-value" = 1 - stats::pchisq(as.numeric(t_sq), 1)
+      )
+    )
   }
   else if (type == "inverse variance") {
     # Colmun vector of ones.
@@ -162,12 +294,22 @@ score_test_common = function(time_points,
     if (nrow(Sigma_g) == 1) D = 1 / as.numeric(Sigma_g)
     else D = solve(diag(diag(Sigma_g)))
     z_value = (1 / sqrt(t(ones) %*% D %*% Sigma_g %*% t(D) %*% ones)) * t(ones) %*% D %*% g
-    return(as.numeric(z_value))
+    return(
+      c(
+        "z" = as.numeric(z_value),
+        "p-value" = 2 * (1 - stats::pnorm(abs(as.numeric(z_value))))
+      )
+    )
   }
   else if (type == "custom") {
     weights = matrix(weights, ncol = 1)
     z_value = ( 1 / sqrt(t(weights) %*% Sigma_g %*% weights)) * t(weights) %*% g
-    return(as.numeric(z_value))
+    return(
+      c(
+        "z" = as.numeric(z_value),
+        "p-value" = 2 * (1 - stats::pnorm(abs(as.numeric(z_value))))
+      )
+    )
   }
 }
 
@@ -175,10 +317,15 @@ score_test_common = function(time_points,
 
 #' Confidence interval based on score test
 #'
-#' @inheritParams score_estimate_common
-#' @param gamma_est Estimate for the common acceleration factor.
+#' The [score_conf_int_common()] function computes the confidence interval for
+#' common acceleration factor. This confidence interval is based on the score
+#' test implemented in [score_test_common()].
 #'
-#' @return
+#' @inheritParams score_estimate_common
+#' @inheritParams score_conf_int
+#' @param gamma_est Estimate for the common acceleration factor.
+#' @inheritSection score_conf_int Score Test Confidence Intervals
+#' @inherit score_conf_int return
 score_conf_int_common = function(time_points,
                                  ctrl_estimates,
                                  exp_estimates,
@@ -209,7 +356,7 @@ score_conf_int_common = function(time_points,
         type,
         j,
         weights
-      )
+      )[1]
       return(t_sq)
     }
   }
@@ -227,7 +374,7 @@ score_conf_int_common = function(time_points,
         type,
         j,
         weights
-      ) ** 2
+      )[1] ** 2
       return(t_sq)
     }
   }
@@ -286,13 +433,20 @@ score_conf_int_common = function(time_points,
 #' Estimate the common acceleration factor by minimizing the squared score
 #' statistic
 #'
+#' The [score_estimate_common()] function estimates the common acceleration
+#' factor. The estimate is the common acceleration factor which minimizes the
+#' test statistic for the corresponding null hypothesis, i.e., the most likely
+#' value of \eqn{\gamma} where "likelihood" is defined in terms of a test
+#' statistic.
+#'
 #' @inheritParams score_test_common
+#' @param ... Tuning parameters that are passed to [optim()].
 #' @param penalty This a function that is added to the (squared) test
 #'   statistics. Defaults to a constant function. This is mostly useful for
 #'   small samples to put a penalty on values of gamma outside the unit
 #'   interval.
 #'
-#' @return
+#' @return (numeric) estimated for the common acceleration factor.
 score_estimate_common = function(time_points,
                                  ctrl_estimates,
                                  exp_estimates,
@@ -320,7 +474,7 @@ score_estimate_common = function(time_points,
         type,
         j,
         weights
-      )
+      )[1]
       return(test_statistic + penalty(gamma))
     }
   }
@@ -337,7 +491,7 @@ score_estimate_common = function(time_points,
         type,
         j,
         weights
-      ) ** 2
+      )[1] ** 2
       return(test_statistic + penalty(gamma))
     }
   }

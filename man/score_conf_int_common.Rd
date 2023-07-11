@@ -45,12 +45,47 @@ of \code{c(ctrl_means, exp_means)}.}
 
 \item{gamma_est}{Estimate for the common acceleration factor.}
 
-\item{type}{Which type of test statistic should be used. See Details.}
+\item{type}{Which type of test statistic should be used. See Test Statistic
+Variants. Should be one of
+\enumerate{
+\item \code{type = "omnibus"}
+\item \code{type = "directional"}
+\item \code{type = "inverse variance"}
+\item \code{type = "custom"}
+}}
 
-\item{j}{description}
+\item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
+should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+i.e., all elements are used.}
 
-\item{weights}{description}
+\item{weights}{If \code{type == "custom"}, the user should specify a weight
+vector for weighting estimates at different time points differently.}
+
+\item{alpha}{\code{1 - alpha} represents the two-sided confidence level. Defaults
+to \code{0.05}.}
+}
+\value{
+(numeric) vector with two elements. The first element is the lower
+confidence limit, the second element is the upper confidence limit.
 }
 \description{
-Confidence interval based on score test
+The \code{\link[=score_conf_int_common]{score_conf_int_common()}} function computes the confidence interval for
+common acceleration factor. This confidence interval is based on the score
+test implemented in \code{\link[=score_test_common]{score_test_common()}}.
 }
+\section{Score Test Confidence Intervals}{
+For the construction of a confidence interval based on the scores, we make
+use of the relationship between confidence intervals and hypothesis tests. A
+\eqn{1 − α} confidence interval can be defined as follows, \deqn{\left\{
+\gamma : p(\gamma) > \alpha \right\}} where \eqn{p(\gamma)} is the p-value
+for the null that the acceleration factor is equal to \eqn{\gamma}. This
+p-value can be based on the time-specific score test implemented in
+\code{\link[=score_test]{score_test()}}, or can be based on the joint score test implemented in
+\code{\link[=score_test_common]{score_test_common()}}. The former gives a confidence interval for the
+time-specific acceleration factor while the latter gives a confidence
+interval for the common acceleration factor. The latter interval should be
+used with some care. Indeed, the confidence interval for a common
+acceleration factor is only sensible if there is no evidence against the
+assumptions of constant slowing of the disease progression.
+}
+

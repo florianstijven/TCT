@@ -110,7 +110,7 @@ optimize_weights = function(time_points,
       j,
       c(w_new, w_K_new)
     )
-    stoppping_criterion = sum((w_old - w_new) ** 2) < epsilon
+    stopping_criterion = sum((w_old - w_new) ** 2) < epsilon
   }
   return(c(w_new, w_K_new))
 }
