@@ -1,31 +1,37 @@
 #' Transform vertical Treatment Effect Estimates to the Time Scale
 #'
-#' The [TCT_meta()] function transforms so-called vertical parameter estimates to
-#' parameter estimates on the time scale. These treatment effect estimates on
+#' The [TCT_meta()] function transforms so-called vertical parameter estimates
+#' to parameter estimates on the time scale. These treatment effect estimates on
 #' the time scale are so-called acceleration factors. This is an application of
 #' the Time-Component Test (TCT) methodology.
 #'
 #' @param time_points Ordered vector that contains the times corresponding to
-#'   the estimated means in the `ctrl_estimates` vector.
-#' @param ctrl_estimates Estimated mean outcome in the control group at fixed
-#'   occasions.
+#'   the estimated means in the `ctrl_estimates` vector. The first element
+#'   should be zero which generally corresponds to the time of randomization.
+#' @param ctrl_estimates Estimated mean outcome in the control group at the
+#'   fixed occasions corresponding to the times in `time_points`.
 #' @param exp_estimates Estimated mean outcomes in the experimental group at
-#'   fixed occasions.
+#'   fixed occasions corresponding to the times in `time_points[-1]`. Note that
+#'   first element in `exp_estimates` should correspond to some time after
+#'   randomization.
 #' @param vcov The variance-covariance matrix for the means. In order to map to
 #'   the correct estimates, this matrix should be the variance-covariance matrix
 #'   of `c(ctrl_means, exp_means)`.
 #' @param inference Which approach is used for estimation and inference? Should
-#'   be `"wald"` or `"score"`.
+#'   be `"wald"` or `"score"`. The `"wald"`-approach is explained and
+#'   implemented in [DeltaMethod()], the `"score"`-approach is explained and
+#'   documented in [score_test()] and [score_test_common()].
 #' @param interpolation Which interpolation method to use?
-#'  * `"linear"`: linear interpolation
-#'  * `"spline"`: natural cubic spline interpolation
+#'  * `"linear"`: linear interpolation.
+#'  * `"spline"`: natural cubic spline interpolation. This interpolation method has been most
+#'   thoroughly tested is most stable.
 #'  * `"monoH.FC`: monotone Hermite spline according to the method of Fritsch
-#'   and Carlson
-#' @param B Number of bootstrap replications. If `B = 0`, no bootstrap is
-#'   performed (default).
+#'   and Carlson.
+#' @param B Number of parametric bootstrap replications. If `B = 0`, no
+#'   bootstrap is performed (default).
 #' @param constraints Use the constrained generalized least squares estimator
 #'   for the vertical treatment effects.
-#' @return An object from the TCT-class
+#' @return S3 object of class `"TCT_meta"`
 #' @export
 #'
 #' @details
@@ -44,23 +50,36 @@
 #' the corresponding means in the experimental group. Note that the index starts
 #' here at 1, i.e., the first measurement *after* start of the treatment. Let
 #' the mean trajectory in the control and experimental group be, respectively,
-#' \eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}
+#' \eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}.
 #'
 #' The treatment effects on the time scale are acceleration factors, analogous
 #' to accelerated failure time models. These are defined as follows at
 #' \eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
 #' \boldsymbol{\alpha})}
 #' where \eqn{\gamma_j} is the so-called acceleration factor at \eqn{t_j}, i.e.,
-#' treatment causes a acceleration of \eqn{\gamma_j}. For example, if
+#' treatment causes an acceleration of \eqn{\gamma_j}. For example, if
 #' \eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
 #' slow as patients in the control group.
 #'
-#' # Inference
+#' # Estimation and Inference
 #'
-#' Following options for inference are available:
-#' * Delta method
-#' * Parametric bootstrap
-#' * Score test: More information in [score_test()] and [score_test_common()]
+#' Following options for estimation and inference are available:
+#' * Delta method. More information in [DeltaMethod()].
+#' * Parametric bootstrap. More information in
+#' [pm_bootstrap_vertical_to_horizontal()].
+#' * Score test: More information in [score_test()] and [score_test_common()].
+#'
+#' Note that the estimators in the above three methods are equivalent. The
+#' estimates for the acceleration factor at \eqn{t_j} will thus be identical.
+#' The difference lies in the procedures to computing standard errors, p-values,
+#' and confidence intervals.
+#'
+#' Inference based on a direct application of the delta method can be unstable
+#' and should be avoided. The parametric bootstrap and score test generally
+#' yield very similar inferences. The main advanatage of the score test is that
+#' it reduces to "classical" hypothesis tests for \eqn{H_0: \alpha_j = \beta_j}.
+#' The p-value of the score test will thus equal that of classical hypothesis
+#' tests.
 #'
 #' @examples
 #' # transform example data set to desired format
@@ -83,6 +102,9 @@
 #'   interpolation = "spline",
 #'   B = 1e3
 #' )
+#' # The summary() generic can be used to obtain the most useful quantities from
+#' # the Meta-TCT.
+#' summary(TCT_Fit)
 TCT_meta = function(time_points,
                ctrl_estimates,
                exp_estimates,
@@ -172,8 +194,7 @@ new_TCT_meta = function(coefficients,
 #'
 #' @param x
 #'
-#' @return
-#' @export
+#' @return NULL
 print.TCT_meta = function(x) {
   cat(
     paste0(
@@ -219,14 +240,16 @@ new_summary_TCT_meta = function(
   class = "summary_TCT_meta")
 }
 
-#' Summarize fitted Time Component Test model
+#' Summarize fitted Meta-Time Component Test model
 #'
 #' @param x Object returned by [TCT_meta()].
 #' @param alpha Two-sided confidence level for confidence intervals.
 #' @param delta_transformation Transformation when applying the delta-method to
 #'   obtain confidence intervals.
 #'
+#' @return S3 object of class `"summary_TCT_meta"`
 #' @export
+#' @inherit TCT_meta examples
 summary.TCT_meta = function(x,
                             alpha = 0.05,
                             delta_transformation = "identity") {
@@ -367,14 +390,11 @@ summary.TCT_meta = function(x,
   )
 }
 
-#' Title
+#' Print summary_TCT_meta object
 #'
 #' @param x
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return NULL
 print.summary_TCT_meta = function(x) {
   cat(
     paste0(
@@ -441,22 +461,54 @@ print.summary_TCT_meta = function(x) {
 #'
 #' The [TCT_meta_common()] function estimates the common acceleration factor.
 #'
-#' @param TCT_Fit
-#' @param bs_fix_vcov
+#' @param TCT_Fit Object returned by [TCT_meta()]
+#' @param select_coef Estimates from the `exp_estimates` in [TCT_meta()] to use
+#'  in estimating the common acceleration factor. If there is reason to believe
+#'  that the proportional slowing assumption does not hold, e.g., for the first
+#'  measurement after randomization, then the corresponding estimate should not
+#'  be used in estimation the common acceleration factor.
+#' @inheritParams TCT_meta
+#' @inheritParams score_test_common
+#' @inheritParams pm_bootstrap_vertical_to_common
 #'
-#' @return
+#' @return S3 object of class `"TCT_meta_common"`
 #' @export
 #'
 #' @examples
+#' # transform example data set to desired format
+#' library(dplyr)
+#' data = simulated_test_trial %>%
+#' mutate(time_int = (Week %/% 25)) %>%
+#'   arrange(trial_number, SubjId, time_int) %>%
+#'   mutate(time_int = as.integer(time_int) + 1L) %>%
+#'   mutate(arm_time = ifelse(time_int == 1L,
+#'                            "baseline",
+#'                            paste0(arm, ":", time_int)))
+#' # fit e.g. MMRM model to obtain estimates of profiles
+#' mmrm_fit = analyze_mmrm(data)
+#' set.seed(1)
+#' TCT_Fit = TCT_meta(
+#'   time_points = 0:4,
+#'   ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+#'   exp_estimates = mmrm_fit$coefficients[5:8],
+#'   vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+#'   interpolation = "spline",
+#'   B = 1e3
+#' )
+#' TCT_fit_common = TCT_meta_common(
+#'   TCT_Fit = TCT_Fit,
+#'   inference = "wald"
+#' )
 TCT_meta_common = function(TCT_Fit,
-                      inference = "wald",
-                      B = 0,
-                      bs_fix_vcov = FALSE,
-                      select_coef = 1:length(coef(TCT_Fit)),
-                      gls_est = TRUE,
-                      constraints = FALSE,
-                      type = NULL,
-                      weights = NULL) {
+                           inference = "wald",
+                           B = 0,
+                           bs_fix_vcov = FALSE,
+                           select_coef = 1:length(coef(TCT_Fit)),
+                           gls_est = TRUE,
+                           constraints = FALSE,
+                           type = NULL,
+                           weights = NULL)
+{
   # Extract information from the TCT_meta object that is used further on.
   inference = TCT_Fit$inference_options$inference
   ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
@@ -465,11 +517,9 @@ TCT_meta_common = function(TCT_Fit,
   interpolation = TCT_Fit$inference_options$interpolation
   vcov_vertical = TCT_Fit$vertical_model$vcov
   # (Re)construct reference trajectory.
-  ref_fun = ref_fun_constructor(
-    time_points,
-    ctrl_estimates,
-    interpolation
-  )
+  ref_fun = ref_fun_constructor(time_points,
+                                ctrl_estimates,
+                                interpolation)
   # Use wald-based inference if this is asked by the user.
   estimates = coef(TCT_Fit)[select_coef]
   if (gls_est) {
@@ -480,12 +530,12 @@ TCT_meta_common = function(TCT_Fit,
   }
   n_points = length(TCT_Fit$vertical_model$time_points)
   if (inference == "wald") {
-        # delta method
+    # delta method
     p = length(estimates)
     vec_1 = matrix(1, nrow = p, ncol = 1)
-    gamma_common_estimate = (t(vec_1) %*% solve(vcov) %*% matrix(estimates, ncol = 1) ) /
+    gamma_common_estimate = (t(vec_1) %*% solve(vcov) %*% matrix(estimates, ncol = 1)) /
       (t(vec_1) %*% solve(vcov) %*% vec_1)
-    gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
+    gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1) ** (-1)
   }
   else if (inference == "score") {
     # Compute optimal weights if the user did not provide weights themselves.
@@ -544,7 +594,9 @@ TCT_meta_common = function(TCT_Fit,
   )
 
   # Test for common slowing parameter
-  lht_matrix = matrix(0, nrow = length(estimates) - 1, ncol = length(estimates) - 1)
+  lht_matrix = matrix(0,
+                      nrow = length(estimates) - 1,
+                      ncol = length(estimates) - 1)
   diag(lht_matrix) = -1
   lht_matrix = cbind(1, lht_matrix)
 
@@ -604,14 +656,11 @@ new_TCT_meta_common = function(coefficients,
   )
 }
 
-#' Title
+#' Print TCT_meta_common object
 #'
 #' @param x
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return NULL
 print.TCT_meta_common = function(x) {
   cat(
     paste0(
@@ -628,15 +677,14 @@ print.TCT_meta_common = function(x) {
 
 }
 
-#' Title
+#' Summarize fitted Meta-Time Component Test model with Proportional Slowing
 #'
-#' @param x
-#' @param alpha
+#' @param x Object returned by [TCT_meta_common()].
+#' @inheritParams summary.TCT_meta
 #'
-#' @return
+#' @return S3 object of class `"summary_TCT_meta_common"`
 #' @export
-#'
-#' @examples
+#' @inherit TCT_meta_common examples
 summary.TCT_meta_common = function(x,
                                    alpha = 0.05,
                                    delta_transformation = "identity") {
@@ -785,14 +833,11 @@ new_summary_TCT_meta_common = function(
   class = "summary_TCT_meta_common")
 }
 
-#' Title
+#' Print summary_TCT_meta_common object
 #'
 #' @param x
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return NULL
 print.summary_TCT_meta_common = function(x) {
   cat(
     paste0(

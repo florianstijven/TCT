@@ -17,13 +17,16 @@ TCT_meta(
 }
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
-the estimated means in the \code{ctrl_estimates} vector.}
+the estimated means in the \code{ctrl_estimates} vector. The first element
+should be zero which generally corresponds to the time of randomization.}
 
-\item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
-occasions.}
+\item{ctrl_estimates}{Estimated mean outcome in the control group at the
+fixed occasions corresponding to the times in \code{time_points}.}
 
 \item{exp_estimates}{Estimated mean outcomes in the experimental group at
-fixed occasions.}
+fixed occasions corresponding to the times in \code{time_points[-1]}. Note that
+first element in \code{exp_estimates} should correspond to some time after
+randomization.}
 
 \item{vcov}{The variance-covariance matrix for the means. In order to map to
 the correct estimates, this matrix should be the variance-covariance matrix
@@ -31,27 +34,30 @@ of \code{c(ctrl_means, exp_means)}.}
 
 \item{interpolation}{Which interpolation method to use?
 \itemize{
-\item \code{"linear"}: linear interpolation
-\item \code{"spline"}: natural cubic spline interpolation
+\item \code{"linear"}: linear interpolation.
+\item \code{"spline"}: natural cubic spline interpolation. This interpolation method has been most
+thoroughly tested is most stable.
 \item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
-and Carlson
+and Carlson.
 }}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"wald"} or \code{"score"}.}
+be \code{"wald"} or \code{"score"}. The \code{"wald"}-approach is explained and
+implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
+documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
 
-\item{B}{Number of bootstrap replications. If \code{B = 0}, no bootstrap is
-performed (default).}
+\item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
+bootstrap is performed (default).}
 
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
 }
 \value{
-An object from the TCT-class
+S3 object of class \code{"TCT_meta"}
 }
 \description{
-The \code{\link[=TCT_meta]{TCT_meta()}} function transforms so-called vertical parameter estimates to
-parameter estimates on the time scale. These treatment effect estimates on
+The \code{\link[=TCT_meta]{TCT_meta()}} function transforms so-called vertical parameter estimates
+to parameter estimates on the time scale. These treatment effect estimates on
 the time scale are so-called acceleration factors. This is an application of
 the Time-Component Test (TCT) methodology.
 }
@@ -68,25 +74,38 @@ control group. Let \eqn{\boldsymbol{\beta} = (\beta_1, ..., \beta_{K})} be
 the corresponding means in the experimental group. Note that the index starts
 here at 1, i.e., the first measurement \emph{after} start of the treatment. Let
 the mean trajectory in the control and experimental group be, respectively,
-\eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}
+\eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}.
 
 The treatment effects on the time scale are acceleration factors, analogous
 to accelerated failure time models. These are defined as follows at
 \eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
 \boldsymbol{\alpha})}
 where \eqn{\gamma_j} is the so-called acceleration factor at \eqn{t_j}, i.e.,
-treatment causes a acceleration of \eqn{\gamma_j}. For example, if
+treatment causes an acceleration of \eqn{\gamma_j}. For example, if
 \eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
 slow as patients in the control group.
 }
 
-\section{Inference}{
-Following options for inference are available:
+\section{Estimation and Inference}{
+Following options for estimation and inference are available:
 \itemize{
-\item Delta method
-\item Parametric bootstrap
-\item Score test: More information in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}
+\item Delta method. More information in \code{\link[=DeltaMethod]{DeltaMethod()}}.
+\item Parametric bootstrap. More information in
+\code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}}.
+\item Score test: More information in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.
 }
+
+Note that the estimators in the above three methods are equivalent. The
+estimates for the acceleration factor at \eqn{t_j} will thus be identical.
+The difference lies in the procedures to computing standard errors, p-values,
+and confidence intervals.
+
+Inference based on a direct application of the delta method can be unstable
+and should be avoided. The parametric bootstrap and score test generally
+yield very similar inferences. The main advanatage of the score test is that
+it reduces to "classical" hypothesis tests for \eqn{H_0: \alpha_j = \beta_j}.
+The p-value of the score test will thus equal that of classical hypothesis
+tests.
 }
 
 \examples{
@@ -110,4 +129,7 @@ TCT_Fit = TCT_meta(
   interpolation = "spline",
   B = 1e3
 )
+# The summary() generic can be used to obtain the most useful quantities from
+# the Meta-TCT.
+summary(TCT_Fit)
 }

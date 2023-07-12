@@ -2,7 +2,7 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{print.TCT_meta_common}
 \alias{print.TCT_meta_common}
-\title{Title}
+\title{Print TCT_meta_common object}
 \usage{
 \method{print}{TCT_meta_common}(x)
 }
@@ -10,5 +10,5 @@
 \item{x}{}
 }
 \description{
-Title
+Print TCT_meta_common object
 }

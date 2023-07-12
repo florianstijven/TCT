@@ -2,13 +2,13 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{print.TCT_meta}
 \alias{print.TCT_meta}
-\title{Title}
+\title{Print Meta-Time Component Test object}
 \usage{
 \method{print}{TCT_meta}(x)
 }
 \arguments{
-\item{...}{}
+\item{x}{}
 }
 \description{
-Title
+Print Meta-Time Component Test object
 }

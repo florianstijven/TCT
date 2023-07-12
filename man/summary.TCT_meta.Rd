@@ -2,7 +2,7 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{summary.TCT_meta}
 \alias{summary.TCT_meta}
-\title{Summarize fitted Time Component Test model}
+\title{Summarize fitted Meta-Time Component Test model}
 \usage{
 \method{summary}{TCT_meta}(x, alpha = 0.05, delta_transformation = "identity")
 }
@@ -14,6 +14,34 @@
 \item{delta_transformation}{Transformation when applying the delta-method to
 obtain confidence intervals.}
 }
+\value{
+S3 object of class \code{"summary_TCT_meta"}
+}
 \description{
-Summarize fitted Time Component Test model
+Summarize fitted Meta-Time Component Test model
+}
+\examples{
+# transform example data set to desired format
+library(dplyr)
+data = simulated_test_trial \%>\%
+mutate(time_int = (Week \%/\% 25)) \%>\%
+  arrange(trial_number, SubjId, time_int) \%>\%
+  mutate(time_int = as.integer(time_int) + 1L) \%>\%
+  mutate(arm_time = ifelse(time_int == 1L,
+                           "baseline",
+                           paste0(arm, ":", time_int)))
+# fit e.g. MMRM model to obtain estimates of profiles
+mmrm_fit = analyze_mmrm(data)
+set.seed(1)
+TCT_Fit = TCT_meta(
+  time_points = 0:4,
+  ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+  exp_estimates = mmrm_fit$coefficients[5:8],
+  vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+  interpolation = "spline",
+  B = 1e3
+)
+# The summary() generic can be used to obtain the most useful quantities from
+# the Meta-TCT.
+summary(TCT_Fit)
 }

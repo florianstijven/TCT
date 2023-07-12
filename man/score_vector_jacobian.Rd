@@ -13,6 +13,9 @@ score_vector_jacobian(time_points, ctrl_estimates, interpolation, gamma_0, j)
 should be used for the score test. Defaults to \code{1:length(exp_estimates)},
 i.e., all elements are used.}
 }
+\value{
+The Jacobian matrix.
+}
 \description{
 The \code{\link[=score_vector_jacobian]{score_vector_jacobian()}} function computes the Jacobian of the score
 vector with respect to \eqn{(\boldsymbol{\alpha},\boldsymbol{\beta})'},

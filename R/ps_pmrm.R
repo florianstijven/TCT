@@ -14,9 +14,6 @@
 #'   Defaults to 0.
 #'
 #' @return
-#' @export
-#'
-#' @examples
 analyze_ps_pmrm = function(data_trial,
                            b_start = 0.20) {
 

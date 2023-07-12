@@ -6,7 +6,7 @@
 #' @param B Number of bootstrap replications.
 #' @param null (boolean): conduct the bootstrap under the null hypothesis of no
 #'   treatment effect? Defaults to `FALSE`.
-#' @inheritParams TCT
+#' @inheritParams TCT_meta
 #'
 #' @details
 #' We can write the slowing factor at \eqn{\boldsymbol{t} = (t_1, ..., t_K)'}
@@ -111,15 +111,13 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 
 #' Parametric Bootstrap for a Common Acceleration Factor
 #'
-#' @param time_points
-#' @param ctrl_estimates
-#' @param exp_estimates
-#' @param vcov
+#' The [pm_bootstrap_vertical_to_common()] function implements a parametric
+#' bootstrap for the time-specific acceleration factors.
+#'
 #' @param TCT_vcov
-#' @param interpolation
-#' @param B
 #' @param bs_fix_vcov
 #' @param return_se
+#' @inheritParams pm_bootstrap_vertical_to_horizontal
 #'
 #' @return
 pm_bootstrap_vertical_to_common = function(time_points,

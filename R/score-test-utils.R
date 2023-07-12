@@ -177,7 +177,7 @@ gradient_gamma_w_analytical = function(time_points,
 #' \deqn{\frac{\partial \boldsymbol{s}(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta})}{\partial (\boldsymbol{\alpha}, \boldsymbol{\beta})}}.
 #'
 #' @inheritParams score_test_common
-#' @return
+#' @return The Jacobian matrix.
 score_vector_jacobian = function(time_points,
                                  ctrl_estimates,
                                  interpolation,

@@ -21,8 +21,40 @@ pm_bootstrap_vertical_to_common(
 )
 }
 \arguments{
-\item{return_se}{}
+\item{time_points}{Ordered vector that contains the times corresponding to
+the estimated means in the \code{ctrl_estimates} vector. The first element
+should be zero which generally corresponds to the time of randomization.}
+
+\item{ctrl_estimates}{Estimated mean outcome in the control group at the
+fixed occasions corresponding to the times in \code{time_points}.}
+
+\item{exp_estimates}{Estimated mean outcomes in the experimental group at
+fixed occasions corresponding to the times in \code{time_points[-1]}. Note that
+first element in \code{exp_estimates} should correspond to some time after
+randomization.}
+
+\item{vcov}{The variance-covariance matrix for the means. In order to map to
+the correct estimates, this matrix should be the variance-covariance matrix
+of \code{c(ctrl_means, exp_means)}.}
+
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation.
+\item \code{"spline"}: natural cubic spline interpolation. This interpolation method has been most
+thoroughly tested is most stable.
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson.
+}}
+
+\item{B}{Number of bootstrap replications.}
+
+\item{null}{(boolean): conduct the bootstrap under the null hypothesis of no
+treatment effect? Defaults to \code{FALSE}.}
+
+\item{constraints}{Use the constrained generalized least squares estimator
+for the vertical treatment effects.}
 }
 \description{
-Parametric Bootstrap for a Common Acceleration Factor
+The \code{\link[=pm_bootstrap_vertical_to_common]{pm_bootstrap_vertical_to_common()}} function implements a parametric
+bootstrap for the time-specific acceleration factors.
 }

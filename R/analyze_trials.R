@@ -13,9 +13,6 @@
 #' @param ... Additional parameters that are passed on to `trial_function()`.
 #'
 #' @return A list of fitted-model objects.
-#' @export
-#'
-#' @examples
 analyze_trials = function(list_data_trials,
                           trial_function,
                           n_cores = 1,

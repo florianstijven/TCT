@@ -2,13 +2,47 @@
 % Please edit documentation in R/time_scale_effects.R
 \name{summary.TCT_meta_common}
 \alias{summary.TCT_meta_common}
-\title{Title}
+\title{Summarize fitted Meta-Time Component Test model with Proportional Slowing}
 \usage{
 \method{summary}{TCT_meta_common}(x, alpha = 0.05, delta_transformation = "identity")
 }
 \arguments{
-\item{alpha}{}
+\item{x}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
+
+\item{alpha}{Two-sided confidence level for confidence intervals.}
+
+\item{delta_transformation}{Transformation when applying the delta-method to
+obtain confidence intervals.}
+}
+\value{
+S3 object of class \code{"summary_TCT_meta_common"}
 }
 \description{
-Title
+Summarize fitted Meta-Time Component Test model with Proportional Slowing
+}
+\examples{
+# transform example data set to desired format
+library(dplyr)
+data = simulated_test_trial \%>\%
+mutate(time_int = (Week \%/\% 25)) \%>\%
+  arrange(trial_number, SubjId, time_int) \%>\%
+  mutate(time_int = as.integer(time_int) + 1L) \%>\%
+  mutate(arm_time = ifelse(time_int == 1L,
+                           "baseline",
+                           paste0(arm, ":", time_int)))
+# fit e.g. MMRM model to obtain estimates of profiles
+mmrm_fit = analyze_mmrm(data)
+set.seed(1)
+TCT_Fit = TCT_meta(
+  time_points = 0:4,
+  ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+  exp_estimates = mmrm_fit$coefficients[5:8],
+  vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+  interpolation = "spline",
+  B = 1e3
+)
+TCT_fit_common = TCT_meta_common(
+  TCT_Fit = TCT_Fit,
+  inference = "wald"
+)
 }

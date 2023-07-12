@@ -17,8 +17,66 @@ TCT_meta_common(
 )
 }
 \arguments{
-\item{bs_fix_vcov}{}
+\item{TCT_Fit}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
+
+\item{inference}{Which approach is used for estimation and inference? Should
+be \code{"wald"} or \code{"score"}. The \code{"wald"}-approach is explained and
+implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
+documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
+
+\item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
+bootstrap is performed (default).}
+
+\item{select_coef}{Estimates from the \code{exp_estimates} in \code{\link[=TCT_meta]{TCT_meta()}} to use
+in estimating the common acceleration factor. If there is reason to believe
+that the proportional slowing assumption does not hold, e.g., for the first
+measurement after randomization, then the corresponding estimate should not
+be used in estimation the common acceleration factor.}
+
+\item{constraints}{Use the constrained generalized least squares estimator
+for the vertical treatment effects.}
+
+\item{type}{Which type of test statistic should be used. See Test Statistic
+Variants. Should be one of
+\enumerate{
+\item \code{type = "omnibus"}
+\item \code{type = "directional"}
+\item \code{type = "inverse variance"}
+\item \code{type = "custom"}
+}}
+
+\item{weights}{If \code{type == "custom"}, the user should specify a weight
+vector for weighting estimates at different time points differently.}
+}
+\value{
+S3 object of class \code{"TCT_meta_common"}
 }
 \description{
 The \code{\link[=TCT_meta_common]{TCT_meta_common()}} function estimates the common acceleration factor.
+}
+\examples{
+# transform example data set to desired format
+library(dplyr)
+data = simulated_test_trial \%>\%
+mutate(time_int = (Week \%/\% 25)) \%>\%
+  arrange(trial_number, SubjId, time_int) \%>\%
+  mutate(time_int = as.integer(time_int) + 1L) \%>\%
+  mutate(arm_time = ifelse(time_int == 1L,
+                           "baseline",
+                           paste0(arm, ":", time_int)))
+# fit e.g. MMRM model to obtain estimates of profiles
+mmrm_fit = analyze_mmrm(data)
+set.seed(1)
+TCT_Fit = TCT_meta(
+  time_points = 0:4,
+  ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
+  exp_estimates = mmrm_fit$coefficients[5:8],
+  vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+  interpolation = "spline",
+  B = 1e3
+)
+TCT_fit_common = TCT_meta_common(
+  TCT_Fit = TCT_Fit,
+  inference = "wald"
+)
 }
