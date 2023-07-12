@@ -43,7 +43,7 @@ time-component test. The first step is to estimate the slowing factor for each
 time point. Different approaches for inference are available. Note that the
 estimators in these different approaches are equivalent, but the corresponding
 measures of uncertainty are not equivalent. Information on these approaches can
-be found in the function documentation.
+be found in the function documentation. 
 
 ```{r cars}
 # TCT_meta() is the main function for performing time component tests. The estimated
