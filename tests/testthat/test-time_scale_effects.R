@@ -1,4 +1,4 @@
-test_that("TCT() function works with cubic spline interpolation", {
+test_that("TCT_meta() function works with cubic spline interpolation", {
   library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
@@ -9,7 +9,7 @@ test_that("TCT() function works with cubic spline interpolation", {
                              paste0(arm, ":", time_int)))
     mmrm_fit = analyze_mmrm(data)
     set.seed(1)
-    TCT_Fit = TCT(
+    TCT_Fit = TCT_meta(
       time_points = 0:4,
       ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
       exp_estimates = coef(mmrm_fit)[5:8],
@@ -18,7 +18,7 @@ test_that("TCT() function works with cubic spline interpolation", {
       interpolation = "spline",
       B = 1e3
     )
-    TCT_output_vctr = c(TCT_Fit$coefficients,
+    TCT_output_vctr = c(coef(TCT_Fit),
                         TCT_Fit$bootstrap_estimates[1:2],
                         TCT_Fit$vcov[1, 2])
     check_vctr = c(0.7327657260, 0.8734756221, 0.7936971718, 0.7510185731,
@@ -27,7 +27,7 @@ test_that("TCT() function works with cubic spline interpolation", {
                ignore_attr = "names", tolerance = 1e-3)
 })
 
-test_that("TCT_common() function works with cubic spline interpolation", {
+test_that("TCT_meta_common() function works with cubic spline interpolation", {
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -37,7 +37,7 @@ test_that("TCT_common() function works with cubic spline interpolation", {
                              paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -46,7 +46,7 @@ test_that("TCT_common() function works with cubic spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = TRUE)
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = TRUE)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
@@ -55,7 +55,7 @@ test_that("TCT_common() function works with cubic spline interpolation", {
                ignore_attr = "names", tolerance = 1e-3)
 })
 
-test_that("TCT() function works with monoH.FC spline interpolation", {
+test_that("TCT_meta() function works with monoH.FC spline interpolation", {
   library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
@@ -66,7 +66,7 @@ test_that("TCT() function works with monoH.FC spline interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -83,7 +83,7 @@ test_that("TCT() function works with monoH.FC spline interpolation", {
                ignore_attr = "names", tolerance = 1e-3)
 })
 
-test_that("TCT_common() function works with monoH.FC spline interpolation", {
+test_that("TCT_meta_common() function works with monoH.FC spline interpolation", {
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -93,7 +93,7 @@ test_that("TCT_common() function works with monoH.FC spline interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -102,22 +102,20 @@ test_that("TCT_common() function works with monoH.FC spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_common(
+  TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 1e1,
-    bs_fix_vcov = FALSE,
-    null_bs = TRUE
+    bs_fix_vcov = FALSE
   )
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
-                      TCT_common_fit$vcov,
-                      TCT_common_fit$bootstrap_estimates_null$estimates_bootstrap[1:2])
-  check_vctr = c(0.812935193, 0.824029215, 0.840300615, 0.003978323, 0.775201628, 1.213386432)
+                      TCT_common_fit$vcov)
+  check_vctr = c(0.812935193, 0.824029215, 0.840300615, 0.003978323)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-5)
 })
 
-test_that("TCT() function works with linear spline interpolation", {
+test_that("TCT_meta() function works with linear spline interpolation", {
   library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
@@ -128,7 +126,7 @@ test_that("TCT() function works with linear spline interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -145,7 +143,7 @@ test_that("TCT() function works with linear spline interpolation", {
                ignore_attr = "names", tolerance = 1e-3)
 })
 
-test_that("TCT_common() function works with linear spline interpolation", {
+test_that("TCT_meta_common() function works with linear spline interpolation", {
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -155,7 +153,7 @@ test_that("TCT_common() function works with linear spline interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -164,7 +162,7 @@ test_that("TCT_common() function works with linear spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE)
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
@@ -173,7 +171,7 @@ test_that("TCT_common() function works with linear spline interpolation", {
                ignore_attr = "names", tolerance = 1e-5)
 })
 
-test_that("TCT() function works with fourPL interpolation", {
+test_that("TCT_meta() function works with fourPL interpolation", {
   library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
@@ -184,7 +182,7 @@ test_that("TCT() function works with fourPL interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -201,7 +199,7 @@ test_that("TCT() function works with fourPL interpolation", {
                ignore_attr = "names", tolerance = 1e-3)
 })
 
-test_that("TCT_common() function works with fourPL interpolation", {
+test_that("TCT_meta_common() function works with fourPL interpolation", {
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -211,7 +209,7 @@ test_that("TCT_common() function works with fourPL interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -220,7 +218,7 @@ test_that("TCT_common() function works with fourPL interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE)
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
@@ -229,7 +227,7 @@ test_that("TCT_common() function works with fourPL interpolation", {
                ignore_attr = "names", tolerance = 1e-5)
 })
 
-test_that("TCT() function works with cubic spline interpolation", {
+test_that("TCT_meta() function works with cubic spline interpolation", {
   library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
@@ -240,7 +238,7 @@ test_that("TCT() function works with cubic spline interpolation", {
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -258,7 +256,7 @@ test_that("TCT() function works with cubic spline interpolation", {
                ignore_attr = "names", tolerance = 1e-3)
 })
 
-test_that("TCT() and its summary work with cubic spline interpolation and score-based inference", {
+test_that("TCT_meta() and its summary work with cubic spline interpolation and score-based inference", {
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -268,7 +266,7 @@ test_that("TCT() and its summary work with cubic spline interpolation and score-
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -277,16 +275,7 @@ test_that("TCT() and its summary work with cubic spline interpolation and score-
     B = 0,
     inference = "score"
   )
-  TCT_Fit_summary = summary.TCT(TCT_Fit)
-  set.seed(1)
-  TCT_common_fit = TCT_common(
-    TCT_Fit = TCT_Fit,
-    B = 10,
-    bs_fix_vcov = TRUE,
-    inference = "score",
-    type = "custom"
-  )
-  summary(TCT_common_fit)
+  TCT_Fit_summary = summary(TCT_Fit)
   TCT_output_vctr = c(TCT_Fit$coefficients[1:2],
                       TCT_Fit_summary$ci_matrix[1, 1],
                       TCT_Fit_summary$ci_matrix[2, 2])
@@ -302,7 +291,7 @@ test_that("TCT() and its summary work with cubic spline interpolation and score-
                tolerance = 1e-3)
 })
 
-test_that("TCT_common() and its summary work with cubic spline interpolation and score-based inference", {
+test_that("TCT_meta_common() and its summary work with cubic spline interpolation and score-based inference", {
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -312,7 +301,7 @@ test_that("TCT_common() and its summary work with cubic spline interpolation and
                                     paste0(arm, ":", time_int)))
   mmrm_fit = analyze_mmrm(data)
   set.seed(1)
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -321,9 +310,9 @@ test_that("TCT_common() and its summary work with cubic spline interpolation and
     B = 0,
     inference = "score"
   )
-  TCT_Fit_summary = summary.TCT(TCT_Fit)
+  TCT_Fit_summary = summary(TCT_Fit)
   set.seed(1)
-  TCT_common_fit = TCT_common(
+  TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 10,
     bs_fix_vcov = TRUE,

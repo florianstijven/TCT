@@ -200,7 +200,7 @@ pm_bootstrap_vertical_to_common = function(time_points,
                              interpolation = interpolation)[select_coef]
     }
     else {
-      tct_results = TCT(
+      tct_results = TCT_meta(
         time_points = time_points,
         ctrl_estimates = par_sampled[i, 1:n_points],
         exp_estimates = par_sampled[i, (n_points + 1):length(par_sampled[1, ])],

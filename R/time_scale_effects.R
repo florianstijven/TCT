@@ -1,25 +1,6 @@
-new_TCT = function(coefficients,
-                   vcov,
-                   inference,
-                   bootstrap_estimates,
-                   interpolation,
-                   type,
-                   vertical_model) {
-
-  structure(list(coefficients = coefficients,
-                 vcov = vcov,
-                 bootstrap_estimates = bootstrap_estimates,
-                 interpolation = interpolation,
-                 type = type,
-                 vertical_model = vertical_model,
-                 inference = inference),
-            class = "TCT")
-}
-
-
 #' Transform vertical Treatment Effect Estimates to the Time Scale
 #'
-#' The [TCT()] function transforms so-called vertical parameter estimates to
+#' The [TCT_meta()] function transforms so-called vertical parameter estimates to
 #' parameter estimates on the time scale. These treatment effect estimates on
 #' the time scale are so-called acceleration factors. This is an application of
 #' the Time-Component Test (TCT) methodology.
@@ -94,7 +75,7 @@ new_TCT = function(coefficients,
 #' # fit e.g. MMRM model to obtain estimates of profiles
 #' mmrm_fit = analyze_mmrm(data)
 #' set.seed(1)
-#' TCT_Fit = TCT(
+#' TCT_Fit = TCT_meta(
 #'   time_points = 0:4,
 #'   ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
 #'   exp_estimates = mmrm_fit$coefficients[5:8],
@@ -102,7 +83,7 @@ new_TCT = function(coefficients,
 #'   interpolation = "spline",
 #'   B = 1e3
 #' )
-TCT = function(time_points,
+TCT_meta = function(time_points,
                ctrl_estimates,
                exp_estimates,
                vcov,
@@ -146,51 +127,119 @@ TCT = function(time_points,
     constraints = constraints
   )
 
-  return(new_TCT(coefficients = coefficients,
-                 vcov = vcov_matrix,
-                 inference = inference,
+  return(
+    new_TCT_meta(
+      coefficients = coefficients,
+      vcov = vcov_matrix,
+      inference = inference,
+      bootstrap_estimates = bootstrap_estimates,
+      interpolation = interpolation,
+      type = "time-based treatment effects",
+      vertical_model = list(
+        time_points = time_points,
+        ctrl_estimates = ctrl_estimates,
+        exp_estimates = exp_estimates,
+        vcov = vcov
+      )
+    )
+  )
+}
+
+new_TCT_meta = function(coefficients,
+                   vcov,
+                   inference,
+                   bootstrap_estimates,
+                   interpolation,
+                   type,
+                   vertical_model) {
+  # All options regarding inference are put into a single list.
+  inference_options = list(
+    interpolation = interpolation,
+    type = type,
+    inference = inference
+  )
+
+  structure(list(coefficients = coefficients,
+                 vcov = vcov,
+                 inference_options = inference_options,
                  bootstrap_estimates = bootstrap_estimates,
-                 interpolation = interpolation,
-                 type = "time-based treatment effects",
-                 vertical_model = list(time_points = time_points,
-                                       ctrl_estimates = ctrl_estimates,
-                                       exp_estimates = exp_estimates,
-                                       vcov = vcov)
-                 ))
+                 vertical_model = vertical_model),
+            class = "TCT_meta")
 }
 
 
-print.TCT = function(x, ...) {
+#' Print Meta-Time Component Test object
+#'
+#' @param x
+#'
+#' @return
+#' @export
+print.TCT_meta = function(x) {
   cat(
     paste0(
-      "Time Component Test ",
-      "(", x$inference, ")",
-      x$type,
+      "Meta-Time Component Test:",
       "\n\n"
     )
   )
-  cat("Coefficients: \n")
+  cat("Estimated Acceleration Factors: \n")
   print(coef(x))
   cat("\n Interpolation Method: ")
-  cat(x$interpolation)
+  cat(x$inference_options$interpolation)
 }
 
 
+new_summary_TCT_meta = function(
+    x,
+    se_delta,
+    z_values,
+    ci_matrix,
+    p_values,
+    lht_delta,
+    vcov_bootstrap,
+    se_bootstrap,
+    ci_bootstrap,
+    p_bootstrap,
+    alpha
+) {
+  structure(unclass(append(
+    x,
+    list(
+      se_delta = se_delta,
+      z_values = z_values,
+      ci_matrix = ci_matrix,
+      p_values = p_values,
+      lht_delta = lht_delta,
+      vcov_bootstrap = vcov_bootstrap,
+      se_bootstrap = se_bootstrap,
+      ci_bootstrap = ci_bootstrap,
+      p_bootstrap = p_bootstrap,
+      alpha = alpha
+    )
+  )),
+  class = "summary_TCT_meta")
+}
+
 #' Summarize fitted Time Component Test model
 #'
-#' @param x Object returned by [TCT()].
+#' @param x Object returned by [TCT_meta()].
 #' @param alpha Two-sided confidence level for confidence intervals.
 #' @param delta_transformation Transformation when applying the delta-method to
 #'   obtain confidence intervals.
 #'
-#' @return
 #' @export
-#' @import stats
-summary.TCT = function(x,
-                       alpha = 0.05,
-                       delta_transformation = "identity") {
+summary.TCT_meta = function(x,
+                            alpha = 0.05,
+                            delta_transformation = "identity") {
+  # Extract information from the TCT_meta object that is used further on.
+  inference = x$inference_options$inference
+  ctrl_estimates = x$vertical_model$ctrl_estimates
+  exp_estimates = x$vertical_model$exp_estimates
+  time_points = x$vertical_model$time_points
+  interpolation = x$inference_options$interpolation
+  vcov_vertical = x$vertical_model$vcov
+
   # Wald-based inference if the inference option is equal to "wald".
-  if (x$inference == "wald") {
+  if (inference == "wald") {
     if (delta_transformation == "identity") {
       se_delta = sqrt(diag(x$vcov))
       z_values = (1 - coef(x)) / se_delta
@@ -216,26 +265,26 @@ summary.TCT = function(x,
     )
   }
   # Score-based inference if the inference option is equal to "score".
-  if (x$inference == "score") {
+  if (inference == "score") {
     se_delta = sqrt(diag(x$vcov))
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
-      x$vertical_model$time_points,
-      x$vertical_model$ctrl_estimates,
-      x$interpolation
+      time_points,
+      ctrl_estimates,
+      interpolation
     )
     # Compute confidence intervals for the measurement occasion-specific
     # acceleration factors based on the score test.
     ci_list = lapply(
-      X = 1:length(x$vertical_model$exp_estimates),
+      X = 1:length(exp_estimates),
       FUN = function(j) {
         score_conf_int(
-          time_points = x$vertical_model$time_points,
-          ctrl_estimates = x$vertical_model$ctrl_estimates,
-          exp_estimates = x$vertical_model$exp_estimates,
+          time_points = time_points,
+          ctrl_estimates = ctrl_estimates,
+          exp_estimates = exp_estimates,
           ref_fun = ref_fun,
-          interpolation = x$interpolation,
-          vcov = x$vertical_model$vcov,
+          interpolation = interpolation,
+          vcov = vcov_vertical,
           j = j,
           alpha = alpha
         )
@@ -247,15 +296,15 @@ summary.TCT = function(x,
     # Compute the z-statistics for the measurement occasion-specific
     # acceleration factors based on the score test.
     z_values = vapply(
-      X = 1:length(x$vertical_model$exp_estimates),
+      X = 1:length(exp_estimates),
       FUN = function(j) {
         score_test(
-          time_points = x$vertical_model$time_points,
-          ctrl_estimates = x$vertical_model$ctrl_estimates,
-          exp_estimates = x$vertical_model$exp_estimates,
+          time_points = time_points,
+          ctrl_estimates = ctrl_estimates,
+          exp_estimates = exp_estimates,
           ref_fun = ref_fun,
-          interpolation = x$interpolation,
-          vcov = x$vertical_model$vcov,
+          interpolation = interpolation,
+          vcov = vcov_vertical,
           j = j,
           gamma_0 = 1
         )[1]
@@ -302,7 +351,7 @@ summary.TCT = function(x,
 
 
   return(
-    new_summary.TCT(
+    new_summary_TCT_meta(
       x = x,
       se_delta = se_delta,
       z_values = z_values,
@@ -318,37 +367,6 @@ summary.TCT = function(x,
   )
 }
 
-new_summary.TCT = function(
-    x,
-    se_delta,
-    z_values,
-    ci_matrix,
-    p_values,
-    lht_delta,
-    vcov_bootstrap,
-    se_bootstrap,
-    ci_bootstrap,
-    p_bootstrap,
-    alpha
-) {
-  structure(append(
-    x,
-    list(
-      se_delta = se_delta,
-      z_values = z_values,
-      ci_matrix = ci_matrix,
-      p_values = p_values,
-      lht_delta = lht_delta,
-      vcov_bootstrap = vcov_bootstrap,
-      se_bootstrap = se_bootstrap,
-      ci_bootstrap = ci_bootstrap,
-      p_bootstrap = p_bootstrap,
-      alpha = alpha
-    )
-  ),
-  class = "summary.TCT")
-}
-
 #' Title
 #'
 #' @param x
@@ -357,67 +375,71 @@ new_summary.TCT = function(
 #' @export
 #'
 #' @examples
-print.summary.TCT = function(x) {
+print.summary_TCT_meta = function(x) {
   cat(
     paste0(
-      "Time Component Test: ",
-      x$type,
+      "Meta-Time Component Test: ",
       "\n\n"
     )
   )
   cat("Coefficients: \n")
   if (is.null(x$ci_bootstrap)) {
     coefficients_df = data.frame(
-      Value = coef(x),
-      "Std. Error (delta)" = x$se_delta,
-      "z-value (delta)" = x$z_values,
-      "p-value (delta)" = x$p_values,
-      "CI (delta)" = paste0("(",
-                            format(x$ci_matrix[, 1], digits = 5),
-                            ", ",
-                            format(x$ci_matrix[, 2], digits = 5),
-                            ")"),
+      "Estimate" = coef(x),
+      "Std. Error" = x$se_delta,
+      "z value" = x$z_values,
+      "p value" = x$p_values,
+      "CI" = paste0(
+        "(",
+        format(x$ci_matrix[, 1], digits = 5),
+        ", ",
+        format(x$ci_matrix[, 2], digits = 5),
+        ")"
+      ),
       check.names = FALSE
     )
   }
   else {
     coefficients_df = data.frame(
       Value = coef(x),
-      `Std. Error (delta)` = x$se_delta,
-      `z-value (delta)` = x$z_values,
-      `p-value (delta)` = x$p_values,
-      `CI (delta)` = paste0("(",
-                            format(x$ci_matrix[, 1], digits = 5),
-                            ", ",
-                            format(x$ci_matrix[, 2], digits = 5),
-                            ")"),
-      `CI (bootstrap)` = paste0("(",
-                                format(x$ci_bootstrap[, 1], digits = 5),
-                                ", ",
-                                format(x$ci_bootstrap[, 2], digits = 5),
-                                ")"),
+      `Std. Error` = x$se_delta,
+      `z value` = x$z_values,
+      `p value` = x$p_values,
+      `CI` = paste0(
+        "(",
+        format(x$ci_matrix[, 1], digits = 5),
+        ", ",
+        format(x$ci_matrix[, 2], digits = 5),
+        ")"
+      ),
+      `CI` = paste0(
+        "(",
+        format(x$ci_bootstrap[, 1], digits = 5),
+        ", ",
+        format(x$ci_bootstrap[, 2], digits = 5),
+        ")"
+      ),
       check.names = FALSE
     )
 
   }
-  # Change column names if inference is based on the score test.
-  if (x$inference == "score") {
-    colnames(coefficients_df)[2:5] = c("Std. Error (delta)",
-                                  "z-value (score)",
-                                  "p-value (score)",
-                                  "CI (score)")
-  }
 
   print(coefficients_df, digits = 5)
+
   cat(paste0("alpha = ", x$alpha))
-  cat("\n Interpolation Method: ")
-  cat(x$interpolation)
   cat("\n")
+  cat("\nInterpolation Method: ")
+  cat(x$inference_options$interpolation)
+  cat("\nEstimation and Inference: ")
+  cat(x$inference_options$inference)
+  cat("\n")
+
+
 }
 
 #' Estimate Common Acceleration Factor
 #'
-#' The [TCT_common()] function estimates the common acceleration factor.
+#' The [TCT_meta_common()] function estimates the common acceleration factor.
 #'
 #' @param TCT_Fit
 #' @param bs_fix_vcov
@@ -426,21 +448,27 @@ print.summary.TCT = function(x) {
 #' @export
 #'
 #' @examples
-TCT_common = function(TCT_Fit,
+TCT_meta_common = function(TCT_Fit,
                       inference = "wald",
                       B = 0,
                       bs_fix_vcov = FALSE,
                       select_coef = 1:length(coef(TCT_Fit)),
-                      null_bs = FALSE,
                       gls_est = TRUE,
                       constraints = FALSE,
                       type = NULL,
                       weights = NULL) {
+  # Extract information from the TCT_meta object that is used further on.
+  inference = TCT_Fit$inference_options$inference
+  ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
+  exp_estimates = TCT_Fit$vertical_model$exp_estimates
+  time_points = TCT_Fit$vertical_model$time_points
+  interpolation = TCT_Fit$inference_options$interpolation
+  vcov_vertical = TCT_Fit$vertical_model$vcov
   # (Re)construct reference trajectory.
   ref_fun = ref_fun_constructor(
-    TCT_Fit$vertical_model$time_points,
-    TCT_Fit$vertical_model$ctrl_estimates,
-    TCT_Fit$interpolation
+    time_points,
+    ctrl_estimates,
+    interpolation
   )
   # Use wald-based inference if this is asked by the user.
   estimates = coef(TCT_Fit)[select_coef]
@@ -463,40 +491,50 @@ TCT_common = function(TCT_Fit,
     # Compute optimal weights if the user did not provide weights themselves.
     if ((type == "custom") & (is.null(weights))) {
       weights = optimize_weights(
-        time_points = TCT_Fit$vertical_model$time_points,
-        ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-        exp_estimates = TCT_Fit$vertical_model$exp_estimates,
+        time_points = time_points,
+        ctrl_estimates = ctrl_estimates,
+        exp_estimates = exp_estimates,
         ref_fun = ref_fun,
-        interpolation = TCT_Fit$interpolation,
-        vcov = TCT_Fit$vertical_model$vcov,
+        interpolation = interpolation,
+        vcov = vcov_vertical,
         type = type,
         j = select_coef
       )
     }
     gamma_common_estimate = score_estimate_common(
-      time_points = TCT_Fit$vertical_model$time_points,
-      ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-      exp_estimates = TCT_Fit$vertical_model$exp_estimates,
+      time_points = time_points,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
       ref_fun = ref_fun,
-      interpolation = TCT_Fit$interpolation,
-      vcov = TCT_Fit$vertical_model$vcov,
+      interpolation = interpolation,
+      vcov = vcov_vertical,
       type = type,
       j = select_coef,
       weights = weights
     )
-    gamma_common_vcov = NA
+    gamma_common_vcov = score_estimate_common_se(
+      gamma_est = gamma_common_estimate,
+      time_points = time_points,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
+      interpolation = interpolation,
+      vcov = vcov_vertical,
+      type = type,
+      j = select_coef,
+      weights = weights
+    )
   }
 
 
 
   bs_estimates = pm_bootstrap_vertical_to_common(
-    time_points = TCT_Fit$vertical_model$time_points,
-    ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-    exp_estimates = TCT_Fit$vertical_model$exp_estimates,
-    vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + 1:length(coef(TCT_Fit))),
-                                       c(1:n_points, n_points + 1:length(coef(TCT_Fit)))],
+    time_points = time_points,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_vertical[c(1:n_points, n_points + 1:length(coef(TCT_Fit))),
+                         c(1:n_points, n_points + 1:length(coef(TCT_Fit)))],
     TCT_vcov = vcov,
-    interpolation = TCT_Fit$interpolation,
+    interpolation = interpolation,
     B = B,
     bs_fix_vcov = bs_fix_vcov,
     return_se = TRUE,
@@ -504,22 +542,6 @@ TCT_common = function(TCT_Fit,
     select_coef = select_coef,
     constraints = constraints
   )
-
-  bs_estimates_null = NULL
-  if (null_bs) {
-    bs_estimates_null = pm_bootstrap_vertical_to_common(
-      time_points = TCT_Fit$vertical_model$time_points,
-      ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
-      exp_estimates = TCT_Fit$vertical_model$exp_estimates[select_coef],
-      vcov = TCT_Fit$vertical_model$vcov[c(1:n_points, n_points + select_coef), c(1:n_points, n_points + select_coef)],
-      TCT_vcov = vcov,
-      interpolation = TCT_Fit$interpolation,
-      B = B,
-      bs_fix_vcov = bs_fix_vcov,
-      return_se = TRUE,
-      null = TRUE
-    )
-  }
 
   # Test for common slowing parameter
   lht_matrix = matrix(0, nrow = length(estimates) - 1, ncol = length(estimates) - 1)
@@ -535,13 +557,12 @@ TCT_common = function(TCT_Fit,
   )
 
 
-  new_TCT_common(
+  new_TCT_meta_common(
     coefficients = gamma_common_estimate,
     inference = inference,
     vcov = gamma_common_vcov,
     bootstrap_estimates = bs_estimates,
-    bootstrap_estimates_null = bs_estimates_null,
-    interpolation = TCT_Fit$interpolation,
+    interpolation = interpolation,
     lht_common = lht_common,
     type = type,
     weights = weights,
@@ -550,11 +571,10 @@ TCT_common = function(TCT_Fit,
   )
 }
 
-new_TCT_common = function(coefficients,
+new_TCT_meta_common = function(coefficients,
                           inference,
                           vcov,
                           bootstrap_estimates,
-                          bootstrap_estimates_null,
                           interpolation,
                           lht_common,
                           type,
@@ -562,21 +582,25 @@ new_TCT_common = function(coefficients,
                           vertical_model,
                           select_coef
                           ) {
+  # All options regarding inference are put into a single list.
+  inference_options = list(
+    interpolation = interpolation,
+    type = type,
+    inference = inference,
+    weights = weights,
+    select_coef = select_coef
+  )
+
   structure(
     list(
       coefficients = coefficients,
-      inference = inference,
       vcov = vcov,
+      inference_options = inference_options,
       bootstrap_estimates = bootstrap_estimates,
-      bootstrap_estimates_null = bootstrap_estimates_null,
-      interpolation = interpolation,
       lht_common = lht_common,
-      type = type,
-      weights = weights,
-      vertical_model = vertical_model,
-      select_coef = select_coef
+      vertical_model = vertical_model
     ),
-    class = "TCT_common"
+    class = "TCT_meta_common"
   )
 }
 
@@ -588,18 +612,18 @@ new_TCT_common = function(coefficients,
 #' @export
 #'
 #' @examples
-print.TCT_common = function(x) {
+print.TCT_meta_common = function(x) {
   cat(
     paste0(
-      "Time Component Test: ",
-      "proportional slowing",
+      "Meta-Time Component Test - ",
+      "Common Acceleration Factor:",
       "\n\n"
     )
   )
-  cat("Coefficients: \n")
-  print(x$coefficients)
-  cat("\n Interpolation Method: ")
-  cat(x$interpolation)
+  cat("Estimated Common Acceleration Factor: \n")
+  print(coef(x))
+  cat("\nInterpolation Method: ")
+  cat(x$inference_options$interpolation)
   cat("\n")
 
 }
@@ -613,11 +637,21 @@ print.TCT_common = function(x) {
 #' @export
 #'
 #' @examples
-summary.TCT_common = function(x,
-                              alpha = 0.05,
-                              delta_transformation = "identity") {
+summary.TCT_meta_common = function(x,
+                                   alpha = 0.05,
+                                   delta_transformation = "identity") {
+  # Extract information from the TCT_meta object that is used further on.
+  inference = x$inference_options$inference
+  ctrl_estimates = x$vertical_model$ctrl_estimates
+  exp_estimates = x$vertical_model$exp_estimates
+  time_points = x$vertical_model$time_points
+  interpolation = x$inference_options$interpolation
+  vcov_vertical = x$vertical_model$vcov
+  type = x$inference_options$type
+  select_coef = x$inference_options$select_coef
+  weights = x$inference_options$weights
   # Wald-based inference
-  if (x$inference == "wald") {
+  if (inference == "wald") {
     if (delta_transformation == "identity") {
       gamma_common_se = sqrt(diag(x$vcov))
       z_value = (1 - coef(x)) / gamma_common_se
@@ -644,46 +678,47 @@ summary.TCT_common = function(x,
     p_value =  (1 - stats::pnorm(abs(z_value))) * 2
   }
   # Score based inference
-  if (x$inference == "score") {
+  if (inference == "score") {
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
-      x$vertical_model$time_points,
-      x$vertical_model$ctrl_estimates,
-      x$interpolation
+      time_points,
+      ctrl_estimates,
+      interpolation
     )
     # Compute confidence interval
     gamma_common_ci = matrix(
       data = score_conf_int_common(
-        time_points = x$vertical_model$time_points,
-        ctrl_estimates = x$vertical_model$ctrl_estimates,
-        exp_estimates = x$vertical_model$exp_estimates,
+        time_points = time_points,
+        ctrl_estimates = ctrl_estimates,
+        exp_estimates = exp_estimates,
         ref_fun = ref_fun,
-        interpolation = x$interpolation,
-        vcov = x$vertical_model$vcov,
-        gamma_est = x$coefficients,
-        type = x$type,
-        j = x$select_coef,
-        weights = x$weights,
+        interpolation = interpolation,
+        vcov = vcov_vertical,
+        gamma_est = coef(x),
+        type = type,
+        j = select_coef,
+        weights = weights,
         alpha = alpha
       ),
       ncol = 2
     )
     # Compute score test statistic and p-value
     temp = score_test_common(
-      time_points = x$vertical_model$time_points,
-      ctrl_estimates = x$vertical_model$ctrl_estimates,
-      exp_estimates = x$vertical_model$exp_estimates,
+      time_points = time_points,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
       ref_fun = ref_fun,
-      interpolation = x$interpolation,
-      vcov = x$vertical_model$vcov,
+      interpolation = interpolation,
+      vcov = vcov_vertical,
       gamma_0 = 1,
-      type = x$type,
-      j = x$select_coef,
-      weights = x$weights)
+      type = type,
+      j = select_coef,
+      weights = weights
+    )
     z_value = temp[1]
     p_value = temp[2]
-    # SE not yet implemented
-    gamma_common_se = NA
+    # Estimated standard error.
+    gamma_common_se = sqrt(x$vcov)
   }
 
 
@@ -707,7 +742,7 @@ summary.TCT_common = function(x,
   }
 
 
-  new_summary.TCT_common(
+  new_summary_TCT_meta_common(
     x = x,
     gamma_common_se = gamma_common_se,
     z_value = z_value,
@@ -721,7 +756,7 @@ summary.TCT_common = function(x,
   )
 }
 
-new_summary.TCT_common = function(
+new_summary_TCT_meta_common = function(
     x,
     gamma_common_se,
     z_value,
@@ -733,7 +768,7 @@ new_summary.TCT_common = function(
     p_bootstrap,
     alpha
 ) {
-  structure(append(
+  structure(unclass(append(
     x,
     list(
       gamma_common_se = gamma_common_se,
@@ -746,8 +781,8 @@ new_summary.TCT_common = function(
       p_bootstrap = p_bootstrap,
       alpha = alpha
     )
-  ),
-  class = "summary.TCT_common")
+  )),
+  class = "summary_TCT_meta_common")
 }
 
 #' Title
@@ -758,22 +793,22 @@ new_summary.TCT_common = function(
 #' @export
 #'
 #' @examples
-print.summary.TCT_common = function(x) {
+print.summary_TCT_meta_common = function(x) {
   cat(
     paste0(
-      "Time Component Test: ",
-      "proportional slowing",
+      "Meta-Time Component Test - ",
+      "Common Acceleration Factor:",
       "\n\n"
     )
   )
-  cat("Coefficients: \n")
+  cat("Estimated Common Acceleration Factor: \n")
   if (is.null(x$vcov_bootstrap)) {
     coefficients_df = data.frame(
-      Value = coef(x),
-      `Std. Error (delta)` = x$gamma_common_se,
-      `z-value (delta)` = x$z_value,
-      `p-value (delta)` = x$p_value,
-      `CI (delta)` = paste0("(",
+      Estimate = coef(x),
+      `Std. Error` = x$gamma_common_se,
+      `z value` = x$z_value,
+      `p value` = x$p_value,
+      `CI` = paste0("(",
                             format(x$gamma_common_ci[1], digits = 5),
                             ", ",
                             format(x$gamma_common_ci[2], digits = 5),
@@ -783,11 +818,11 @@ print.summary.TCT_common = function(x) {
   }
   else {
     coefficients_df = data.frame(
-      Value = coef(x),
-      `Std. Error (delta)` = x$gamma_common_se,
-      `z-value (delta)` = x$z_value,
-      `p-value (delta)` = x$p_value,
-      `CI (delta)` = paste0("(",
+      Estimate = coef(x),
+      `Std. Error` = x$gamma_common_se,
+      `z value` = x$z_value,
+      `p value` = x$p_value,
+      `CI` = paste0("(",
                             format(x$gamma_common_ci[1], digits = 5),
                             ", ",
                             format(x$gamma_common_ci[2], digits = 5),
@@ -801,16 +836,33 @@ print.summary.TCT_common = function(x) {
       check.names = FALSE
     )
   }
-  # Change column names if inference is based on the score test.
-  if (x$inference == "score") {
-    colnames(coefficients_df)[2:5] = c("Std. Error (delta)",
-                                       paste0(names(x$z_value), " (score)"),
-                                       "p-value (score)",
-                                       "CI (score)")
-  }
+
   print(coefficients_df, digits = 5)
   cat(paste0("alpha = ", x$alpha))
+  cat("\n")
+  cat("\nInterpolation Method: ")
+  cat(x$inference_options$interpolation)
+  cat("\nTime Points Used in Estimator: ")
+  cat(x$vertical_model$time_points[x$inference_options$select_coef + 1])
+  cat("\nEstimation and Inference: ")
+  cat(x$inference_options$inference)
+  if (x$inference_options$inference == "score") {
+    cat("\n")
+    cat("\t")
+    cat(paste0("Type of Score Test: ", x$inference_options$type))
+    if (x$inference_options$type == "custom") {
+      cat("\n")
+      cat("\t")
+      cat("Weights: ")
+      cat(round(x$inference_options$weights, 3))
+    }
+  }
   cat("\n\n")
+
+
+
+
+
   cat("Test for proportional slowing factor:\n")
   print(
     data.frame("Df" = x$lht_common$Df[2],

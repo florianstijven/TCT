@@ -14,20 +14,6 @@ v_deriv_alpha_beta(
 )
 }
 \arguments{
-\item{time_points}{Ordered vector that contains the times corresponding to
-the estimated means in the \code{ctrl_estimates} vector.}
-
-\item{ctrl_estimates}{Estimated mean outcome in the control group at fixed
-occasions.}
-
-\item{interpolation}{Which interpolation method to use?
-\itemize{
-\item \code{"linear"}: linear interpolation
-\item \code{"spline"}: natural cubic spline interpolation
-\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
-and Carlson
-}}
-
 \item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
 
 \item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}

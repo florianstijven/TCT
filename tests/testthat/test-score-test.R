@@ -1,6 +1,6 @@
 test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -30,7 +30,7 @@ test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
 
 test_that("score TCT CI is correct", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -59,7 +59,7 @@ test_that("score TCT CI is correct", {
 
 test_that("omnibus score TCT test for common treatment effect is correct", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -86,7 +86,7 @@ test_that("omnibus score TCT test for common treatment effect is correct", {
 
 test_that("omnibus score TCT test for common treatment effect is equivalent to to linear hypothesis test for gamma = 1", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -119,7 +119,7 @@ test_that("omnibus score TCT test for common treatment effect is equivalent to t
 
 test_that("all type of score TCT test for common treatment effect are correct", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -134,7 +134,7 @@ test_that("all type of score TCT test for common treatment effect are correct", 
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
 
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -195,7 +195,7 @@ test_that("all type of score TCT test for common treatment effect are correct", 
 
 test_that("one-dimensional score TCT tests for common treatment effect are equivalent", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -210,7 +210,7 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
 
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -270,7 +270,7 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
 
 test_that("all type of mutlivariate score TCT confidence intervals for common treatment effect are correct", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -285,7 +285,7 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
 
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -348,7 +348,7 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
 
 test_that("all type of multivariate score TCT confidence intervals for common treatment effect are equivalent to their univariate counterparts", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -363,7 +363,7 @@ test_that("all type of multivariate score TCT confidence intervals for common tr
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
 
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],
@@ -435,7 +435,7 @@ test_that("all type of multivariate score TCT confidence intervals for common tr
 # Score based estimators
 test_that("all type of multivariate score TCT estimators are correct", {
   library(dplyr)
-  # Example data set transformed to format required by TCT()
+  # Example data set transformed to format required by TCT_meta()
   data_test = simulated_test_trial %>%
     mutate(
       time_int = (Week %/% 25) + 1,
@@ -450,7 +450,7 @@ test_that("all type of multivariate score TCT estimators are correct", {
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
 
-  TCT_Fit = TCT(
+  TCT_Fit = TCT_meta(
     time_points = 0:4,
     ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
     exp_estimates = coef(mmrm_fit)[5:8],

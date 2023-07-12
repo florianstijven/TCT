@@ -513,6 +513,43 @@ score_estimate_common = function(time_points,
   )$par
 }
 
+#' Standard Error of Score-based estimator of the common acceleration factor
+#'
+#'
+#' @param gamma_est Estimated value for the common acceleration factor.
+#' @inheritParams score_estimate_common
+#'
+#' @return (numeric) Estimated SE of the estimator.
+score_estimate_common_se = function(gamma_est,
+                                    time_points,
+                                    ctrl_estimates,
+                                    exp_estimates,
+                                    interpolation,
+                                    vcov,
+                                    type = "omnibus",
+                                    j = 1:length(exp_estimates),
+                                    weights = NULL,
+                                    ...) {
+  # Only the SE for the weights-based estimator has been implemented. For
+  # estimators of which the SE has not yet been implemented, NA is returned.
+  if (type != "custom") {
+    return(NA)
+  }
+  gr_gamma_w = gradient_gamma_w_analytical(
+    time_points = time_points,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    interpolation = interpolation,
+    gamma_0 = gamma_est,
+    j = j,
+    weights = weights
+  )
+  se = t(gr_gamma_w) %*%
+    vcov %*%
+    gr_gamma_w
+  return(as.numeric(se))
+}
+
 
 
 
