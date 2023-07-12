@@ -39,7 +39,7 @@ mmrm_fit = analyze_mmrm(data_test)
 ```
 
 After fitting a MMRM model, we can use the `TCT_meta()` function to perform the
-time-component test. The first step is to estimate the slowing factor for each
+time-component test. The first step is to estimate the acceleration factor for each
 time point. Different approaches for inference are available. Note that the
 estimators in these different approaches are equivalent, but the corresponding
 measures of uncertainty are not equivalent. Information on these approaches can
@@ -64,33 +64,33 @@ summary(TCT_fit)
 ```
 
 
-The next step is to estimate a common slowing factor. As before, different
+The next step is to estimate a common acceleration factor. As before, different
 approaches to inference are available. However, the estimators in these
-different approaches are no longer equivalent. In the next code chunk,
-score-based weighted with adaptively selected weights is illustrated. These
-weight the different measurement occasions such the the variance of the
-corresponding estimator is minimized.
+different approaches are no longer equivalent. In the next code chunk, the
+score-based weighted estimator with adaptively selected weights is illustrated.
+This estimator weights the different measurement occasions so that the variance
+of the corresponding estimator is minimized.
 
 ```{r}
 # The object returned by TCT() can be used as argument to the TCT_common() function.
-# This function estimates a single common slowing factor.
+# This function estimates a single common acceleration factor.
 TCT_common_fit = TCT_meta_common(TCT_fit,
                                  B = 0,
                                  inference = "score",
                                  type = "custom")
 summary(TCT_common_fit)
 ```
+
 The output shown above indicates that the optimal weights put all weight on the
 third measurement occasion. Alternatively, one could set `inference =
-"omnibus"`. This corresponding p-value for this estimator is consistent with the
-results from "classical" hypothesis tests for $H_0: \alpha_j = \beta_j \;
-\forall \; j$ where $\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in
-the control and treatment group, respectively. This estimator is an attrictive
-complement to the classical hypothesis tests as the corresponding confidence
-interval provides a very easy to interpret quantification of the treatment
-effect. The analysis is repeated below with this alternative estimator. Note 
-that the standard error is `NA` because a corresponding estimator has not yet 
-been implemented.
+"omnibus"`. The p-value for this estimator is consistent with the results from
+"classical" hypothesis tests for $H_0: \alpha_j = \beta_j \; \forall \; j$ where
+$\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in the control and
+treatment group, respectively. This estimator is an attractive complement to the
+classical hypothesis tests as the corresponding confidence interval provides a
+very easy to interpret quantification of the treatment effect. The analysis is
+repeated below with this alternative estimator. Note that the standard error is
+`NA` because a corresponding estimator has not yet been implemented.
 
 ```{r}
 TCT_common_fit = TCT_meta_common(TCT_fit,

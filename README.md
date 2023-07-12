@@ -40,11 +40,11 @@ mmrm_fit = analyze_mmrm(data_test)
 
 After fitting a MMRM model, we can use the `TCT_meta()` function to
 perform the time-component test. The first step is to estimate the
-slowing factor for each time point. Different approaches for inference
-are available. Note that the estimators in these different approaches
-are equivalent, but the corresponding measures of uncertainty are not
-equivalent. Information on these approaches can be found in the function
-documentation.
+acceleration factor for each time point. Different approaches for
+inference are available. Note that the estimators in these different
+approaches are equivalent, but the corresponding measures of uncertainty
+are not equivalent. Information on these approaches can be found in the
+function documentation.
 
 ``` r
 # TCT_meta() is the main function for performing time component tests. The estimated
@@ -68,30 +68,31 @@ summary(TCT_fit)
     ## 
     ## Coefficients: 
     ##               Value Std. Error  z value  p value                  CI
-    ## arm_time1:2 0.73276   0.620430 -0.59571 0.551370 (-0.28696, 1.35407)
-    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215368 ( 0.66403, 1.07477)
+    ## arm_time1:2 0.73275   0.620431 -0.59571 0.551369 (-0.28696, 1.35407)
+    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215367 ( 0.66403, 1.07477)
     ## arm_time1:4 0.79370   0.080407 -2.13015 0.033159 ( 0.64368, 0.97891)
-    ## arm_time1:5 0.75102   0.096582 -1.71942 0.085537 ( 0.60176, 1.03671)
+    ## arm_time1:5 0.75102   0.096581 -1.71942 0.085537 ( 0.60176, 1.03671)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.27084, 1.36005)
-    ## arm_time1:3 ( 0.66394, 1.07737)
-    ## arm_time1:4 ( 0.64528, 0.98422)
-    ## arm_time1:5 ( 0.60145, 1.04004)
+    ## arm_time1:2 (-0.27743, 1.34984)
+    ## arm_time1:3 ( 0.66911, 1.07112)
+    ## arm_time1:4 ( 0.64374, 0.97626)
+    ## arm_time1:5 ( 0.60367, 1.03266)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
     ## Estimation and Inference: score
 
-The next step is to estimate a common slowing factor. As before,
+The next step is to estimate a common acceleration factor. As before,
 different approaches to inference are available. However, the estimators
 in these different approaches are no longer equivalent. In the next code
-chunk, score-based weighted with adaptively selected weights is
-illustrated. These weight the different measurement occasions such the
-the variance of the corresponding estimator is minimized.
+chunk, the score-based weighted estimator with adaptively selected
+weights is illustrated. This estimator weights the different measurement
+occasions so that the variance of the corresponding estimator is
+minimized.
 
 ``` r
 # The object returned by TCT() can be used as argument to the TCT_common() function.
-# This function estimates a single common slowing factor.
+# This function estimates a single common acceleration factor.
 TCT_common_fit = TCT_meta_common(TCT_fit,
                                  B = 0,
                                  inference = "score",
@@ -118,11 +119,11 @@ summary(TCT_common_fit)
 
 The output shown above indicates that the optimal weights put all weight
 on the third measurement occasion. Alternatively, one could set
-`inference = "omnibus"`. This corresponding p-value for this estimator
-is consistent with the results from “classical” hypothesis tests for
+`inference = "omnibus"`. The p-value for this estimator is consistent
+with the results from “classical” hypothesis tests for
 $H_0: \alpha_j = \beta_j \; \forall \; j$ where $\alpha_j$ and $\beta_j$
 are the mean outcomes at $t_j$ in the control and treatment group,
-respectively. This estimator is an attrictive complement to the
+respectively. This estimator is an attractive complement to the
 classical hypothesis tests as the corresponding confidence interval
 provides a very easy to interpret quantification of the treatment
 effect. The analysis is repeated below with this alternative estimator.
@@ -140,8 +141,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error z value p value                CI
-    ## chi-squared  0.85502         NA  6.2652  0.1802 (0.66471, 1.0845)
+    ##             Estimate Std. Error chi-squared p value                CI
+    ## chi-squared  0.85503         NA      6.2652  0.1802 (0.66471, 1.0845)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline

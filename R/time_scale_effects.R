@@ -885,6 +885,11 @@ print.summary_TCT_meta_common = function(x) {
       check.names = FALSE
     )
   }
+  # If the omnibus score-test is used, the test statistic is not a z-value, but
+  # rather chi-squared statistic.
+  if (x$inference_options$type == "omnibus") {
+    colnames(coefficients_df)[3] = "chi-squared"
+  }
 
   print(coefficients_df, digits = 5)
   cat(paste0("alpha = ", x$alpha))
