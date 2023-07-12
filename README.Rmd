@@ -6,9 +6,10 @@ output: github_document
 The goal the TCT package is to provide a set of easy to use functions to
 perform time components test. 
 
-## Installation You can install the development
+## Installation 
 
-version of TCT from [GitHub](https://github.com/) with:
+You can install the development version of TCT from
+[GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
@@ -62,6 +63,7 @@ TCT_fit = TCT_meta(
 summary(TCT_fit)
 ```
 
+
 The next step is to estimate a common slowing factor. As before, different
 approaches to inference are available. However, the estimators in these
 different approaches are no longer equivalent. In the next code chunk,
@@ -78,3 +80,47 @@ TCT_common_fit = TCT_meta_common(TCT_fit,
                                  type = "custom")
 summary(TCT_common_fit)
 ```
+The output shown above indicates that the optimal weights put all weight on the
+third measurement occasion. Alternatively, one could set `inference =
+"omnibus"`. This corresponding p-value for this estimator is consistent with the
+results from "classical" hypothesis tests for $H_0: \alpha_j = \beta_j \;
+\forall \; j$ where $\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in
+the control and treatment group, respectively. This estimator is an attrictive
+complement to the classical hypothesis tests as the corresponding confidence
+interval provides a very easy to interpret quantification of the treatment
+effect. The analysis is repeated below with this alternative estimator. Note 
+that the standard error is `NA` because a corresponding estimator has not yet 
+been implemented.
+
+```{r}
+TCT_common_fit = TCT_meta_common(TCT_fit,
+                                 B = 0,
+                                 inference = "score",
+                                 type = "omnibus")
+summary(TCT_common_fit)
+```
+
+We show that the p-value above is identical to the one obtained with a classical
+hypothesis test if we use the asympotic chi-squared distribution instead of the
+F-distribution with approximate degrees of freedom.
+
+```{r}
+# Specify contrast matrix. 
+contrast_matrix = matrix(c(-1, 0, 0, 0, 1, 0, 0, 0, 0,
+                           0, -1, 0, 0, 0, 1, 0, 0, 0,
+                           0, 0, -1, 0, 0, 0, 1, 0, 0,
+                           0, 0, 0, -1, 0, 0, 0, 1, 0), nrow = 4, byrow = TRUE)
+# Test for the linear contrast that corresponds to equal means in both treatment
+# groups at the corresponding measurement occasions.
+classical_test = mmrm::df_md(mmrm_fit,
+                             contrast_matrix)
+# Extract F-statistic for the linear contrast. This statistic follows
+# asymptotically a chi-squared distribution if multiplied by the degrees of
+# freedom. However, finite sample corrections are usually applied.
+test_statistic = 4 * classical_test$f_stat
+# Compute p-value using chi-squared distribution. This p-value is identical to the
+# one obtained with TCT_meta_common() in the previous code chunk.
+1 - pchisq(test_statistic, 4)
+```
+
+

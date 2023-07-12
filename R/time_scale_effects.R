@@ -195,7 +195,6 @@ new_TCT_meta = function(coefficients,
 #' @param x
 #'
 #' @return NULL
-#' @export
 print.TCT_meta = function(x) {
   cat(
     paste0(
@@ -396,7 +395,6 @@ summary.TCT_meta = function(x,
 #' @param x
 #'
 #' @return NULL
-#' @export
 print.summary_TCT_meta = function(x) {
   cat(
     paste0(
@@ -404,7 +402,7 @@ print.summary_TCT_meta = function(x) {
       "\n\n"
     )
   )
-  cat("Coefficients: \n")
+  cat("Estimated Acceleration Factors: \n")
   if (is.null(x$ci_bootstrap)) {
     coefficients_df = data.frame(
       "Estimate" = coef(x),
@@ -423,7 +421,7 @@ print.summary_TCT_meta = function(x) {
   }
   else {
     coefficients_df = data.frame(
-      Value = coef(x),
+      "Estimate" = coef(x),
       `Std. Error` = x$se_delta,
       `z value` = x$z_values,
       `p value` = x$p_values,
@@ -663,7 +661,6 @@ new_TCT_meta_common = function(coefficients,
 #' @param x
 #'
 #' @return NULL
-#' @export
 print.TCT_meta_common = function(x) {
   cat(
     paste0(
@@ -841,7 +838,6 @@ new_summary_TCT_meta_common = function(
 #' @param x
 #'
 #' @return NULL
-#' @export
 print.summary_TCT_meta_common = function(x) {
   cat(
     paste0(
