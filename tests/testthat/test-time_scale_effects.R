@@ -173,7 +173,6 @@ test_that("TCT_common() function works with linear spline interpolation", {
                ignore_attr = "names", tolerance = 1e-5)
 })
 
-
 test_that("TCT() function works with fourPL interpolation", {
   library(mmrm)
   data = simulated_test_trial %>%
@@ -228,6 +227,119 @@ test_that("TCT_common() function works with fourPL interpolation", {
   check_vctr = c(0.77765914, 0.78482953, 1.01569215, 0.08541886)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-5)
+})
+
+test_that("TCT() function works with cubic spline interpolation", {
+  library(mmrm)
+  data = simulated_test_trial %>%
+    dplyr::mutate(time_int = (Week %/% 25)) %>%
+    dplyr::arrange(trial_number, SubjId, time_int) %>%
+    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
+    dplyr::mutate(arm_time = ifelse(time_int == 1L,
+                                    "baseline",
+                                    paste0(arm, ":", time_int)))
+  mmrm_fit = analyze_mmrm(data)
+  set.seed(1)
+  TCT_Fit = TCT(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    inference = "wald",
+    interpolation = "spline",
+    B = 1e3
+  )
+  TCT_output_vctr = c(TCT_Fit$coefficients,
+                      TCT_Fit$bootstrap_estimates[1:2],
+                      TCT_Fit$vcov[1, 2])
+  check_vctr = c(0.7327657260, 0.8734756221, 0.7936971718, 0.7510185731,
+                 0.4256797100, 1.0165886470, 0.0411074803)
+  expect_equal(TCT_output_vctr, check_vctr,
+               ignore_attr = "names", tolerance = 1e-3)
+})
+
+test_that("TCT() and its summary work with cubic spline interpolation and score-based inference", {
+  data = simulated_test_trial %>%
+    dplyr::mutate(time_int = (Week %/% 25)) %>%
+    dplyr::arrange(trial_number, SubjId, time_int) %>%
+    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
+    dplyr::mutate(arm_time = ifelse(time_int == 1L,
+                                    "baseline",
+                                    paste0(arm, ":", time_int)))
+  mmrm_fit = analyze_mmrm(data)
+  set.seed(1)
+  TCT_Fit = TCT(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    B = 0,
+    inference = "score"
+  )
+  TCT_Fit_summary = summary.TCT(TCT_Fit)
+  set.seed(1)
+  TCT_common_fit = TCT_common(
+    TCT_Fit = TCT_Fit,
+    B = 10,
+    bs_fix_vcov = TRUE,
+    inference = "score",
+    type = "custom"
+  )
+  summary(TCT_common_fit)
+  TCT_output_vctr = c(TCT_Fit$coefficients[1:2],
+                      TCT_Fit_summary$ci_matrix[1, 1],
+                      TCT_Fit_summary$ci_matrix[2, 2])
+  check_vctr = c(
+    0.732680858024503,
+    0.873507167779775,
+    -0.286970220428998,
+    1.07477707220273
+  )
+  expect_equal(TCT_output_vctr,
+               check_vctr,
+               ignore_attr = "names",
+               tolerance = 1e-3)
+})
+
+test_that("TCT_common() and its summary work with cubic spline interpolation and score-based inference", {
+  data = simulated_test_trial %>%
+    dplyr::mutate(time_int = (Week %/% 25)) %>%
+    dplyr::arrange(trial_number, SubjId, time_int) %>%
+    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
+    dplyr::mutate(arm_time = ifelse(time_int == 1L,
+                                    "baseline",
+                                    paste0(arm, ":", time_int)))
+  mmrm_fit = analyze_mmrm(data)
+  set.seed(1)
+  TCT_Fit = TCT(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    B = 0,
+    inference = "score"
+  )
+  TCT_Fit_summary = summary.TCT(TCT_Fit)
+  set.seed(1)
+  TCT_common_fit = TCT_common(
+    TCT_Fit = TCT_Fit,
+    B = 10,
+    bs_fix_vcov = TRUE,
+    inference = "score",
+    type = "custom"
+  )
+  TCT_common_summary = summary(TCT_common_fit)
+  TCT_output_vctr = c(TCT_common_fit$coefficients,
+                      TCT_common_summary$gamma_common_ci[1, 1:2])
+  check_vctr = c(0.793693254456409,
+                 0.643696602719346,
+                 0.978881018916929)
+  expect_equal(TCT_output_vctr,
+               check_vctr,
+               ignore_attr = "names",
+               tolerance = 1e-3)
 })
 
 

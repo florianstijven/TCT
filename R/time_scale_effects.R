@@ -450,10 +450,9 @@ TCT_common = function(TCT_Fit,
   else {
     vcov = diag(diag(TCT_Fit$vcov[select_coef, select_coef]))
   }
+  n_points = length(TCT_Fit$vertical_model$time_points)
   if (inference == "wald") {
-    n_points = length(TCT_Fit$vertical_model$time_points)
-
-    # delta method
+        # delta method
     p = length(estimates)
     vec_1 = matrix(1, nrow = p, ncol = 1)
     gamma_common_estimate = (t(vec_1) %*% solve(vcov) %*% matrix(estimates, ncol = 1) ) /
@@ -461,6 +460,19 @@ TCT_common = function(TCT_Fit,
     gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1)**(-1)
   }
   else if (inference == "score") {
+    # Compute optimal weights if the user did not provide weights themselves.
+    if ((type == "custom") & (is.null(weights))) {
+      weights = optimize_weights(
+        time_points = TCT_Fit$vertical_model$time_points,
+        ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
+        exp_estimates = TCT_Fit$vertical_model$exp_estimates,
+        ref_fun = ref_fun,
+        interpolation = TCT_Fit$interpolation,
+        vcov = TCT_Fit$vertical_model$vcov,
+        type = type,
+        j = select_coef
+      )
+    }
     gamma_common_estimate = score_estimate_common(
       time_points = TCT_Fit$vertical_model$time_points,
       ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates,
@@ -474,7 +486,6 @@ TCT_common = function(TCT_Fit,
     )
     gamma_common_vcov = NA
   }
-
 
 
 
@@ -789,6 +800,13 @@ print.summary.TCT_common = function(x) {
       `p-value (bootstrap)` = x$p_bootstrap[1],
       check.names = FALSE
     )
+  }
+  # Change column names if inference is based on the score test.
+  if (x$inference == "score") {
+    colnames(coefficients_df)[2:5] = c("Std. Error (delta)",
+                                       paste0(names(x$z_value), " (score)"),
+                                       "p-value (score)",
+                                       "CI (score)")
   }
   print(coefficients_df, digits = 5)
   cat(paste0("alpha = ", x$alpha))
