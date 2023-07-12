@@ -195,6 +195,7 @@ new_TCT_meta = function(coefficients,
 #' @param x
 #'
 #' @return NULL
+#' @export
 print.TCT_meta = function(x) {
   cat(
     paste0(
@@ -395,6 +396,7 @@ summary.TCT_meta = function(x,
 #' @param x
 #'
 #' @return NULL
+#' @export
 print.summary_TCT_meta = function(x) {
   cat(
     paste0(
@@ -432,7 +434,7 @@ print.summary_TCT_meta = function(x) {
         format(x$ci_matrix[, 2], digits = 5),
         ")"
       ),
-      `CI` = paste0(
+      `CI (bootstrap)` = paste0(
         "(",
         format(x$ci_bootstrap[, 1], digits = 5),
         ", ",
@@ -661,6 +663,7 @@ new_TCT_meta_common = function(coefficients,
 #' @param x
 #'
 #' @return NULL
+#' @export
 print.TCT_meta_common = function(x) {
   cat(
     paste0(
@@ -838,6 +841,7 @@ new_summary_TCT_meta_common = function(
 #' @param x
 #'
 #' @return NULL
+#' @export
 print.summary_TCT_meta_common = function(x) {
   cat(
     paste0(
