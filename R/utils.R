@@ -37,8 +37,6 @@
 #'      curve.
 #'
 #' @return A vector of the time-mapped values.
-#'
-#' @import stats
 get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
   # For fourPL, analytic solution exists.
   if (method == "fourPL") {

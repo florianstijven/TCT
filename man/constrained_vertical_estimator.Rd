@@ -2,10 +2,70 @@
 % Please edit documentation in R/constrained_vertical_estimator.R
 \name{constrained_vertical_estimator}
 \alias{constrained_vertical_estimator}
-\title{Constrained vertical Estimator}
+\title{Re-estimate Vertical Parameters Under Constraints for TCT}
 \usage{
 constrained_vertical_estimator(alpha_obs, beta_obs, Sigma_obs)
 }
-\description{
-Constrained vertical Estimator
+\arguments{
+\item{alpha_obs}{Estimates for vertical parameters in the control group.}
+
+\item{beta_obs}{Estimates for the vertical parameters in the experimental
+group.}
+
+\item{Sigma_obs}{Variance-covariance matrix for
+\eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})'}.}
 }
+\value{
+(numeric) Re-estimated parameter vector under the linear
+constraints that are implicitly assumed by TCT.
+\eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})'} under the
+appropriate constraints.
+}
+\description{
+The \code{constrained_vertical_estimator()} function re-estimates the vertical
+parameters under the constraints that are implicitly assumed by TCT-methods.
+}
+\section{Implicit Assumptions Made in TCT}{
+There are two implicit assumptions that underlie the TCT methodology:
+\itemize{
+\item \eqn{\boldsymbol{\alpha}} and \eqn{\boldsymbol{\beta}} are strictly
+monotone sequences, i.e.,
+\deqn{\alpha_0 < \alpha_1 < ... < \alpha_k \; \text{and} \; \beta_0 < \beta_1 < ... < \beta_k}
+\item The values for the trajectory in the active treatment group lie in the
+range of values for the trajectory in the placebo group. Especially
+important is the minimum: \eqn{\min(\boldsymbol{\alpha}) < \min(\boldsymbol{\beta})}.
+}
+
+The available vertical parameter estimates may not satisfy the above
+assumptions. We can "re-estimate" the vertical parameters such that they
+satisfy the above assumptions.  This re-estimation procedure is explained
+in the next section.
+}
+
+\section{Re-Estimation Procedure}{
+Let \eqn{N((\boldsymbol{\alpha}_0, \boldsymbol{\beta}_0)', \Sigma)} be the
+sampling distribution of the (unmodified) vertical parameter estimators. Let
+\eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' = \boldsymbol{y}}
+be a sample from this sampling distribution. The generalized least squares
+estimator for \eqn{(\boldsymbol{\alpha}_0, \boldsymbol{\beta}_0)'} is simply
+\eqn{\boldsymbol{y}}. However, \eqn{\boldsymbol{y}} may not satisfy the
+above two assumptions, even though they hold for the true parameter vector
+\eqn{(\boldsymbol{\alpha}_0, \boldsymbol{\beta}_0)'}. Next, we modify the
+generalized least squares estimator to an estimator that satisfies those
+assumptions. This is termed the \emph{constrained generalized least squares estimator},
+denoted by \eqn{(\hat{\boldsymbol{\alpha}}_{c}, \hat{\boldsymbol{\beta}}_{c})'}.
+
+The generalized least squares estimator minimizes the following objective function
+\deqn{O(\boldsymbol{\alpha}, \boldsymbol{\beta}) = (\boldsymbol{y} - (\boldsymbol{\alpha}, \boldsymbol{\beta})')' \cdot \Sigma^{-1} \cdot (\boldsymbol{y} - (\boldsymbol{\alpha}, \boldsymbol{\beta})').}
+This immediately leads us to the constrained generalized least-squares
+estimator. This estimator is found as the solution to the following
+minimiation problem,
+\deqn{(\hat{\boldsymbol{\alpha}}_{c}, \hat{\boldsymbol{\beta}}_{c})' = \arg \; \min_{(\boldsymbol{\alpha}, \boldsymbol{\beta})'}   O(\boldsymbol{\alpha}, \boldsymbol{\beta}),}
+under the following linear constraints,
+\itemize{
+\item \eqn{\alpha_0 < \alpha_1 < ... < \alpha_k}
+\item \eqn{\beta_0 < \beta_1 < ... < \beta_k}
+\item \eqn{\alpha_0 \le \beta_0}
+}
+}
+
