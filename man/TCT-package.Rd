@@ -4,9 +4,9 @@
 \name{TCT-package}
 \alias{TCT}
 \alias{TCT-package}
-\title{TCT: What the Package Does (One Line, Title Case)}
+\title{TCT: Time Component Tests for Longitudinal Data}
 \description{
-What the package does (one paragraph).
+The goal the TCT package is to provide a set of easy to use functions to perform time components test.
 }
 \seealso{
 Useful links:
