@@ -37,6 +37,9 @@ randomization.}
 the correct estimates, this matrix should be the variance-covariance matrix
 of \code{c(ctrl_means, exp_means)}.}
 
+\item{TCT_vcov}{Variance-Covariance matrix for the estimated acceleration
+factors.}
+
 \item{interpolation}{Which interpolation method to use?
 \itemize{
 \item \code{"linear"}: linear interpolation.
@@ -48,11 +51,28 @@ and Carlson.
 
 \item{B}{Number of bootstrap replications.}
 
+\item{bs_fix_vcov}{(boolean) Fix the estimated variance-covariance matrix for
+the estimated acceleration factors? This speeds up computations, but can have
+a negative impact of the method's properties.}
+
+\item{return_se}{(boolean) Return the estimated standard error from each
+bootstrap replication? This standard error is computed with the delta method.}
+
 \item{null}{(boolean): conduct the bootstrap under the null hypothesis of no
 treatment effect? Defaults to \code{FALSE}.}
 
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
+}
+\value{
+A list with two element:
+\itemize{
+\item \code{estimates_bootstrap}: (numeric) vector of length \code{B} that contains the
+bootstrap replicates for the common acceleration factor.
+\item \code{se_bootstrap}: (numeric) vector of length \code{B} that contains the bootstrap
+replicates of the estimated standard error. Is a vector of \code{NA}s when
+\code{return_se = FALSE}.
+}
 }
 \description{
 The \code{\link[=pm_bootstrap_vertical_to_common]{pm_bootstrap_vertical_to_common()}} function implements a parametric

@@ -27,6 +27,10 @@ documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_tes
 \item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
 bootstrap is performed (default).}
 
+\item{bs_fix_vcov}{(boolean) Fix the estimated variance-covariance matrix for
+the estimated acceleration factors? This speeds up computations, but can have
+a negative impact of the method's properties.}
+
 \item{select_coef}{Estimates from the \code{exp_estimates} in \code{\link[=TCT_meta]{TCT_meta()}} to use
 in estimating the common acceleration factor. If there is reason to believe
 that the proportional slowing assumption does not hold, e.g., for the first

@@ -20,6 +20,9 @@ consecutive integers.
 \item{b_start}{Starting value for the proportional slowing parameter.
 Defaults to 0.}
 }
+\value{
+object returned by \code{nlme::gnls}
+}
 \description{
 Analyze trial data with the proportion slowing PMRM
 }

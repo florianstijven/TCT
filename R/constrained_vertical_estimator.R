@@ -1,6 +1,6 @@
 #' Re-estimate Vertical Parameters Under Constraints for TCT
 #'
-#' The `constrained_vertical_estimator()` function re-estimates the vertical
+#' The [constrained_vertical_estimator()] function re-estimates the vertical
 #' parameters under the constraints that are implicitly assumed by TCT-methods.
 #'
 #' @param alpha_obs Estimates for vertical parameters in the control group.
@@ -52,6 +52,9 @@
 #'  * \eqn{\beta_0 < \beta_1 < ... < \beta_k}
 #'  * \eqn{\alpha_0 \le \beta_0}
 #'
+#'  If the original estimates already satisfy the above constraints, then the
+#'  original estimates are of course returned.
+#'
 #' @return (numeric) Re-estimated parameter vector under the linear
 #' constraints that are implicitly assumed by TCT.
 #'   \eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})'} under the
@@ -59,6 +62,25 @@
 #' @export
 #'
 #' @examples
+#'
+#' # transform example data set to desired format
+#' library(dplyr)
+#' data = simulated_test_trial %>%
+#'   mutate(time_int = (Week %/% 25)) %>%
+#'   arrange(trial_number, SubjId, time_int) %>%
+#'   mutate(time_int = as.integer(time_int) + 1L) %>%
+#'   mutate(arm_time = ifelse(time_int == 1L,
+#'                            "baseline",
+#'                            paste0(arm, ":", time_int)))
+#' # fit e.g. MMRM model to obtain estimates of profiles
+#' mmrm_fit = analyze_mmrm(data)
+#' # Re-estimate parameter vector under the constrainst that are implictly
+#' # assumed by TCT.
+#' re_estimated_vector = constrained_vertical_estimator(
+#'   alpha_obs = coef(mmrm_fit)[c(9, 1:4)],
+#'   beta_obs = coef(mmrm_fit)[5:8],
+#'   Sigma_obs = vcov(mmrm_fit)
+#' )
 constrained_vertical_estimator = function(alpha_obs, beta_obs, Sigma_obs) {
   # Compute the inverse covariance matrix. This leads to efficiency gains since
   # the inverse would otherwise be computed multiple time.

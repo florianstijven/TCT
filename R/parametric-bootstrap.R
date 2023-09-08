@@ -114,12 +114,21 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 #' The [pm_bootstrap_vertical_to_common()] function implements a parametric
 #' bootstrap for the time-specific acceleration factors.
 #'
-#' @param TCT_vcov
-#' @param bs_fix_vcov
-#' @param return_se
+#' @param TCT_vcov Variance-Covariance matrix for the estimated acceleration
+#'  factors.
+#' @param bs_fix_vcov (boolean) Fix the estimated variance-covariance matrix for
+#' the estimated acceleration factors? This speeds up computations, but can have
+#' a negative impact of the method's properties.
+#' @param return_se (boolean) Return the estimated standard error from each
+#' bootstrap replication? This standard error is computed with the delta method.
 #' @inheritParams pm_bootstrap_vertical_to_horizontal
 #'
-#' @return
+#' @return A list with two element:
+#'  * `estimates_bootstrap`: (numeric) vector of length `B` that contains the
+#'  bootstrap replicates for the common acceleration factor.
+#'  * `se_bootstrap`: (numeric) vector of length `B` that contains the bootstrap
+#'  replicates of the estimated standard error. Is a vector of `NA`s when
+#'  `return_se = FALSE`.
 pm_bootstrap_vertical_to_common = function(time_points,
                                            ctrl_estimates,
                                            exp_estimates,

@@ -22,7 +22,7 @@ constraints that are implicitly assumed by TCT.
 appropriate constraints.
 }
 \description{
-The \code{constrained_vertical_estimator()} function re-estimates the vertical
+The \code{\link[=constrained_vertical_estimator]{constrained_vertical_estimator()}} function re-estimates the vertical
 parameters under the constraints that are implicitly assumed by TCT-methods.
 }
 \section{Implicit Assumptions Made in TCT}{
@@ -67,5 +67,29 @@ under the following linear constraints,
 \item \eqn{\beta_0 < \beta_1 < ... < \beta_k}
 \item \eqn{\alpha_0 \le \beta_0}
 }
+
+If the original estimates already satisfy the above constraints, then the
+original estimates are of course returned.
 }
 
+\examples{
+
+# transform example data set to desired format
+library(dplyr)
+data = simulated_test_trial \%>\%
+  mutate(time_int = (Week \%/\% 25)) \%>\%
+  arrange(trial_number, SubjId, time_int) \%>\%
+  mutate(time_int = as.integer(time_int) + 1L) \%>\%
+  mutate(arm_time = ifelse(time_int == 1L,
+                           "baseline",
+                           paste0(arm, ":", time_int)))
+# fit e.g. MMRM model to obtain estimates of profiles
+mmrm_fit = analyze_mmrm(data)
+# Re-estimate parameter vector under the constrainst that are implictly
+# assumed by TCT.
+re_estimated_vector = constrained_vertical_estimator(
+  alpha_obs = coef(mmrm_fit)[c(9, 1:4)],
+  beta_obs = coef(mmrm_fit)[5:8],
+  Sigma_obs = vcov(mmrm_fit)
+)
+}
