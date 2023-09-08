@@ -1,6 +1,11 @@
 
 # TCT
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 The goal the TCT package is to provide a set of easy to use functions to
 perform time components test.
 
@@ -68,15 +73,15 @@ summary(TCT_fit)
     ## 
     ## Coefficients: 
     ##               Value Std. Error  z value  p value                  CI
-    ## arm_time1:2 0.73275   0.620431 -0.59571 0.551369 (-0.28696, 1.35407)
-    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215367 ( 0.66403, 1.07477)
-    ## arm_time1:4 0.79370   0.080407 -2.13015 0.033159 ( 0.64368, 0.97891)
-    ## arm_time1:5 0.75102   0.096581 -1.71942 0.085537 ( 0.60176, 1.03671)
+    ## arm_time1:2 0.73275   0.620432 -0.59571 0.551368 (-0.28696, 1.35407)
+    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215366 ( 0.66403, 1.07477)
+    ## arm_time1:4 0.79370   0.080407 -2.13016 0.033159 ( 0.64368, 0.97891)
+    ## arm_time1:5 0.75102   0.096581 -1.71943 0.085537 ( 0.60176, 1.03671)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.27743, 1.34984)
-    ## arm_time1:3 ( 0.66911, 1.07112)
-    ## arm_time1:4 ( 0.64374, 0.97626)
-    ## arm_time1:5 ( 0.60367, 1.03266)
+    ## arm_time1:2 (-0.28158, 1.36115)
+    ## arm_time1:3 ( 0.66061, 1.07685)
+    ## arm_time1:4 ( 0.64306, 0.97894)
+    ## arm_time1:5 ( 0.60278, 1.04271)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -141,8 +146,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error chi-squared p value                CI
-    ## chi-squared  0.85503         NA      6.2652  0.1802 (0.66471, 1.0845)
+    ##             Estimate Std. Error chi-squared p value               CI
+    ## chi-squared  0.85503         NA      6.2653  0.1802 (0.6647, 1.0845)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -178,4 +183,4 @@ test_statistic = 4 * classical_test$f_stat
 1 - pchisq(test_statistic, 4)
 ```
 
-    ## [1] 0.1801964
+    ## [1] 0.1801955

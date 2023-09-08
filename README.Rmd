@@ -3,6 +3,11 @@ output: github_document
 ---
 # TCT 
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+
 The goal the TCT package is to provide a set of easy to use functions to
 perform time components test. 
 
