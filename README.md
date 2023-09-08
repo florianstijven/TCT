@@ -4,6 +4,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 The goal the TCT package is to provide a set of easy to use functions to
@@ -78,10 +80,10 @@ summary(TCT_fit)
     ## arm_time1:4 0.79370   0.080407 -2.13016 0.033159 ( 0.64368, 0.97891)
     ## arm_time1:5 0.75102   0.096581 -1.71943 0.085537 ( 0.60176, 1.03671)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.28158, 1.36115)
-    ## arm_time1:3 ( 0.66061, 1.07685)
-    ## arm_time1:4 ( 0.64306, 0.97894)
-    ## arm_time1:5 ( 0.60278, 1.04271)
+    ## arm_time1:2 (-0.29442, 1.35343)
+    ## arm_time1:3 ( 0.66670, 1.06993)
+    ## arm_time1:4 ( 0.64328, 0.97587)
+    ## arm_time1:5 ( 0.60150, 1.03499)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -147,7 +149,7 @@ summary(TCT_common_fit)
     ## 
     ## Estimated Common Acceleration Factor: 
     ##             Estimate Std. Error chi-squared p value               CI
-    ## chi-squared  0.85503         NA      6.2653  0.1802 (0.6647, 1.0845)
+    ## chi-squared  0.85503         NA      6.2652  0.1802 (0.6647, 1.0845)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -183,4 +185,4 @@ test_statistic = 4 * classical_test$f_stat
 1 - pchisq(test_statistic, 4)
 ```
 
-    ## [1] 0.1801955
+    ## [1] 0.1801958

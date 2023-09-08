@@ -3,5 +3,6 @@
 
 ## usethis namespace: start
 #' @importFrom dplyr %>%
+#' @importFrom lifecycle deprecated
 ## usethis namespace: end
 NULL
