@@ -18,7 +18,10 @@ Config/testthat/edition: 3
 Imports: 
     dplyr,
     lifecycle,
+    mnormt,
+    mvtnorm,
     nlme,
+    numDeriv,
     stats
 Depends: 
     R (>= 2.10)
