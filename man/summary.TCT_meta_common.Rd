@@ -35,9 +35,9 @@ mmrm_fit = analyze_mmrm(data)
 set.seed(1)
 TCT_Fit = TCT_meta(
   time_points = 0:4,
-  ctrl_estimates = mmrm_fit$coefficients[c(9, 1:4)],
-  exp_estimates = mmrm_fit$coefficients[5:8],
-  vcov = mmrm_fit$varBeta[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+  ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+  exp_estimates = coef(mmrm_fit)[5:8],
+  vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
   interpolation = "spline",
   B = 1e3
 )
