@@ -7,7 +7,13 @@
 \method{print}{TCT_meta}(x, ...)
 }
 \arguments{
-\item{x}{Object returend by \code{\link[=TCT_meta]{TCT_meta()}}}
+\item{x}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
+
+\item{...}{
+  Arguments passed on to \code{\link[base:print]{base::print}}
+  \describe{
+    \item{\code{}}{}
+  }}
 }
 \description{
 Print Meta-Time Component Test object

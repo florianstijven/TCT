@@ -7,14 +7,18 @@
 \method{summary}{TCT_meta_common}(object, alpha = 0.05, delta_transformation = "identity", ...)
 }
 \arguments{
-\item{object}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}.}
+\item{object}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
 
 \item{alpha}{Two-sided confidence level for confidence intervals.}
 
 \item{delta_transformation}{Transformation when applying the delta-method to
 obtain confidence intervals.}
 
-\item{x}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
+\item{...}{
+  Arguments passed on to \code{\link[base:summary]{base::summary}}
+  \describe{
+    \item{\code{}}{}
+  }}
 }
 \value{
 S3 object of class \code{"summary_TCT_meta_common"}

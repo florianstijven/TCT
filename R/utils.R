@@ -408,7 +408,7 @@ linearHypothesis.default = function (model,
   if (df == 0)
     stop("residual df = 0")
   V <- if (is.null(vcov.))
-    stas::vcov(model, complete = FALSE)
+    stats::vcov(model, complete = FALSE)
   else if (is.function(vcov.))
     vcov.(model)
   else vcov.

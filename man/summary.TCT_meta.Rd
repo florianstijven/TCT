@@ -13,6 +13,12 @@
 
 \item{delta_transformation}{Transformation when applying the delta-method to
 obtain confidence intervals.}
+
+\item{...}{
+  Arguments passed on to \code{\link[base:summary]{base::summary}}
+  \describe{
+    \item{\code{}}{}
+  }}
 }
 \value{
 S3 object of class \code{"summary_TCT_meta"}

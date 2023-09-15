@@ -107,7 +107,7 @@ summary(TCT_common_fit)
 ```
 
 We show that the p-value above is identical to the one obtained with a classical
-hypothesis test if we use the asympotic chi-squared distribution instead of the
+hypothesis test if we use the asymptotic chi-squared distribution instead of the
 F-distribution with approximate degrees of freedom.
 
 ```{r}

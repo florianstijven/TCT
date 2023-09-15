@@ -14,16 +14,16 @@ URL: https://github.com/florianstijven/TCT
 BugReports: https://github.com/florianstijven/TCT/issues
 Suggests: 
     mmrm,
+    nlme,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
     dplyr,
-    lifecycle,
     mnormt,
     mvtnorm,
-    nlme,
     numDeriv,
-    stats
+    stats,
+    lifecycle
 Depends: 
     R (>= 2.10)
 LazyData: true

@@ -80,10 +80,10 @@ summary(TCT_fit)
     ## arm_time1:4 0.79370   0.080407 -2.13016 0.033159 ( 0.64368, 0.97891)
     ## arm_time1:5 0.75102   0.096581 -1.71943 0.085537 ( 0.60176, 1.03671)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.29442, 1.35343)
-    ## arm_time1:3 ( 0.66670, 1.06993)
-    ## arm_time1:4 ( 0.64328, 0.97587)
-    ## arm_time1:5 ( 0.60150, 1.03499)
+    ## arm_time1:2 (-0.28327, 1.35804)
+    ## arm_time1:3 ( 0.66305, 1.07537)
+    ## arm_time1:4 ( 0.64629, 0.97823)
+    ## arm_time1:5 ( 0.60259, 1.03787)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -162,7 +162,7 @@ summary(TCT_common_fit)
     ## 1  3 4.1219  0.2486
 
 We show that the p-value above is identical to the one obtained with a
-classical hypothesis test if we use the asympotic chi-squared
+classical hypothesis test if we use the asymptotic chi-squared
 distribution instead of the F-distribution with approximate degrees of
 freedom.
 

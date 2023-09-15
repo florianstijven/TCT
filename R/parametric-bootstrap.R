@@ -122,6 +122,7 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 #' @param return_se (boolean) Return the estimated standard error from each
 #' bootstrap replication? This standard error is computed with the delta method.
 #' @inheritParams pm_bootstrap_vertical_to_horizontal
+#' @inheritParams TCT_meta_common
 #'
 #' @return A list with two element:
 #'  * `estimates_bootstrap`: (numeric) vector of length `B` that contains the

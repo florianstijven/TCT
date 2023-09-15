@@ -60,6 +60,12 @@ bootstrap replication? This standard error is computed with the delta method.}
 \item{null}{(boolean): conduct the bootstrap under the null hypothesis of no
 treatment effect? Defaults to \code{FALSE}.}
 
+\item{select_coef}{Estimates from the \code{exp_estimates} in \code{\link[=TCT_meta]{TCT_meta()}} to use
+in estimating the common acceleration factor. If there is reason to believe
+that the proportional slowing assumption does not hold, e.g., for the first
+measurement after randomization, then the corresponding estimate should not
+be used in estimation the common acceleration factor.}
+
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
 }

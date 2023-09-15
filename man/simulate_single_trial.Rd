@@ -31,7 +31,7 @@ patient.}
 
 \item{sample_size}{Total sample size in each trial.}
 
-\item{trial_number}{Defaults to 1. This is used by \code{\link[=simulate_N_trial]{simulate_N_trial()}} to
+\item{trial_number}{Defaults to 1. This is used by \code{\link[=simulate_N_trials]{simulate_N_trials()}} to
 distinguish different trials, but is not relevant when
 \code{\link[=simulate_single_trial]{simulate_single_trial()}} is used by the user directly to simulate a single
 trial.}

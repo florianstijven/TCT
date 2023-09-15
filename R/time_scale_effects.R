@@ -192,7 +192,8 @@ new_TCT_meta = function(coefficients,
 
 #' Print Meta-Time Component Test object
 #'
-#' @param x Object returend by [TCT_meta()]
+#' @param x Object returned by [TCT_meta()]
+#' @inheritDotParams base::print
 #'
 #' @export
 #' @return NULL
@@ -248,6 +249,7 @@ new_summary_TCT_meta = function(
 #' @param alpha Two-sided confidence level for confidence intervals.
 #' @param delta_transformation Transformation when applying the delta-method to
 #'   obtain confidence intervals.
+#' @inheritDotParams base::summary
 #'
 #' @return S3 object of class `"summary_TCT_meta"`
 #' @export
@@ -397,6 +399,7 @@ summary.TCT_meta = function(object,
 #' Print summary_TCT_meta object
 #'
 #' @param x Object returned by [summary.TCT_meta()].
+#' @inheritDotParams base::print
 #'
 #' @export
 #' @return NULL
@@ -664,6 +667,7 @@ new_TCT_meta_common = function(coefficients,
 #' Print TCT_meta_common object
 #'
 #' @param x Object returned by [TCT_meta_common()].
+#' @inheritDotParams base::print
 #'
 #' @export
 #' @return NULL
@@ -686,8 +690,9 @@ print.TCT_meta_common = function(x, ...) {
 
 #' Summarize fitted Meta-Time Component Test model with Proportional Slowing
 #'
-#' @param x Object returned by [TCT_meta_common()].
+#' @param object Object returned by [TCT_meta_common()].
 #' @inheritParams summary.TCT_meta
+#' @inheritDotParams base::summary
 #'
 #' @return S3 object of class `"summary_TCT_meta_common"`
 #' @export
@@ -845,6 +850,7 @@ new_summary_TCT_meta_common = function(
 #' Print summary_TCT_meta_common object
 #'
 #' @param x Object returned by [summary.TCT_meta_common()].
+#' @inheritDotParams base::print
 #'
 #' @export
 #' @return NULL

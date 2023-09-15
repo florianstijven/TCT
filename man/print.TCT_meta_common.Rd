@@ -8,6 +8,12 @@
 }
 \arguments{
 \item{x}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
+
+\item{...}{
+  Arguments passed on to \code{\link[base:print]{base::print}}
+  \describe{
+    \item{\code{}}{}
+  }}
 }
 \description{
 Print TCT_meta_common object

@@ -55,7 +55,7 @@ simulate_N_trials = function(control = "placebo",
 #' @param n_measurements Number of equally spaced measurement occasions for each
 #'   patient.
 #' @param sample_size Total sample size in each trial.
-#' @param trial_number Defaults to 1. This is used by [simulate_N_trial()] to
+#' @param trial_number Defaults to 1. This is used by [simulate_N_trials()] to
 #' distinguish different trials, but is not relevant when
 #' [simulate_single_trial()] is used by the user directly to simulate a single
 #' trial.
