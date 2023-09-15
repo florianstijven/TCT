@@ -14,6 +14,22 @@ v_deriv_alpha_beta(
 )
 }
 \arguments{
+\item{time_points}{Ordered vector that contains the times corresponding to
+the estimated means in the \code{ctrl_estimates} vector. The first element
+should be zero which generally corresponds to the time of randomization.}
+
+\item{ctrl_estimates}{Estimated mean outcome in the control group at the
+fixed occasions corresponding to the times in \code{time_points}.}
+
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation.
+\item \code{"spline"}: natural cubic spline interpolation. This interpolation method has been most
+thoroughly tested is most stable.
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson.
+}}
+
 \item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
 
 \item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
@@ -22,6 +38,9 @@ i.e., all elements are used.}
 
 \item{weights}{If \code{type == "custom"}, the user should specify a weight
 vector for weighting estimates at different time points differently.}
+}
+\value{
+(numeric) The derivative described above, evaluated in \code{gamma_0}.
 }
 \description{
 This function computes

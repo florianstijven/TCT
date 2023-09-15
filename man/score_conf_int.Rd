@@ -16,8 +16,33 @@ score_conf_int(
 )
 }
 \arguments{
+\item{time_points}{Ordered vector that contains the times corresponding to
+the estimated means in the \code{ctrl_estimates} vector. The first element
+should be zero which generally corresponds to the time of randomization.}
+
+\item{ctrl_estimates}{Estimated mean outcome in the control group at the
+fixed occasions corresponding to the times in \code{time_points}.}
+
+\item{exp_estimates}{Estimated mean outcomes in the experimental group at
+fixed occasions corresponding to the times in \code{time_points[-1]}. Note that
+first element in \code{exp_estimates} should correspond to some time after
+randomization.}
+
 \item{ref_fun}{Intra- and extrapolation function that is returned by
 \code{ref_fun_constructor()}.}
+
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation.
+\item \code{"spline"}: natural cubic spline interpolation. This interpolation method has been most
+thoroughly tested is most stable.
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson.
+}}
+
+\item{vcov}{The variance-covariance matrix for the means. In order to map to
+the correct estimates, this matrix should be the variance-covariance matrix
+of \code{c(ctrl_means, exp_means)}.}
 
 \item{j}{Measurement occasion to test acceleration factor for. This
 corresponds to \code{exp_estimates[j]}.}

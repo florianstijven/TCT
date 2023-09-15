@@ -210,7 +210,7 @@ score_vector_jacobian = function(time_points,
 #'
 #' @inheritParams score_test_common
 #'
-#' @return
+#' @return (numeric) The derivative described above, evaluated in `gamma_0`.
 v_deriv_alpha_beta = function(time_points,
                               ctrl_estimates,
                               interpolation,
@@ -232,13 +232,11 @@ v_deriv_alpha_beta = function(time_points,
 #' The [f0_gradient_t()] function is a simple wrapper that returns
 #' \eqn{\frac{\partial \boldsymbol{f_0} (\boldsymbol{t^*}; \boldsymbol{\alpha}, \boldsymbol{\beta})}{\partial \boldsymbol{t^*}}}.
 #'
-#' @param ref_fun
-#' @param t_vec
+#' @param t_vec Numeric vector of values at which the derivative described above
+#'    is evaluated.
+#' @inheritParams DeltaMethod
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return (numeric) The derivative described above evaluated in `t_vec`.
 f0_gradient_t = function(ref_fun, t_vec) {
   return(matrix(ref_fun(t_vec, deriv = 1), ncol = 1))
 }

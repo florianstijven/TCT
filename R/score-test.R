@@ -238,7 +238,7 @@ score_conf_int = function(time_points,
 #'
 #' @return Named (numeric) vector with two elements:
 #'
-#' 1. `"z"` or `chi-squared`. The test statistic.
+#' 1. `"z"` or `"chi-squared"`. The test statistic.
 #' 2. `"p-value"`: two-sided p-value.
 #'
 #' @export

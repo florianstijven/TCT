@@ -331,25 +331,15 @@ deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline") {
   rho = myenv)
 }
 
-#' Title
-#'
-#' @param t_m
-#' @param x_ref
-#' @param y_ref
-#' @param finite_diff
-#' @param method
-#'
-#' @return
-#' @importFrom numDeriv jacobian
-deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "spline") {
-  numDeriv::jacobian(
-    func = function(y_ref) {
-      ref_fun = ref_fun_constructor(x_ref, y_ref, method)
-      ref_fun(t_m)
-    },
-    x = y_ref
-  )
-}
+# deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "spline") {
+#   numDeriv::jacobian(
+#     func = function(y_ref) {
+#       ref_fun = ref_fun_constructor(x_ref, y_ref, method)
+#       ref_fun(t_m)
+#     },
+#     x = y_ref
+#   )
+# }
 
 ref_fun_constructor = function(x_ref, y_ref, method) {
   # if (method == "linear") {

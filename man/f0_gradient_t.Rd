@@ -7,7 +7,14 @@
 f0_gradient_t(ref_fun, t_vec)
 }
 \arguments{
-\item{t_vec}{}
+\item{ref_fun}{Intra- and extrapolation function that is returned by
+\code{ref_fun_constructor()}.}
+
+\item{t_vec}{Numeric vector of values at which the derivative described above
+is evaluated.}
+}
+\value{
+(numeric) The derivative described above evaluated in \code{t_vec}.
 }
 \description{
 The \code{\link[=f0_gradient_t]{f0_gradient_t()}} function is a simple wrapper that returns

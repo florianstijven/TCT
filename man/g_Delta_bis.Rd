@@ -13,6 +13,15 @@ The \code{length(time_points)} first elements correspond to the reference group.
 The \code{length(time_points) - 1} remaining elements correspond to the active
 treatment group.}
 
+\item{interpolation}{Which interpolation method to use?
+\itemize{
+\item \code{"linear"}: linear interpolation.
+\item \code{"spline"}: natural cubic spline interpolation. This interpolation method has been most
+thoroughly tested is most stable.
+\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
+and Carlson.
+}}
+
 \item{time_points}{Time points to which the first \code{length(time_points)}
 elements in \code{par} correspond.}
 }

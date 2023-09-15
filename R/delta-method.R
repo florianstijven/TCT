@@ -6,7 +6,7 @@
 #'
 #' @param ref_fun Intra- and extrapolation function that is returned by
 #'   `ref_fun_constructor()`.
-#' @inheritParams TCT
+#' @inheritParams TCT_meta
 #'
 #' @details
 #'
@@ -102,7 +102,7 @@ DeltaMethod = function (time_points,
 #'   treatment group.
 #' @param time_points Time points to which the first `length(time_points)`
 #'   elements in `par` correspond.
-#' @inheritParams TCT
+#' @inheritParams TCT_meta
 #'
 #' @details
 #' We can write the slowing factor at \eqn{t_j} as a function of the the mean

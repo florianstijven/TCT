@@ -11,9 +11,6 @@
 #' @inheritParams get_new_time
 #'
 #' @return (numeric) value of the trajctory at `t`.
-#' @export
-#'
-#' @examples
 trajectory = function(t, z, gamma, alpha, x_ref, method) {
   # Reference profile
   f0 = ref_fun_constructor(x_ref, alpha, method = method)
