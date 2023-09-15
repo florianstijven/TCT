@@ -520,7 +520,6 @@ TCT_meta_common = function(TCT_Fit,
 {
   gls_est = TRUE
   # Extract information from the TCT_meta object that is used further on.
-  inference = TCT_Fit$inference_options$inference
   ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
   exp_estimates = TCT_Fit$vertical_model$exp_estimates
   time_points = TCT_Fit$vertical_model$time_points
@@ -900,8 +899,10 @@ print.summary_TCT_meta_common = function(x, ...) {
   }
   # If the omnibus score-test is used, the test statistic is not a z-value, but
   # rather chi-squared statistic.
-  if (x$inference_options$type == "omnibus") {
-    colnames(coefficients_df)[3] = "chi-squared"
+  if (x$inference_options$inference == "score") {
+    if (x$inference_options$type == "omnibus") {
+      colnames(coefficients_df)[3] = "chi-squared"
+    }
   }
 
   print(coefficients_df, digits = 5)
