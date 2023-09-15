@@ -170,9 +170,6 @@ linear_interpolation_f_factory = function(x_ref, y_ref) {
     else {
      linear_spline_deriv_fun(x)
     }
-    # ifelse(deriv == 0,
-    #        linear_spline_fun(x),
-    #        linear_spline_deriv_fun(x))
   }
 }
 
