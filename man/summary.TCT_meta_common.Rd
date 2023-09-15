@@ -4,15 +4,17 @@
 \alias{summary.TCT_meta_common}
 \title{Summarize fitted Meta-Time Component Test model with Proportional Slowing}
 \usage{
-\method{summary}{TCT_meta_common}(x, alpha = 0.05, delta_transformation = "identity")
+\method{summary}{TCT_meta_common}(object, alpha = 0.05, delta_transformation = "identity", ...)
 }
 \arguments{
-\item{x}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
+\item{object}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}.}
 
 \item{alpha}{Two-sided confidence level for confidence intervals.}
 
 \item{delta_transformation}{Transformation when applying the delta-method to
 obtain confidence intervals.}
+
+\item{x}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
 }
 \value{
 S3 object of class \code{"summary_TCT_meta_common"}

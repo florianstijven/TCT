@@ -192,11 +192,12 @@ new_TCT_meta = function(coefficients,
 
 #' Print Meta-Time Component Test object
 #'
-#' @param x
+#' @param x Object returend by [TCT_meta()]
 #'
 #' @export
 #' @return NULL
-print.TCT_meta = function(x) {
+#' @importFrom stats coef
+print.TCT_meta = function(x, ...) {
   cat(
     paste0(
       "Meta-Time Component Test:",
@@ -243,7 +244,7 @@ new_summary_TCT_meta = function(
 
 #' Summarize fitted Meta-Time Component Test model
 #'
-#' @param x Object returned by [TCT_meta()].
+#' @param object Object returned by [TCT_meta()].
 #' @param alpha Two-sided confidence level for confidence intervals.
 #' @param delta_transformation Transformation when applying the delta-method to
 #'   obtain confidence intervals.
@@ -251,36 +252,38 @@ new_summary_TCT_meta = function(
 #' @return S3 object of class `"summary_TCT_meta"`
 #' @export
 #' @inherit TCT_meta examples
-summary.TCT_meta = function(x,
+#' @importFrom stats coef
+summary.TCT_meta = function(object,
                             alpha = 0.05,
-                            delta_transformation = "identity") {
+                            delta_transformation = "identity",
+                            ...) {
   # Extract information from the TCT_meta object that is used further on.
-  inference = x$inference_options$inference
-  ctrl_estimates = x$vertical_model$ctrl_estimates
-  exp_estimates = x$vertical_model$exp_estimates
-  time_points = x$vertical_model$time_points
-  interpolation = x$inference_options$interpolation
-  vcov_vertical = x$vertical_model$vcov
+  inference = object$inference_options$inference
+  ctrl_estimates = object$vertical_model$ctrl_estimates
+  exp_estimates = object$vertical_model$exp_estimates
+  time_points = object$vertical_model$time_points
+  interpolation = object$inference_options$interpolation
+  vcov_vertical = object$vertical_model$vcov
 
   # Wald-based inference if the inference option is equal to "wald".
   if (inference == "wald") {
     if (delta_transformation == "identity") {
-      se_delta = sqrt(diag(x$vcov))
-      z_values = (1 - coef(x)) / se_delta
-      ci_delta_lower = coef(x) - stats::qnorm(1 - (alpha / 2)) * se_delta
-      ci_delta_upper = coef(x) + stats::qnorm(1 - (alpha / 2)) * se_delta
+      se_delta = sqrt(diag(object$vcov))
+      z_values = (1 - coef(object)) / se_delta
+      ci_delta_lower = coef(object) - stats::qnorm(1 - (alpha / 2)) * se_delta
+      ci_delta_upper = coef(object) + stats::qnorm(1 - (alpha / 2)) * se_delta
     }
     else if (delta_transformation == "log") {
-      se_delta = (1 / coef(x)) * sqrt(diag(x$vcov))
-      z_values = (log(coef(x))) / se_delta
-      ci_delta_lower = exp(log(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
-      ci_delta_upper = exp(log(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
+      se_delta = (1 / coef(object)) * sqrt(diag(object$vcov))
+      z_values = (log(coef(object))) / se_delta
+      ci_delta_lower = exp(log(coef(object)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
+      ci_delta_upper = exp(log(coef(object)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
     }
     else if (delta_transformation == "log10") {
-      se_delta = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
-      z_values = (log10(coef(x))) / se_delta
-      ci_delta_lower = 10**(log10(coef(x)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
-      ci_delta_upper = 10**(log10(coef(x)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
+      se_delta = log10(exp(1)) * (1 / coef(object)) * sqrt(diag(object$vcov))
+      z_values = (log10(coef(object))) / se_delta
+      ci_delta_lower = 10**(log10(coef(object)) - stats::qnorm(1 - (alpha / 2)) * se_delta)
+      ci_delta_upper = 10**(log10(coef(object)) + stats::qnorm(1 - (alpha / 2)) * se_delta)
     }
     ci_matrix = matrix(
       data = c(ci_delta_lower, ci_delta_upper),
@@ -290,7 +293,7 @@ summary.TCT_meta = function(x,
   }
   # Score-based inference if the inference option is equal to "score".
   if (inference == "score") {
-    se_delta = sqrt(diag(x$vcov))
+    se_delta = sqrt(diag(object$vcov))
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
       time_points,
@@ -338,27 +341,27 @@ summary.TCT_meta = function(x,
   }
 
   lht_delta = linearHypothesis.default(
-    model = x,
-    vcov. = x$vcov,
-    coef. = coef(x),
-    rhs = rep(1, length(coef(x))),
-    hypothesis.matrix = diag(1, nrow = length(coef(x)), ncol = length(coef(x)))
+    model = object,
+    vcov. = object$vcov,
+    coef. = coef(object),
+    rhs = rep(1, length(coef(object))),
+    hypothesis.matrix = diag(1, nrow = length(coef(object)), ncol = length(coef(object)))
   )
-  p_values =  (1 - pnorm(abs(z_values))) * 2
+  p_values =  (1 - stats::pnorm(abs(z_values))) * 2
 
   # inference based on parametric bootstrap
-  if (!(is.null(x$bootstrap_estimates))) {
-    vcov_bootstrap = var(x$bootstrap_estimates, na.rm = TRUE)
+  if (!(is.null(object$bootstrap_estimates))) {
+    vcov_bootstrap = stats::var(object$bootstrap_estimates, na.rm = TRUE)
     se_bootstrap = sqrt(diag(vcov_bootstrap))
     ci_bootstrap = t(apply(
-      X = x$bootstrap_estimates,
+      X = object$bootstrap_estimates,
       MARGIN = 2,
-      FUN = quantile,
+      FUN = stats::quantile,
       probs = c(alpha / 2, 1 - alpha / 2),
       na.rm = TRUE
     ))
     p_bootstrap = apply(
-      X = x$bootstrap_estimates,
+      X = object$bootstrap_estimates,
       MARGIN = 2,
       FUN = function(x) {
         prop = mean(x > 1, na.rm = TRUE)
@@ -376,7 +379,7 @@ summary.TCT_meta = function(x,
 
   return(
     new_summary_TCT_meta(
-      x = x,
+      x = object,
       se_delta = se_delta,
       z_values = z_values,
       ci_matrix = ci_matrix,
@@ -393,11 +396,12 @@ summary.TCT_meta = function(x,
 
 #' Print summary_TCT_meta object
 #'
-#' @param x
+#' @param x Object returned by [summary.TCT_meta()].
 #'
 #' @export
 #' @return NULL
-print.summary_TCT_meta = function(x) {
+#' @importFrom stats coef
+print.summary_TCT_meta = function(x, ...) {
   cat(
     paste0(
       "Meta-Time Component Test: ",
@@ -475,6 +479,7 @@ print.summary_TCT_meta = function(x) {
 #'
 #' @return S3 object of class `"TCT_meta_common"`
 #' @export
+#' @importFrom stats coef
 #'
 #' @examples
 #' # transform example data set to desired format
@@ -506,11 +511,11 @@ TCT_meta_common = function(TCT_Fit,
                            B = 0,
                            bs_fix_vcov = FALSE,
                            select_coef = 1:length(coef(TCT_Fit)),
-                           gls_est = TRUE,
                            constraints = FALSE,
                            type = NULL,
                            weights = NULL)
 {
+  gls_est = TRUE
   # Extract information from the TCT_meta object that is used further on.
   inference = TCT_Fit$inference_options$inference
   ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
@@ -549,7 +554,6 @@ TCT_meta_common = function(TCT_Fit,
         ref_fun = ref_fun,
         interpolation = interpolation,
         vcov = vcov_vertical,
-        type = type,
         j = select_coef
       )
     }
@@ -590,7 +594,6 @@ TCT_meta_common = function(TCT_Fit,
     B = B,
     bs_fix_vcov = bs_fix_vcov,
     return_se = TRUE,
-    gls_est = gls_est,
     select_coef = select_coef,
     constraints = constraints
   )
@@ -660,11 +663,12 @@ new_TCT_meta_common = function(coefficients,
 
 #' Print TCT_meta_common object
 #'
-#' @param x
+#' @param x Object returned by [TCT_meta_common()].
 #'
 #' @export
 #' @return NULL
-print.TCT_meta_common = function(x) {
+#' @importFrom stats coef
+print.TCT_meta_common = function(x, ...) {
   cat(
     paste0(
       "Meta-Time Component Test - ",
@@ -688,41 +692,43 @@ print.TCT_meta_common = function(x) {
 #' @return S3 object of class `"summary_TCT_meta_common"`
 #' @export
 #' @inherit TCT_meta_common examples
-summary.TCT_meta_common = function(x,
+#' @importFrom stats coef
+summary.TCT_meta_common = function(object,
                                    alpha = 0.05,
-                                   delta_transformation = "identity") {
+                                   delta_transformation = "identity",
+                                   ...) {
   # Extract information from the TCT_meta object that is used further on.
-  inference = x$inference_options$inference
-  ctrl_estimates = x$vertical_model$ctrl_estimates
-  exp_estimates = x$vertical_model$exp_estimates
-  time_points = x$vertical_model$time_points
-  interpolation = x$inference_options$interpolation
-  vcov_vertical = x$vertical_model$vcov
-  type = x$inference_options$type
-  select_coef = x$inference_options$select_coef
-  weights = x$inference_options$weights
+  inference = object$inference_options$inference
+  ctrl_estimates = object$vertical_model$ctrl_estimates
+  exp_estimates = object$vertical_model$exp_estimates
+  time_points = object$vertical_model$time_points
+  interpolation = object$inference_options$interpolation
+  vcov_vertical = object$vertical_model$vcov
+  type = object$inference_options$type
+  select_coef = object$inference_options$select_coef
+  weights = object$inference_options$weights
   # Wald-based inference
   if (inference == "wald") {
     if (delta_transformation == "identity") {
-      gamma_common_se = sqrt(diag(x$vcov))
-      z_value = (1 - coef(x)) / gamma_common_se
-      gamma_ci_lower = coef(x) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se
-      gamma_ci_upper = coef(x) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se
+      gamma_common_se = sqrt(diag(object$vcov))
+      z_value = (1 - coef(object)) / gamma_common_se
+      gamma_ci_lower = coef(object) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se
+      gamma_ci_upper = coef(object) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se
     }
     else if (delta_transformation == "log") {
-      gamma_common_se = (1 / coef(x)) * sqrt(diag(x$vcov))
-      z_value = (log(coef(x))) / gamma_common_se
-      gamma_ci_lower = exp(log(coef(x)) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
-      gamma_ci_upper = exp(log(coef(x)) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+      gamma_common_se = (1 / coef(object)) * sqrt(diag(object$vcov))
+      z_value = (log(coef(object))) / gamma_common_se
+      gamma_ci_lower = exp(log(coef(object)) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+      gamma_ci_upper = exp(log(coef(object)) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
     }
     else if (delta_transformation == "log10") {
-      gamma_common_se = log10(exp(1)) * (1 / coef(x)) * sqrt(diag(x$vcov))
-      z_value = log10(coef(x)) / gamma_common_se
-      gamma_ci_lower = 10 ** (log10(coef(x)) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
-      gamma_ci_upper = 10 ** (log10(coef(x)) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+      gamma_common_se = log10(exp(1)) * (1 / coef(object)) * sqrt(diag(object$vcov))
+      z_value = log10(coef(object)) / gamma_common_se
+      gamma_ci_lower = 10 ** (log10(coef(object)) - stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
+      gamma_ci_upper = 10 ** (log10(coef(object)) + stats::qnorm(1 - (alpha / 2)) * gamma_common_se)
     }
     gamma_common_ci = matrix(
-      data = c(gamma_ci_lower, ci_delta_upper),
+      data = c(gamma_ci_lower, gamma_ci_upper),
       ncol = 2,
       byrow = FALSE
     )
@@ -745,7 +751,7 @@ summary.TCT_meta_common = function(x,
         ref_fun = ref_fun,
         interpolation = interpolation,
         vcov = vcov_vertical,
-        gamma_est = coef(x),
+        gamma_est = coef(object),
         type = type,
         j = select_coef,
         weights = weights,
@@ -769,21 +775,21 @@ summary.TCT_meta_common = function(x,
     z_value = temp[1]
     p_value = temp[2]
     # Estimated standard error.
-    gamma_common_se = sqrt(x$vcov)
+    gamma_common_se = sqrt(object$vcov)
   }
 
 
   # inference based on parametric bootstrap
-  if (!(is.null(x$bootstrap_estimates))) {
-    vcov_bootstrap = var(x$bootstrap_estimates[[1]], na.rm = TRUE)
+  if (!(is.null(object$bootstrap_estimates))) {
+    vcov_bootstrap = stats::var(object$bootstrap_estimates[[1]], na.rm = TRUE)
     se_bootstrap = sqrt(vcov_bootstrap)
-    ci_bootstrap = quantile(
-      x = x$bootstrap_estimates[[1]],
+    ci_bootstrap = stats::quantile(
+      x = object$bootstrap_estimates[[1]],
       probs = c(alpha / 2, 1 - alpha / 2),
       na.rm = TRUE
     )
-    p_bootstrap = min(mean(x$bootstrap_estimates[[1]] > 1, na.rm = TRUE) * 2,
-                      (1 - mean(x$bootstrap_estimates[[1]] > 1, na.rm = TRUE)) * 2)
+    p_bootstrap = min(mean(object$bootstrap_estimates[[1]] > 1, na.rm = TRUE) * 2,
+                      (1 - mean(object$bootstrap_estimates[[1]] > 1, na.rm = TRUE)) * 2)
   }
   else {
     vcov_bootstrap = NULL
@@ -794,7 +800,7 @@ summary.TCT_meta_common = function(x,
 
 
   new_summary_TCT_meta_common(
-    x = x,
+    x = object,
     gamma_common_se = gamma_common_se,
     z_value = z_value,
     gamma_common_ci = gamma_common_ci,
@@ -838,11 +844,12 @@ new_summary_TCT_meta_common = function(
 
 #' Print summary_TCT_meta_common object
 #'
-#' @param x
+#' @param x Object returned by [summary.TCT_meta_common()].
 #'
 #' @export
 #' @return NULL
-print.summary_TCT_meta_common = function(x) {
+#' @importFrom stats coef
+print.summary_TCT_meta_common = function(x, ...) {
   cat(
     paste0(
       "Meta-Time Component Test - ",

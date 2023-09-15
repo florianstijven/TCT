@@ -393,7 +393,7 @@ linearHypothesis.default = function (model,
 
 {
   if (missing(error.df)) {
-    df <- df.residual(model)
+    df <- stats::df.residual(model)
     test <- match.arg(test)
     if (test == "F" && (is.null(df) || is.na(df))) {
       test <- "Chisq"
@@ -408,7 +408,7 @@ linearHypothesis.default = function (model,
   if (df == 0)
     stop("residual df = 0")
   V <- if (is.null(vcov.))
-    vcov(model, complete = FALSE)
+    stas::vcov(model, complete = FALSE)
   else if (is.function(vcov.))
     vcov.(model)
   else vcov.
@@ -419,21 +419,13 @@ linearHypothesis.default = function (model,
   if (is.null(b))
     stop(paste("there is no coef() method for models of class",
                paste(class(model), collapse = ", ")))
-  if (is.character(hypothesis.matrix)) {
-    L <- makeHypothesis(names(b), hypothesis.matrix, rhs)
-    if (is.null(dim(L)))
-      L <- t(L)
-    rhs <- L[, NCOL(L)]
-    L <- L[, -NCOL(L), drop = FALSE]
-    rownames(L) <- hypothesis.matrix
-  }
-  else {
-    L <- if (is.null(dim(hypothesis.matrix)))
-      t(hypothesis.matrix)
-    else hypothesis.matrix
-    if (is.null(rhs))
-      rhs <- rep(0, nrow(L))
-  }
+
+  L <- if (is.null(dim(hypothesis.matrix)))
+    t(hypothesis.matrix)
+  else
+    hypothesis.matrix
+  if (is.null(rhs))
+    rhs <- rep(0, nrow(L))
   q <- NROW(L)
   value.hyp <- L %*% b - rhs
   vcov.hyp <- L %*% V %*% t(L)
@@ -455,7 +447,7 @@ linearHypothesis.default = function (model,
   test <- match.arg(test)
   if (!(is.finite(df) && df > 0))
     test <- "Chisq"
-  name <- try(formula(model), silent = TRUE)
+  name <- try(stats::formula(model), silent = TRUE)
   if (inherits(name, "try-error"))
     name <- substitute(model)
   title <- "Linear hypothesis test\n\nHypothesis:"
@@ -471,11 +463,11 @@ linearHypothesis.default = function (model,
   rval[, 1] <- c(df + q, df)
   if (test == "F") {
     f <- SSH/q
-    p <- pf(f, q, df, lower.tail = FALSE)
+    p <- stats::pf(f, q, df, lower.tail = FALSE)
     rval[2, 2:4] <- c(q, f, p)
   }
   else {
-    p <- pchisq(SSH, q, lower.tail = FALSE)
+    p <- stats::pchisq(SSH, q, lower.tail = FALSE)
     rval[2, 2:4] <- c(q, SSH, p)
   }
   if (!(is.finite(df) && df > 0))

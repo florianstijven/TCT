@@ -4,10 +4,10 @@
 \alias{summary.TCT_meta}
 \title{Summarize fitted Meta-Time Component Test model}
 \usage{
-\method{summary}{TCT_meta}(x, alpha = 0.05, delta_transformation = "identity")
+\method{summary}{TCT_meta}(object, alpha = 0.05, delta_transformation = "identity", ...)
 }
 \arguments{
-\item{x}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}.}
+\item{object}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}.}
 
 \item{alpha}{Two-sided confidence level for confidence intervals.}
 

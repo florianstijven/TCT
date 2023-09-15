@@ -61,7 +61,7 @@ i.e., all elements are used.}
 \item{weights}{If \code{type == "custom"}, the user should specify a weight
 vector for weighting estimates at different time points differently.}
 
-\item{...}{Tuning parameters that are passed to \code{\link[=optim]{optim()}}.}
+\item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }
 \value{
 (numeric) Estimated SE of the estimator.

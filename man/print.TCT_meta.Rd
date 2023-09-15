@@ -4,10 +4,10 @@
 \alias{print.TCT_meta}
 \title{Print Meta-Time Component Test object}
 \usage{
-\method{print}{TCT_meta}(x)
+\method{print}{TCT_meta}(x, ...)
 }
 \arguments{
-\item{x}{}
+\item{x}{Object returend by \code{\link[=TCT_meta]{TCT_meta()}}}
 }
 \description{
 Print Meta-Time Component Test object

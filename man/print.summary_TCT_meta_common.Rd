@@ -4,10 +4,10 @@
 \alias{print.summary_TCT_meta_common}
 \title{Print summary_TCT_meta_common object}
 \usage{
-\method{print}{summary_TCT_meta_common}(x)
+\method{print}{summary_TCT_meta_common}(x, ...)
 }
 \arguments{
-\item{x}{}
+\item{x}{Object returned by \code{\link[=summary.TCT_meta_common]{summary.TCT_meta_common()}}.}
 }
 \description{
 Print summary_TCT_meta_common object

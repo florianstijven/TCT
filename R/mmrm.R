@@ -18,8 +18,10 @@
 #'   * `"full"` (default): full model with treatment-time interaction.
 #'   * `"null"`: null model with no treatment effect. The only use case for
 #'   fitting this model is to perform likelihood ratio tests.
-#'
-#' @return fitted-model object from [nlme::gls()]
+#' @param package Which package to use for fitting the mmrm? Shoud be one of:
+#'  * `"mmrm"`
+#'  * `"nlme"`
+#' @return fitted-model object from [nlme::gls()] or [mmrm::mmrm()]
 #' @export
 #'
 #' @examples
@@ -37,33 +39,31 @@
 #'
 #'
 analyze_mmrm = function(data_trial, method = "ML", type = "full", package = "mmrm") {
-  # The following options could be elaborated on in the future.
-  baseline = FALSE
-  covariates = FALSE
-  if (baseline) {
-    # Transform data to "baseline format".
-    data_trial = baseline_data_format(data_trial)
-    formula = formula(ADAScog_integer~arm_time + b_ADAScog_integer + 0)
-  }
-  else {
-    formula = formula(ADAScog_integer~arm_time + 0)
-  }
+  # # The following options could be elaborated on in the future.
+  # baseline = FALSE
+  # covariates = FALSE
+  # if (baseline) {
+  #   # Transform data to "baseline format".
+  #   data_trial = baseline_data_format(data_trial)
+  #   formula = formula(ADAScog_integer~arm_time + b_ADAScog_integer + 0)
+  # }
+  formula = formula(ADAScog_integer~arm_time + 0)
 
-  if (covariates) {
-    formula = update.formula(old = formula, .~. +
-                               BMMSE_integer + BMMSE_integer:as.factor(time_int)
-    )
-  }
+  # if (covariates) {
+  #   formula = stats::update.formula(old = formula, .~. +
+  #                              BMMSE_integer + BMMSE_integer:as.factor(time_int)
+  #   )
+  # }
 
   if (type == "null") {
-    formula = update.formula(old = formula,
+    formula = stats::update.formula(old = formula,
                              .~. - arm_time + as.factor(time_int))
   }
 
   if (package == "mmrm") {
     data_trial$SubjId = as.factor(data_trial$SubjId)
     data_trial$time_int = as.factor(data_trial$time_int)
-    formula = update.formula(old = formula, .~. + us(time_int | SubjId))
+    formula = stats::update.formula(old = formula, .~. + us(time_int | SubjId))
     mmrm::mmrm(
       formula = formula,
       data = data_trial,

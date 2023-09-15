@@ -7,7 +7,7 @@ gradient_gamma_w_numerical = function(time_points,
                             weights){
   K = length(time_points)
   force(time_points); force(ctrl_estimates); force(exp_estimates)
-  force(interpolation); force(vcov);
+  force(interpolation);
   force(j); force(weights); force(K); force(gamma_0)
   v = function(theta) {
     v_function(

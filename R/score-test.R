@@ -102,7 +102,7 @@ score_test = function(time_points,
   z = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1])) / sqrt(sigma_sq)
   # Return z-value and corresponding two-sided p-value.
   return(c("z" = as.numeric(z),
-           "p-value" = 2 * (1 - pnorm(abs(as.numeric(z))))
+           "p-value" = 2 * (1 - stats::pnorm(abs(as.numeric(z))))
            )
          )
 }
@@ -157,7 +157,7 @@ score_conf_int = function(time_points,
                       gamma_0 = gamma)[1])
   }
   # Find upper limit
-  z_critical = qnorm(p = 1 - alpha / 2)
+  z_critical = stats::qnorm(p = 1 - alpha / 2)
   upper_limit = stats::uniroot(
     f = function(gamma)
       z_value(gamma) + z_critical,
@@ -382,7 +382,7 @@ score_conf_int_common = function(time_points,
   if (type == "omnibus") df = length(j)
   else df = 1
   # Compute critical value.
-  t_sq_critical = qchisq(p = 1 - alpha, df = df)
+  t_sq_critical = stats::qchisq(p = 1 - alpha, df = df)
   # If the test statistic evaluated in the estimated value is larger than the
   # critical value, then we cannot compute the confidence interval. This means
   # that a common acceleration factor is not consistent with the data.
@@ -440,7 +440,7 @@ score_conf_int_common = function(time_points,
 #' statistic.
 #'
 #' @inheritParams score_test_common
-#' @param ... Tuning parameters that are passed to [optim()].
+#' @param ... Tuning parameters that are passed to [stats::optim()].
 #' @param penalty This a function that is added to the (squared) test
 #'   statistics. Defaults to a constant function. This is mostly useful for
 #'   small samples to put a penalty on values of gamma outside the unit
@@ -502,7 +502,7 @@ score_estimate_common = function(time_points,
   objectives = sapply(X = gammas, FUN = objective_function)
   # Select starting value
   gamma_start = gammas[which.min(objectives)]
-  optim(
+  stats::optim(
     par = gamma_start,
     fn = objective_function,
     hessian = FALSE,

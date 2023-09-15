@@ -139,9 +139,9 @@ pm_bootstrap_vertical_to_common = function(time_points,
                                            bs_fix_vcov = TRUE,
                                            return_se = TRUE,
                                            null = FALSE,
-                                           gls_est = TRUE,
                                            select_coef,
                                            constraints = FALSE) {
+  gls_est = TRUE
   if (B == 0)
     return(NULL)
 

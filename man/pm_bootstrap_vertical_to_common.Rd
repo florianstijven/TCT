@@ -15,7 +15,6 @@ pm_bootstrap_vertical_to_common(
   bs_fix_vcov = TRUE,
   return_se = TRUE,
   null = FALSE,
-  gls_est = TRUE,
   select_coef,
   constraints = FALSE
 )

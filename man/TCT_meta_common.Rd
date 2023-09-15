@@ -10,7 +10,6 @@ TCT_meta_common(
   B = 0,
   bs_fix_vcov = FALSE,
   select_coef = 1:length(coef(TCT_Fit)),
-  gls_est = TRUE,
   constraints = FALSE,
   type = NULL,
   weights = NULL

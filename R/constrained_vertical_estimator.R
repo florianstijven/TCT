@@ -89,7 +89,7 @@ constrained_vertical_estimator = function(alpha_obs, beta_obs, Sigma_obs) {
   obj_function = function(theta, alpha_beta_obs) {
     alpha = theta[1:length_alpha]
     beta = theta[(length_alpha + 1):length(theta)]
-    mahalanobis(
+    stats::mahalanobis(
       x = alpha_beta_obs,
       center = c(alpha, beta),
       cov = Sigma_inv,

@@ -69,7 +69,7 @@ statistics. Defaults to a constant function. This is mostly useful for
 small samples to put a penalty on values of gamma outside the unit
 interval.}
 
-\item{...}{Tuning parameters that are passed to \code{\link[=optim]{optim()}}.}
+\item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }
 \value{
 (numeric) estimated for the common acceleration factor.

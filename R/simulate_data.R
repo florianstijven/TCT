@@ -134,7 +134,7 @@ simAge = function (n,
 
 simGen = function (n, p, ...)
 {
-  rbinom(n, 1, p["pGen"])
+  stats::rbinom(n, 1, p["pGen"])
 }
 
 rnorm.trunc = function (n,
@@ -143,7 +143,7 @@ rnorm.trunc = function (n,
                         lower = -Inf,
                         upper = Inf)
 {
-  qnorm.trunc(runif(n), mean, sd, lower, upper)
+  qnorm.trunc(stats::runif(n), mean, sd, lower, upper)
 }
 
 qnorm.trunc = function (p,
@@ -152,7 +152,7 @@ qnorm.trunc = function (p,
                         lower = -Inf,
                         upper = Inf)
 {
-  qnorm(p * pnorm(upper, mean, sd) + (1 - p) * pnorm(lower,
+  stats::qnorm(p * stats::pnorm(upper, mean, sd) + (1 - p) * stats::pnorm(lower,
                                                      mean, sd),
         mean,
         sd)
@@ -171,7 +171,7 @@ simulate_single_arm = function(control,
   # Time point at which measurements are taken
   times <- seq(0, total_time, length.out = n_measurements)
   # Sample covariate value for each patient.
-  bmmse <- runif(arm_sample_size, 16, 26)
+  bmmse <- stats::runif(arm_sample_size, 16, 26)
   apo <- simApoE(arm_sample_size, popPars)
   age <- simAge(arm_sample_size, popPars, apo)
   gender <- simGen(arm_sample_size, popPars)
@@ -192,8 +192,8 @@ simulate_single_arm = function(control,
     popPars['lambdaAlphaApo1'] * (apo==1) + popPars['lambdaAlphaApo2'] * (apo==2) +
     popPars['lambdaAlphaAge'] * (age -75) + popPars['lambdaAlphaGen'] * gender
   # Sample patient-level random effects.
-  eta <- rnorm(arm_sample_size, muEtaAdj, sigmaEta)
-  alpha <- rnorm(arm_sample_size, muAlphaAdj, sigmaAlpha)
+  eta <- stats::rnorm(arm_sample_size, muEtaAdj, sigmaEta)
+  alpha <- stats::rnorm(arm_sample_size, muAlphaAdj, sigmaAlpha)
 
   # Vector of subject id's.
   subjId <- as.integer(1:arm_sample_size)
@@ -253,7 +253,7 @@ simulate_single_arm = function(control,
   # scores are always integers, so it is advised to use the rounded values for
   # further analyses.
   dat = dplyr::mutate(dat,
-                      ADAScog_numeric = 70 * rbeta(
+                      ADAScog_numeric = 70 * stats::rbeta(
                         n = nrow(dat),
                         shape1 = theta * tauResid,
                         shape2 = (1 - theta) * tauResid

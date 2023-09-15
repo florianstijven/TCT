@@ -30,9 +30,15 @@ of the following strings:
 \item \code{"null"}: null model with no treatment effect. The only use case for
 fitting this model is to perform likelihood ratio tests.
 }}
+
+\item{package}{Which package to use for fitting the mmrm? Shoud be one of:
+\itemize{
+\item \code{"mmrm"}
+\item \code{"nlme"}
+}}
 }
 \value{
-fitted-model object from \code{\link[nlme:gls]{nlme::gls()}}
+fitted-model object from \code{\link[nlme:gls]{nlme::gls()}} or \code{\link[mmrm:mmrm]{mmrm::mmrm()}}
 }
 \description{
 The \code{\link[=analyze_mmrm]{analyze_mmrm()}} function analyzes data from a single trial with the

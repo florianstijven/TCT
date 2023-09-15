@@ -13,8 +13,7 @@ optimize_weights(
   vcov,
   j = 1:length(exp_estimates),
   weights = rep(1, length(exp_estimates)),
-  epsilon = 1e-06,
-  ...
+  epsilon = 1e-06
 )
 }
 \arguments{

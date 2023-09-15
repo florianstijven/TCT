@@ -43,8 +43,7 @@ optimize_weights = function(time_points,
                             vcov,
                             j = 1:length(exp_estimates),
                             weights = rep(1, length(exp_estimates)),
-                            epsilon = 1e-6,
-                            ...) {
+                            epsilon = 1e-6) {
   # The weights multiplied by a constant are equivalent. So, we let the weights
   # sum to one.
   w_new = weights / sum(weights)
@@ -92,7 +91,7 @@ optimize_weights = function(time_points,
     w_K_old = 1 / (1 + sum(exp(log_odds_w_old)))
     w_old = w_K_old * exp(log_odds_w_old)
     gamma_old = gamma_new
-    log_odds_w_new = optim(
+    log_odds_w_new = stats::optim(
       f = sigma_squared,
       par = log_odds_w_old,
       control = list(maxit = 30)
