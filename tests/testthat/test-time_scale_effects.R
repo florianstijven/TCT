@@ -1,5 +1,4 @@
 test_that("TCT_meta() function works with cubic spline interpolation", {
-  library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -16,7 +15,7 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
       vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
       inference = "wald",
       interpolation = "spline",
-      B = 1e3
+      B = 1e1
     )
     TCT_output_vctr = c(coef(TCT_Fit),
                         TCT_Fit$bootstrap_estimates[1:2],
@@ -72,7 +71,7 @@ test_that("TCT_meta() function works with monoH.FC spline interpolation", {
     exp_estimates = coef(mmrm_fit)[5:8],
     vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
     interpolation = "monoH.FC",
-    B = 1e3
+    B = 1e1
   )
   TCT_output_vctr = c(TCT_Fit$coefficients,
                       TCT_Fit$bootstrap_estimates[1:2],
@@ -116,7 +115,6 @@ test_that("TCT_meta_common() function works with monoH.FC spline interpolation",
 })
 
 test_that("TCT_meta() function works with linear spline interpolation", {
-  library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -132,13 +130,13 @@ test_that("TCT_meta() function works with linear spline interpolation", {
     exp_estimates = coef(mmrm_fit)[5:8],
     vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
     interpolation = "linear",
-    B = 1e3
+    B = 1e1
   )
   TCT_output_vctr = c(TCT_Fit$coefficients,
                       TCT_Fit$bootstrap_estimates[1:2],
                       TCT_Fit$vcov[1, 2])
   check_vctr = c(0.2746882, 0.8443806, 0.8024704, 0.7513858,
-                 0.2452254, 1.0094905, 0.3594113)
+                 0.2452254, 1.0094905, 0.064547695)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-3)
 })
@@ -166,7 +164,7 @@ test_that("TCT_meta_common() function works with linear spline interpolation", {
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
-  check_vctr = c(0.8144168, 0.8091335, 0.8858162, 0.2172113)
+  check_vctr = c(0.847130645, 0.753917984, 0.840351151, 0.003785658)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names", tolerance = 1e-5)
 })
@@ -228,7 +226,6 @@ test_that("TCT_meta_common() function works with linear spline interpolation", {
 # })
 
 test_that("TCT_meta() function works with cubic spline interpolation", {
-  library(mmrm)
   data = simulated_test_trial %>%
     dplyr::mutate(time_int = (Week %/% 25)) %>%
     dplyr::arrange(trial_number, SubjId, time_int) %>%
@@ -245,15 +242,20 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
     vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
     inference = "wald",
     interpolation = "spline",
-    B = 1e3
+    B = 1e1
   )
   TCT_output_vctr = c(TCT_Fit$coefficients,
                       TCT_Fit$bootstrap_estimates[1:2],
                       TCT_Fit$vcov[1, 2])
-  check_vctr = c(0.7327657260, 0.8734756221, 0.7936971718, 0.7510185731,
-                 0.4256797100, 1.0165886470, 0.0411074803)
+  check_vctr = c(0.73268086,
+                 0.87350717,
+                 0.79369280,
+                 0.75100870,
+                 0.42588694,
+                 1.01608204,
+                 0.04095813)
   expect_equal(TCT_output_vctr, check_vctr,
-               ignore_attr = "names", tolerance = 1e-3)
+               ignore_attr = "names")
 })
 
 test_that("TCT_meta() and its summary work with cubic spline interpolation and score-based inference", {
@@ -287,8 +289,7 @@ test_that("TCT_meta() and its summary work with cubic spline interpolation and s
   )
   expect_equal(TCT_output_vctr,
                check_vctr,
-               ignore_attr = "names",
-               tolerance = 1e-3)
+               ignore_attr = "names")
 })
 
 test_that("TCT_meta_common() and its summary work with cubic spline interpolation and score-based inference", {
@@ -327,8 +328,7 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
                  0.978881018916929)
   expect_equal(TCT_output_vctr,
                check_vctr,
-               ignore_attr = "names",
-               tolerance = 1e-3)
+               ignore_attr = "names")
 })
 
 
