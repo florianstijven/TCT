@@ -1,16 +1,4 @@
 test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   # z-value for a direct comparison of means
   z_mean = as.numeric(mmrm::df_1d(mmrm_fit, c(-1, 0, 0, 0, 1, 0, 0, 0, 0))$t)
   ref_fun = ref_fun_constructor(0:4,
@@ -29,18 +17,6 @@ test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
 })
 
 test_that("score TCT CI is correct", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   # z-value for a direct comparison of means
   z_mean = as.numeric(mmrm::df_1d(mmrm_fit, c(-1, 0, 0, 0, 1, 0, 0, 0, 0))$t)
   ref_fun = ref_fun_constructor(0:4,
@@ -58,18 +34,6 @@ test_that("score TCT CI is correct", {
 })
 
 test_that("omnibus score TCT test for common treatment effect is correct", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
@@ -85,18 +49,6 @@ test_that("omnibus score TCT test for common treatment effect is correct", {
 })
 
 test_that("omnibus score TCT test for common treatment effect is equivalent to to linear hypothesis test for gamma = 1", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
@@ -118,18 +70,6 @@ test_that("omnibus score TCT test for common treatment effect is equivalent to t
 })
 
 test_that("all type of score TCT test for common treatment effect are correct", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
@@ -194,18 +134,6 @@ test_that("all type of score TCT test for common treatment effect are correct", 
 })
 
 test_that("one-dimensional score TCT tests for common treatment effect are equivalent", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
@@ -269,18 +197,6 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
 })
 
 test_that("all type of mutlivariate score TCT confidence intervals for common treatment effect are correct", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
@@ -347,18 +263,6 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
 })
 
 test_that("all type of multivariate score TCT confidence intervals for common treatment effect are equivalent to their univariate counterparts", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")
@@ -434,18 +338,6 @@ test_that("all type of multivariate score TCT confidence intervals for common tr
 
 # Score based estimators
 test_that("all type of multivariate score TCT estimators are correct", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   ref_fun = ref_fun_constructor(0:4,
                                 coef(mmrm_fit)[c(9, 1:4)],
                                 "spline")

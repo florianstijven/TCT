@@ -1,12 +1,4 @@
 test_that("TCT_meta() function works with cubic spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                             "baseline",
-                             paste0(arm, ":", time_int)))
-    mmrm_fit = analyze_mmrm(data)
     set.seed(1)
     TCT_Fit = TCT_meta(
       time_points = 0:4,
@@ -32,14 +24,6 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
 })
 
 test_that("TCT_meta_common() function works with cubic spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                             "baseline",
-                             paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -61,14 +45,6 @@ test_that("TCT_meta_common() function works with cubic spline interpolation", {
 })
 
 test_that("TCT_meta() function works with monoH.FC spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -93,14 +69,6 @@ test_that("TCT_meta() function works with monoH.FC spline interpolation", {
 })
 
 test_that("TCT_meta_common() function works with monoH.FC spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -125,14 +93,6 @@ test_that("TCT_meta_common() function works with monoH.FC spline interpolation",
 })
 
 test_that("TCT_meta() function works with linear spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -159,14 +119,6 @@ test_that("TCT_meta() function works with linear spline interpolation", {
 })
 
 test_that("TCT_meta_common() function works with linear spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -243,14 +195,6 @@ test_that("TCT_meta_common() function works with linear spline interpolation", {
 # })
 
 test_that("TCT_meta() function works with cubic spline interpolation", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -276,14 +220,6 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
 })
 
 test_that("TCT_meta() and its summary work with cubic spline interpolation and score-based inference", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -310,14 +246,6 @@ test_that("TCT_meta() and its summary work with cubic spline interpolation and s
 })
 
 test_that("TCT_meta_common() and its summary work with cubic spline interpolation and score-based inference", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -349,14 +277,6 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
 })
 
 test_that("TCT_meta_common(inference = score) can be combine with TCT_meta(inference = wald)", {
-  data = simulated_test_trial %>%
-    dplyr::mutate(time_int = (Week %/% 25)) %>%
-    dplyr::arrange(trial_number, SubjId, time_int) %>%
-    dplyr::mutate(time_int = as.integer(time_int) + 1L) %>%
-    dplyr::mutate(arm_time = ifelse(time_int == 1L,
-                                    "baseline",
-                                    paste0(arm, ":", time_int)))
-  mmrm_fit = analyze_mmrm(data)
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,

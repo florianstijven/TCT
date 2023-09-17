@@ -8,10 +8,10 @@ nonlinear_gls_estimator(
   time_points,
   ctrl_estimates,
   exp_estimates,
-  ref_fun,
   interpolation,
   vcov,
   j = 1:length(exp_estimates),
+  gamma_0 = NULL,
   ...
 )
 }
@@ -27,9 +27,6 @@ fixed occasions corresponding to the times in \code{time_points}.}
 fixed occasions corresponding to the times in \code{time_points[-1]}. Note that
 first element in \code{exp_estimates} should correspond to some time after
 randomization.}
-
-\item{ref_fun}{Intra- and extrapolation function that is returned by
-\code{ref_fun_constructor()}.}
 
 \item{interpolation}{Which interpolation method to use?
 \itemize{
@@ -47,6 +44,9 @@ of \code{c(ctrl_means, exp_means)}.}
 \item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
 should be used for the score test. Defaults to \code{1:length(exp_estimates)},
 i.e., all elements are used.}
+
+\item{gamma_0}{Defaults to \code{NULL}. If a non-null value is given to this argument,
+the common acceleration factor is held constant at that value.}
 
 \item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }

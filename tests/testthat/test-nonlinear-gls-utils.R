@@ -1,16 +1,4 @@
 test_that("numerical and analytical derivatives match for GLS criterion function", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   # Run the nonlinear GLS estimator.
   criterion_function = nonlinear_gls_criterion_constructor(
     time_points = 0:4,
@@ -34,18 +22,6 @@ test_that("numerical and analytical derivatives match for GLS criterion function
 })
 
 test_that("numerical and analytical derivatives match for GLS criterion function (reduced model)", {
-  library(dplyr)
-  # Example data set transformed to format required by TCT_meta()
-  data_test = simulated_test_trial %>%
-    mutate(
-      time_int = (Week %/% 25) + 1,
-      arm_time = ifelse(time_int == 1L,
-                        "baseline",
-                        paste0(arm, ":", time_int))
-    )
-  # Fit a MMRM model to the data set. The parameter estimates of this model form
-  # the basis to perform the time component tests.
-  mmrm_fit = analyze_mmrm(data_test)
   # Run the nonlinear GLS estimator.
   criterion_function = nonlinear_gls_criterion_constructor(
     time_points = 0:4,
