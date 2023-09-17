@@ -27,11 +27,21 @@ nonlinear_gls_estimator = function(time_points,
     j = j,
     gamma_0 = gamma_0
   )
+  gradient_function = gradient_gls_criterion_constructor(
+    time_points,
+    ctrl_estimates,
+    exp_estimates,
+    interpolation,
+    vcov,
+    j = j,
+    gamma_0 = gamma_0
+  )
   # Minimize the GLS criterion in the parameters.
   if (is.null(gamma_0)) {
     optim_object = stats::optim(
-      par = c(ctrl_estimates, 1),
+      par = c(ctrl_estimates, 0.95),
       fn = objective_function,
+      gr = gradient_function,
       method = "BFGS",
       control = list(abstol = 1e-7)
     )
@@ -40,6 +50,7 @@ nonlinear_gls_estimator = function(time_points,
     optim_object = stats::optim(
       par = c(ctrl_estimates),
       fn = objective_function,
+      gr = gradient_function,
       method = "BFGS",
       control = list(abstol = 1e-7)
     )
@@ -74,7 +85,7 @@ nonlinear_gls_conf_int_common = function(time_points,
     exp_estimates = exp_estimates,
     vcov = vcov,
     interpolation = interpolation,
-    j = 1:length(exp_estimates)
+    j = j
   )
   criterion_full = nl_gls_object$criterion
   gamma_est = nl_gls_object$estimates[length(nl_gls_object$estimates)]
@@ -82,20 +93,22 @@ nonlinear_gls_conf_int_common = function(time_points,
   # Define function that computes the difference in criterion values of the full
   # model and the constrained model. In the latter model, the value for gamma is
   # held fixed.
-    t_sq_value = function(gamma) {
-      criterion_reduced = nonlinear_gls_estimator(
-        time_points = time_points,
-        ctrl_estimates = ctrl_estimates,
-        exp_estimates = exp_estimates,
-        vcov = vcov,
-        interpolation = interpolation,
-        j = 1:length(exp_estimates),
-        gamma_0 = gamma
-      )$criterion
-      return(criterion_reduced - criterion_full)
-    }
+  t_sq_value = function(gamma) {
+    criterion_reduced = nonlinear_gls_estimator(
+      time_points = time_points,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
+      vcov = vcov,
+      interpolation = interpolation,
+      j = j,
+      gamma_0 = gamma
+    )$criterion
+    # The absolute value of the difference is returned because in a epsilon
+    # neighborhood around gamma, the difference could become negative.
+    return(abs(criterion_reduced - criterion_full))
+  }
   # Compute critical value for the test-statistic.
-  t_sq_critical = stats::pchisq(alpha, df = 1)
+  t_sq_critical = stats::qchisq(1 - alpha, df = 1)
   # If the right limit of the test statistic, as a function of gamma, does not
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
@@ -106,7 +119,7 @@ nonlinear_gls_conf_int_common = function(time_points,
     upper_limit = stats::uniroot(
       f = function(gamma)
         sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-      interval = c(gamma_est,
+      interval = c(gamma_est - 1e-4,
                    10),
       tol = .Machine$double.eps ^ 0.5,
       maxiter = 1e3
@@ -122,7 +135,7 @@ nonlinear_gls_conf_int_common = function(time_points,
       f = function(gamma)
         sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
       interval = c(-10,
-                   gamma_est),
+                   gamma_est + 1e-4),
       tol = .Machine$double.eps ^ 0.5,
       maxiter = 1e3
     )$root
