@@ -116,8 +116,6 @@ gradient_gls_criterion_constructor = function(time_points,
     # Define a function that returns that gradient of the generalized least
     # squares criterion for the reduced model. That is the model where gamma is
     # fixed at some value.
-
-    # THIS IS STILL NOT FINISHED!!!!!
     gradient_function = function(param) {
       # Vector of mean parameters in the control group.
       alpha_vec = param[1:length(ctrl_estimates)]
@@ -126,7 +124,7 @@ gradient_gls_criterion_constructor = function(time_points,
                                     y_ref = alpha_vec,
                                     method = interpolation)
       # Acceleration factor parameter.
-      gamma = param[length(ctrl_estimates) + 1]
+      gamma = gamma_0
       # Predicted means. This is the alpha vector for the means in the control
       # group, and the trajectory function with accelerated time for the
       # experimental group.
@@ -146,9 +144,8 @@ gradient_gls_criterion_constructor = function(time_points,
         ),
         "gradient"
       )
-      D_t = diag(time_points[j + 1])
-      B = cbind(diag(1, nrow = length(alpha_vec)), matrix(0, nrow = length(alpha_vec), ncol = 1))
-      C = cbind(A, D_t %*% f0_gradient_t(ref_fun, time_points[j + 1] * gamma))
+      B = diag(1, nrow = length(alpha_vec))
+      C = A
       # Compute and return the GLS criterion function.
       gradient = -2 * t(data_vec - predicted_means) %*%
         Sigma_inv %*%

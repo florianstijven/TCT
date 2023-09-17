@@ -24,8 +24,8 @@ nonlinear_gls_estimator = function(time_points,
     exp_estimates,
     interpolation,
     vcov,
-    j = 1:length(exp_estimates),
-    gamma_0 = NULL
+    j = j,
+    gamma_0 = gamma_0
   )
   # Minimize the GLS criterion in the parameters.
   if (is.null(gamma_0)) {
