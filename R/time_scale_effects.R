@@ -582,6 +582,26 @@ TCT_meta_common = function(TCT_Fit,
       weights = weights
     )
   }
+  else if (inference == "least-squares") {
+    # UNFINISHED
+    gamma_common_estimate = nonlinear_gls_estimator(
+      time_points = time_points,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
+      interpolation = interpolation,
+      vcov = vcov_vertical,
+      j = select_coef
+    )$estimate
+    # gamma_common_vcov = nonlinear_gls_estimator_vcov(
+    #   time_points = time_points,
+    #   ctrl_estimates = ctrl_estimates,
+    #   exp_estimates = exp_estimates,
+    #   interpolation = interpolation,
+    #   vcov = vcov_vertical,
+    #   j = select_coef
+    # )
+    gamma_common_vcov = NA
+  }
 
 
 

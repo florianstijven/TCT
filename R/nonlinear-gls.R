@@ -64,6 +64,68 @@ nonlinear_gls_estimator = function(time_points,
   )
 }
 
+#' Standard Error of nonlinear GLS estimator of the common acceleration factor
+#'
+#' @inheritParams nonlinear_gls_estimator
+#' @param gamma_est Estimated value for the common acceleration factor.
+#' @param alpha_est Estimated value of the mean vector in the control group.
+#'   Note that this should be the estimate as returned by
+#'   [nonlinear_gls_estimator()], and not the original estimates.
+#'
+#' @return (numeric) Estimated SE of the estimator.
+nonlinear_gls_estimator_se = function(time_points,
+                                      interpolation,
+                                      vcov,
+                                      j,
+                                      gamma_est,
+                                      alpha_est) {
+  vcov_matrix = nonlinear_gls_estimator_vcov(time_points,
+                                             interpolation,
+                                             vcov,
+                                             j,
+                                             gamma_est,
+                                             alpha_est)
+  se = sqrt(vcov_matrix[nrow(vcov_matrix), nrow(vcov_matrix)])
+  return(se)
+}
+
+#' Variance-Covariance matrix of nonlinear GLS estimator
+#'
+#' @inheritParams nonlinear_gls_estimator_se
+#'
+#' @return (numeric) variance-covariance matrix where the rows and columns
+#' correspond to
+#' \eqn{(\hat{\alpha}_0, \hat{\alpha}_1, ..., \hat{\alpha}_K, \hat{\gamma})'}.
+nonlinear_gls_estimator_vcov = function(time_points,
+                                        interpolation,
+                                        vcov,
+                                        j,
+                                        gamma_est,
+                                        alpha_est){
+  # Compute the reference trajectory.
+  ref_fun = ref_fun_constructor(x_ref = time_points,
+                                y_ref = alpha_est,
+                                method = interpolation)
+  # Compute the Jacobian for the trajectory function with respect to the
+  # alpha-parameters.
+  A = attr(
+    deriv_f0_alpha(
+      t_m = gamma_est * time_points[j + 1],
+      x_ref = time_points,
+      y_ref = alpha_est,
+      method = interpolation
+    ),
+    "gradient"
+  )
+  D_t = diag(time_points[j + 1])
+  B = cbind(diag(1, nrow = length(alpha_est)), matrix(0, nrow = length(alpha_est), ncol = 1))
+  C = cbind(A, D_t %*% f0_gradient_t(ref_fun, time_points[j + 1] * gamma_est))
+  J = rbind(B, C)
+  # Compute and return the variance-covariance matrix.
+  vcov_matrix = solve(t(J) %*% solve(vcov) %*% J)
+  return(vcov_matrix)
+}
+
 
 nonlinear_gls_conf_int_common = function(time_points,
                                  ctrl_estimates,

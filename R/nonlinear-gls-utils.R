@@ -153,4 +153,5 @@ gradient_gls_criterion_constructor = function(time_points,
       return(gradient)
     }
   }
+  return(gradient_function)
 }
