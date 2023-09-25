@@ -82,7 +82,7 @@ get_new_time = function(y_ref, x_ref, y_obs, method = "linear") {
             ref_fun(x) - y_obs[i],
           interval = c(min(x_ref) - extrapol,
                        max(x_ref) + extrapol),
-          tol = .Machine$double.eps ^ 0.5,
+          tol = 1e-8,
           maxiter = 1e3
         )$root
       }
@@ -329,7 +329,9 @@ deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline") {
     ref_fun(t_m)
   }),
   theta = c("y_ref"),
-  rho = myenv)
+  rho = myenv,
+  eps = 1e-8,
+  central = TRUE)
 }
 
 # deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "spline") {

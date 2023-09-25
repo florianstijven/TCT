@@ -18,7 +18,7 @@
 #'   the correct estimates, this matrix should be the variance-covariance matrix
 #'   of `c(ctrl_means, exp_means)`.
 #' @param inference Which approach is used for estimation and inference? Should
-#'   be `"wald"` or `"score"`. The `"wald"`-approach is explained and
+#'   be `"wald"`, `"score"`, or `"least-squares"`. The `"wald"`-approach is explained and
 #'   implemented in [DeltaMethod()], the `"score"`-approach is explained and
 #'   documented in [score_test()] and [score_test_common()].
 #' @param interpolation Which interpolation method to use?
@@ -583,8 +583,10 @@ TCT_meta_common = function(TCT_Fit,
     )
   }
   else if (inference == "least-squares") {
-    # UNFINISHED
-    gamma_common_estimate = nonlinear_gls_estimator(
+    # Estimate parameter vector. The first length(ctrl_estimates) elements are
+    # estimated for the mean parameters in the control group. The last element
+    # is the estimate for the common acceleration factor.
+    estimates_vec = nonlinear_gls_estimator(
       time_points = time_points,
       ctrl_estimates = ctrl_estimates,
       exp_estimates = exp_estimates,
@@ -592,18 +594,20 @@ TCT_meta_common = function(TCT_Fit,
       vcov = vcov_vertical,
       j = select_coef
     )$estimate
-    # gamma_common_vcov = nonlinear_gls_estimator_vcov(
-    #   time_points = time_points,
-    #   ctrl_estimates = ctrl_estimates,
-    #   exp_estimates = exp_estimates,
-    #   interpolation = interpolation,
-    #   vcov = vcov_vertical,
-    #   j = select_coef
-    # )
-    gamma_common_vcov = NA
+    # Extract estimate for the common acceleration factor.
+    gamma_common_estimate = estimates_vec[length(ctrl_estimates) + 1]
+    # Extract estimates for the mean parameters in the control group.
+    alpha_est = estimates_vec[1:length(ctrl_estimates)]
+    # Compute SE for the common acceleration factor.
+    gamma_common_vcov = nonlinear_gls_estimator_se(
+      time_points = time_points,
+      interpolation = interpolation,
+      vcov = vcov_vertical,
+      j = select_coef,
+      gamma_est = gamma_common_estimate,
+      alpha_est = alpha_est
+    )
   }
-
-
 
   bs_estimates = pm_bootstrap_vertical_to_common(
     time_points = time_points,
@@ -799,7 +803,43 @@ summary.TCT_meta_common = function(object,
     z_value = temp[1]
     p_value = temp[2]
     # Estimated standard error.
-    gamma_common_se = sqrt(object$vcov)
+    gamma_common_se = object$vcov
+  }
+  # Nonlinear GLS based inference
+  if (inference == "least-squares") {
+    # (Re)construct reference trajectory.
+    ref_fun = ref_fun_constructor(
+      time_points,
+      ctrl_estimates,
+      interpolation
+    )
+    # Compute confidence interval
+    gamma_common_ci = matrix(
+      data = nonlinear_gls_conf_int_common(
+        time_points = time_points,
+        ctrl_estimates = ctrl_estimates,
+        exp_estimates = exp_estimates,
+        interpolation = interpolation,
+        vcov = vcov_vertical,
+        j = select_coef,
+        alpha = alpha
+      ),
+      ncol = 2
+    )
+    # Compute test statistic and p-value
+    temp = nonlinear_gls_test(
+      time_points = time_points,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
+      interpolation = interpolation,
+      vcov = vcov_vertical,
+      gamma_0 = 1,
+      j = select_coef
+    )
+    z_value = temp[1]
+    p_value = temp[2]
+    # Estimated standard error.
+    gamma_common_se = object$vcov
   }
 
 
@@ -923,6 +963,9 @@ print.summary_TCT_meta_common = function(x, ...) {
     if (x$inference_options$type == "omnibus") {
       colnames(coefficients_df)[3] = "chi-squared"
     }
+  }
+  if (x$inference_options$inference == "least-squares") {
+    colnames(coefficients_df)[3] = "chi-squared"
   }
 
   print(coefficients_df, digits = 5)

@@ -42,7 +42,7 @@ and Carlson.
 }}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"wald"} or \code{"score"}. The \code{"wald"}-approach is explained and
+be \code{"wald"}, \code{"score"}, or \code{"least-squares"}. The \code{"wald"}-approach is explained and
 implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
 documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
 

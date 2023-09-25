@@ -84,3 +84,70 @@ test_that("nonlinear_gls_estimator_se() works for estimating the SE of the commo
   expect_equal(se_linear, 0.064204897, ignore_attr = "names")
 })
 
+test_that("nonlinear_gls_test() works.", {
+  # Run the nonlinear GLS estimator.
+  nl_gls_spline = nonlinear_gls_estimator(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline"
+  )
+  nl_gls_linear = nonlinear_gls_estimator(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "linear"
+  )
+  # Compute test statistics for gamma_0 = 1
+  test_spline = nonlinear_gls_test(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    j = 1:4,
+    gamma_0 = 1
+  )
+  test_linear = nonlinear_gls_test(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "linear",
+    j = 1:4,
+    gamma_0 = 1
+  )
+  expect_equal(test_spline,
+               c("chi-squared" = 2.838444790, "p-value" = 0.092033251),
+               ignore_attr = "names")
+  expect_equal(test_linear,
+               c("chi-squared" = 4.449855184, "p-value" = 0.034904207),
+               ignore_attr = "names")
+  # Compute test statistics for gamma_0 = 0.7
+  test_spline = nonlinear_gls_test(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "spline",
+    j = 1:4,
+    gamma_0 = 0.7
+  )
+  test_linear = nonlinear_gls_test(
+    time_points = 0:4,
+    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
+    exp_estimates = coef(mmrm_fit)[5:8],
+    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    interpolation = "linear",
+    j = 1:4,
+    gamma_0 = 0.7
+  )
+  expect_equal(test_spline,
+               c("chi-squared" = 3.895762545, "p-value" = 0.048408059),
+               ignore_attr = "names")
+  expect_equal(test_linear,
+               c("chi-squared" = 5.548799374, "p-value" = 0.018493368),
+               ignore_attr = "names")
+})

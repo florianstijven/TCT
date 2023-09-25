@@ -44,7 +44,7 @@ Note that this should be the estimate as returned by
 \value{
 (numeric) variance-covariance matrix where the rows and columns
 correspond to
-\eqn{(\hat{\alpha}_0, \hat{\alpha}_1, ..., \hat{\alpha}_K, \hat{\gamma})'}
+\eqn{(\hat{\alpha}_0, \hat{\alpha}_1, ..., \hat{\alpha}_K, \hat{\gamma})'}.
 }
 \description{
 Variance-Covariance matrix of nonlinear GLS estimator

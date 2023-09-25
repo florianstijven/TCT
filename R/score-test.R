@@ -544,9 +544,9 @@ score_estimate_common_se = function(gamma_est,
     j = j,
     weights = weights
   )
-  se = t(gr_gamma_w) %*%
+  se = sqrt(t(gr_gamma_w) %*%
     vcov %*%
-    gr_gamma_w
+    gr_gamma_w)
   return(as.numeric(se))
 }
 

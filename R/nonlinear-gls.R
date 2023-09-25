@@ -43,7 +43,7 @@ nonlinear_gls_estimator = function(time_points,
       fn = objective_function,
       gr = gradient_function,
       method = "BFGS",
-      control = list(abstol = 1e-7)
+      control = list(abstol = 1e-7, reltol = 1e-8)
     )
   }
   else {
@@ -52,7 +52,7 @@ nonlinear_gls_estimator = function(time_points,
       fn = objective_function,
       gr = gradient_function,
       method = "BFGS",
-      control = list(abstol = 1e-7)
+      control = list(abstol = 1e-7, reltol = 1e-8)
     )
   }
   # Return the estimated parameters and the value of the minimized object function.
@@ -62,6 +62,47 @@ nonlinear_gls_estimator = function(time_points,
       criterion = optim_object$value
     )
   )
+}
+
+#' Compute test statistic and p-value for the nonlinear GLS estimator
+#'
+#' @inheritParams score_test
+#' @inheritParams nonlinear_gls_estimator
+#'
+#'
+#' @inherit score_test_common return
+nonlinear_gls_test = function(time_points,
+                              ctrl_estimates,
+                              exp_estimates,
+                              interpolation,
+                              vcov,
+                              j = 1:length(exp_estimates),
+                              gamma_0 = 1,
+                              ...) {
+  # Compute criterion function in optimum.
+  criterion_full = nonlinear_gls_estimator(time_points,
+                                           ctrl_estimates,
+                                           exp_estimates,
+                                           interpolation,
+                                           vcov,
+                                           j = j,
+                                           gamma_0 = NULL,
+                                           ...)$criterion
+  # Compute criterion function under the null.
+  criterion_reduced = nonlinear_gls_estimator(time_points,
+                                           ctrl_estimates,
+                                           exp_estimates,
+                                           interpolation,
+                                           vcov,
+                                           j = j,
+                                           gamma_0 = gamma_0,
+                                           ...)$criterion
+  test_statistic = criterion_reduced - criterion_full
+  return(c(
+    "chi-squared" = test_statistic,
+    "p-value" = pchisq(test_statistic, df = 1, lower.tail = FALSE)
+  ))
+
 }
 
 #' Standard Error of nonlinear GLS estimator of the common acceleration factor
