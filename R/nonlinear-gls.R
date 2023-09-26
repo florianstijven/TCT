@@ -163,7 +163,12 @@ nonlinear_gls_estimator_vcov = function(time_points,
   C = cbind(A, D_t %*% f0_gradient_t(ref_fun, time_points[j + 1] * gamma_est))
   J = rbind(B, C)
   # Compute and return the variance-covariance matrix.
-  vcov_matrix = solve(t(J) %*% solve(vcov) %*% J)
+  # Ensure that vcov is a symmetric matrix
+  vcov[lower.tri(vcov)] = t(vcov)[lower.tri(vcov)]
+  # Ensure that the following matrix is a symmetric matrix.
+  Z = t(J) %*% mnormt::pd.solve(vcov) %*% J
+  Z[lower.tri(Z)] = t(Z)[lower.tri(Z)]
+  vcov_matrix = mnormt::pd.solve(Z)
   return(vcov_matrix)
 }
 

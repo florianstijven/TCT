@@ -80,8 +80,8 @@ test_that("nonlinear_gls_estimator_se() works for estimating the SE of the commo
     gamma_est = nl_gls_linear$estimates[6],
     alpha_est = nl_gls_linear$estimates[1:5]
   )
-  print(se_spline)
-  print(se_linear)
+  print(se_spline, digits = 8)
+  print(se_linear, digits = 8)
   expect_equal(se_spline, 0.080210856)
   expect_equal(se_linear, 0.064338448)
 })
