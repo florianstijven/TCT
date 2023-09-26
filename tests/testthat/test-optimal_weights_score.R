@@ -1,21 +1,21 @@
 test_that("Optimisation for weights vector works", {
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
   # t-value for TCT score test
   weights_opt1 = optimize_weights(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
     ref_fun = ref_fun,
     interpolation = "spline",
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    vcov = vcov_mmrm,
     j = 1:4
   )
   weights_opt2 = optimize_weights(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
     ref_fun = ref_fun,
     interpolation = "spline",
     vcov = diag(1, nrow = 9),

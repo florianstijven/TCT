@@ -17,35 +17,33 @@ test_that("score TCT test is equivalent to comparison of means for gamma = 1", {
 })
 
 test_that("score TCT CI is correct", {
-  # z-value for a direct comparison of means
-  z_mean = as.numeric(mmrm::df_1d(mmrm_fit, c(-1, 0, 0, 0, 1, 0, 0, 0, 0))$t)
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
   # z-value for TCT score test
   conf_int = score_conf_int(time_points = 0:4,
-                       ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-                       exp_estimates = coef(mmrm_fit)[5:8],
-                       vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+                       ctrl_estimates = ctrl_estimates,
+                       exp_estimates = exp_estimates,
+                       vcov = vcov_mmrm,
                        interpolation = "spline",
                        ref_fun = ref_fun,
                        j = 1)
-  expect_equal(conf_int, c(-0.2869702204, 1.3540556235))
+  expect_equal(conf_int, c(-0.28764977, 1.35489195))
 })
 
 test_that("omnibus score TCT test for common treatment effect is correct", {
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
   # t-value for TCT score test
   t_sq = score_test_common(time_points = 0:4,
-                       ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-                       exp_estimates = coef(mmrm_fit)[5:8],
-                       vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+                       ctrl_estimates = ctrl_estimates,
+                       exp_estimates = exp_estimates,
+                       vcov = vcov_mmrm,
                        interpolation = "spline",
                        ref_fun = ref_fun,
                        gamma_0 = 1)[1]
-  expect_equal(as.numeric(t_sq), 6.2673327)
+  expect_equal(as.numeric(t_sq), 6.2390581)
 })
 
 test_that("omnibus score TCT test for common treatment effect is equivalent to to linear hypothesis test for gamma = 1", {
@@ -71,23 +69,23 @@ test_that("omnibus score TCT test for common treatment effect is equivalent to t
 
 test_that("all type of score TCT test for common treatment effect are correct", {
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
 
   TCT_Fit = TCT_meta(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0
   )
   # z-value for TCT score test
   z_omnibus = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -96,9 +94,9 @@ test_that("all type of score TCT test for common treatment effect are correct", 
   )[1]
   z_directional = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -107,9 +105,9 @@ test_that("all type of score TCT test for common treatment effect are correct", 
   )[1]
   z_inv_var = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -118,9 +116,9 @@ test_that("all type of score TCT test for common treatment effect are correct", 
   )[1]
   z_custom = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -129,29 +127,29 @@ test_that("all type of score TCT test for common treatment effect are correct", 
     weights = c(0.2, 1, 1, 2)
   )[1]
   output_vector = c(z_omnibus, z_directional, z_inv_var, z_custom)
-  expect_vector = c(6.26733272, 0.00236691, -1.41203381, -1.78553411)
+  expect_vector = c(6.2390580536, 0.0023884661, -1.4091152443, -1.7817867581)
   expect_equal(output_vector, expect_vector, ignore_attr = "names")
 })
 
 test_that("one-dimensional score TCT tests for common treatment effect are equivalent", {
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
 
   TCT_Fit = TCT_meta(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0
   )
   # z-value for TCT score test
   z_omnibus = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -160,9 +158,9 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
   )[1]
   z_directional = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -171,9 +169,9 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
   )[1]
   z_inv_var = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -182,9 +180,9 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
   )[1]
   z_custom = score_test_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     gamma_0 = 1,
@@ -198,14 +196,14 @@ test_that("one-dimensional score TCT tests for common treatment effect are equiv
 
 test_that("all type of mutlivariate score TCT confidence intervals for common treatment effect are correct", {
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
 
   TCT_Fit = TCT_meta(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0
   )
@@ -214,9 +212,9 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
   # z-value for TCT score test
   conf_int_omnibus = score_conf_int_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "omnibus",
@@ -225,9 +223,9 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
   )
   conf_int_directional = score_conf_int_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "directional",
@@ -236,9 +234,9 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
   )
   conf_int_inv_var = score_conf_int_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "inverse variance",
@@ -247,9 +245,9 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
   )
   conf_int_custom = score_conf_int_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "custom",
@@ -258,7 +256,7 @@ test_that("all type of mutlivariate score TCT confidence intervals for common tr
     weights = c(0, 1, 1, 2)
   )
   output_vector = c(conf_int_omnibus, conf_int_directional, conf_int_inv_var, conf_int_custom)
-  expect_vector = c(0.66475028, 1.08446326, 0.36763236, 1.5162254, 0.57461092, 1.08179608, 0.62504568, 1.02042558)
+  expect_vector = c(0.66415999, 1.08546660, 0.36736952, 1.51726499, 0.57410875, 1.08242731, 0.62474983, 1.02097324)
   expect_equal(output_vector, expect_vector)
 })
 
@@ -339,14 +337,14 @@ test_that("all type of multivariate score TCT confidence intervals for common tr
 # Score based estimators
 test_that("all type of multivariate score TCT estimators are correct", {
   ref_fun = ref_fun_constructor(0:4,
-                                coef(mmrm_fit)[c(9, 1:4)],
+                                ctrl_estimates,
                                 "spline")
 
   TCT_Fit = TCT_meta(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0
   )
@@ -355,9 +353,9 @@ test_that("all type of multivariate score TCT estimators are correct", {
   set.seed(1)
   gamma_omnibus = score_estimate_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "omnibus",
@@ -365,9 +363,9 @@ test_that("all type of multivariate score TCT estimators are correct", {
   )
   gamma_directional = score_estimate_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "directional",
@@ -375,9 +373,9 @@ test_that("all type of multivariate score TCT estimators are correct", {
   )
   gamma_inv_var = score_estimate_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "inverse variance",
@@ -385,9 +383,9 @@ test_that("all type of multivariate score TCT estimators are correct", {
   )
   gamma_custom = score_estimate_common(
     time_points = 0:4,
-    ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-    exp_estimates = coef(mmrm_fit)[5:8],
-    vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
     interpolation = "spline",
     ref_fun = ref_fun,
     type = "custom",
@@ -395,8 +393,8 @@ test_that("all type of multivariate score TCT estimators are correct", {
     weights = c(0, 1, 2, 2)
   )
   output_vector = c(gamma_omnibus, gamma_directional, gamma_inv_var, gamma_custom)
-  expect_vector = c(0.85504244, 0.98637208, 0.80793279, 0.78630034)
-  expect_equal(output_vector, expect_vector, tolerance = 1e-5)
+  expect_vector = c(0.85504339, 0.98628002, 0.80792870, 0.78630815)
+  expect_equal(output_vector, expect_vector)
 })
 
 
