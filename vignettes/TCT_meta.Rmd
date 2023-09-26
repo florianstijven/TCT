@@ -23,6 +23,7 @@ information.
 ```{r setup}
 # The TCT R-package is loaded.
 library(TCT)
+library(dplyr)
 ```
 
 # Data
@@ -69,23 +70,215 @@ parameters.
 Note that the mean can be replaced with any other function of the data such as 
 quantiles.
 
+In the following code snippet, the MMRM is fitted to the data. Note that the
+model should be parameterized in such a way that estimates of the mean at each
+measurement occasion are obtained. This is not the conventional parameterization
+where the control means and mean differences are the parameters being estimated.
+
 ```{r}
 # The data are fitted using the a built-in function that essentially is a
 # wrapper for the mmrm::mmrm() function.
-mmrm_fit = analyze_mmrm(simulated_test_trial)
 
+# The data are first transformed into the required format. Specifically, we
+# construct an arm_time variable which represents each arm-measurement occasion
+# combination, except for the baseline measurement. For the latter, only a
+# single category, common to both treatment arms, is present. This ensures that
+# there is only a single mean parameter for that occasion. 
+data_test = simulated_test_trial %>%
+  dplyr::mutate(
+    time_int = (Week %/% 25) + 1,
+    arm_time = ifelse(time_int == 1L,
+                      "baseline",
+                      paste0(arm, ":", time_int))
+  )
+# Fit a MMRM model to the data set. The parameter estimates of this model form
+# the basis to perform the time component tests.
+mmrm_fit = analyze_mmrm(data_test,
+                        package = "mmrm",
+                        method = "REML",
+                        type = "full")
 ```
+
+We can print the summary of this fitted model. However, the mean estimates may
+not be informative with respect to how large the treatment effect actually is. 
+In contrast, an estimate of the treatment effect on the vertical scale is 
+much more informative. This is the goal of the TCT methodology.
+
+```{r}
+summary(mmrm_fit)
+```
+
 
 
 # Meta-Analytic Time-Component Test
 
+## Exctraction of Summary Information
+
+The first step is to extract the relevant summary information from the fitted
+models. Here, we show how this can be done using the fitted MMRM model. This
+step can easily be modified for other types of models, or reported estimates can
+be used (which does not require the data analyst to have access to
+individual-patient data).
+
+We first print the estimated mean parameters. The names of the elements of this
+vector indicate to which measurement occasion these estimates correspond. This
+information is needed to know which estimates should be used to construct the
+reference trajectory, and which estimates should be mapped to the reference
+trajectory.
+
+```{r}
+print(coef(mmrm_fit))
+```
+
+We now see that the 9th estimate corresponds to baseline, and the 1th to 4th 
+estimates correspond to the subsequent estimates in the control group. These 
+estimates are added to the vector, `control_estimates`, which will be used to
+construct the reference trajectory.
+
+```{r}
+control_estimates = coef(mmrm_fit)[c(9, 1:4)]
+```
+
+The 5th to 8th estimates correspond to the post-randomization measurement
+occasions in the active treatment group. These estimates are added to the vector,
+`active_estimates`, the elements of which will be mapped to the reference 
+trajectory. 
+
+```{r}
+active_estimates = coef(mmrm_fit)[c(5:8)]
+```
+
+Finally, we need to extract the estimated variance-covariance matrix. Extra care
+should be taken here to ensure that the rows and columsn correspond to the
+estimates in the following order: `c(control_estimates, active_estimates)`. To
+be sure that everything is correct, we also print the column and row names of
+the extracted matrix.
+
+```{r}
+vcov_mmrm = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)]
+colnames(vcov_mmrm)
+rownames(vcov_mmrm)
+```
 
 
+## Time-Specific Acceleration Factors
 
+The second step is to estimate the time-specific acceleration factors. These
+estimates are based on the mapping of the estimates in `active_estimates` onto
+the trajectory based on the estimates in `control_estimates`. In this second
+step, a different acceleration factor is estimated for each measurement
+occasion.
 
+The `TCT_meta()` function performs this step. This function requires two sets of
+arguments:
+
+1. The first set of arguments pertains to the actual summary information. The
+`ctrl_estimates`, `exp_estimates`, and `vcov` arguments require the estimated
+means and corresponding variance-covariance matrix. In addition, we need to
+specify the timing of the estimates in `control_estimates` through the
+`time_points` argument. In the simulated data, these are 5 equally spaced
+measurement occasions, so we can give the `0:4` vector. Multiplying this vector
+with a constant does not change the results. Clearly, if the occasions are not
+equally-spaced, this should be reflected in `time_points`.
+2. The second set of arguments pertains to options for inference. All options 
+are described in the function documentation. 
+  * For constructing the reference trajectory, we use cubic spline interpolation,       hence, the `"spline"` argument for `interpolation`.
+  * For inference on the estimated acceleration factors, we use the `"score"` based
+    inference.
+  * `B` specifies the number of bootstrap replications. We do not use the bootstrap     for inference in this vignette. 
+  
+```{r}
+TCT_meta_fit = TCT_meta(
+  time_points = 0:4,
+  ctrl_estimates = control_estimates,
+  exp_estimates = active_estimates, 
+  vcov = vcov_mmrm, 
+  interpolation = "spline", 
+  inference = "score", 
+  B = 0
+)
+```
+
+We can call the `summary()` method on the object returned by `TCT_meta()` to 
+get more information on the estimates and corresponding inference.
+
+```{r}
+summary(TCT_meta_fit)
+```
+
+This shows that there is some evidence of slowing at each measurement occasion.
+In addition, the acceleration factor seems quite constant across these
+measurement occasions. Therefore, we proceed by estimating a common acceleration
+factor.
+
+## Common Acceleration Factor
+
+The third (and optional) step in the TCT analysis is estimating the common
+acceleration factor. This estimate will only make sense of there is no strong
+evidence against a common acceleration factor. Above, we have not seen any
+evidence against a common acceleration factor, so we can safely continue.
+
+This step is implemented in the `TCT_meta_common()` function. This function
+takes the object returned by `TCT_meta()` as first argument. The remaining
+arguments specify options for inference. Note that of the inference options used
+in `TCT_meta()`, only `interpolation` has any effect on the behavior of
+`TCT_meta_common()`. Only the inference options specified in `TCT_meta_common()`
+are important.
+
+Whereas there are only a limited number of inference options in the case of 
+time-specific acceleration factors, there are many more options for the case
+of a common acceleration factor. 
+
+* The `inference` argument specifies the method of inference. We choose once `"score"` and
+once `"least-squares"`.
+  * For `"score"` based inference, several `type`s are possible. We choose 
+   `type = "custom"`. If we then leave the `weights` unspecified, the weights
+   will be adaptively selected as to minimize the standard error of the common 
+   acceleration factor estimate.
+* As before, `B` specifies the number of replications in a bootstrap. We do not use
+the boostrap, so we set `B = 0`.
+* `select_coef` is an optional argument which allows use to only use a subset of
+the estimates in `control_estimates` for estimating a common acceleration
+factor. This is useful when the is, for example, evidence of non-proportional
+slowing at the first measurement occasions. By default, all measurement
+occasions are used.
 
 
 ```{r}
-
+TCT_common_score = TCT_meta_common(
+  TCT_Fit = TCT_meta_fit, 
+  inference = "score", 
+  B = 0,
+  type = "custom"
+)
+TCT_common_ls = TCT_meta_common(
+  TCT_Fit = TCT_meta_fit, 
+  inference = "least-squares", 
+  B = 0
+)
 ```
+
+We can again use the `summary()` method on the object returned by `TCT_meta()` to 
+get more information on the estimates and corresponding inference.
+
+```{r}
+summary(TCT_common_score)
+summary(TCT_common_ls)
+```
+
+Both estimates are fairly close to each other, and to the expected value.
+However, the p-values lead to different conclusions regarding significance. This
+is not unexpected as both methods approach the problem from a different
+perspective.
+
+In any case, we can conclude that there is borderline evidence of a treatment 
+effect. In addition, and this is the main contributing of the TCT methodology, 
+we can conclude that the treatment slows the disease process with maximally 
+30-35%. 
+
+
+
+
+
+
 
