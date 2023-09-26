@@ -80,9 +80,72 @@ test_that("nonlinear_gls_estimator_se() works for estimating the SE of the commo
     gamma_est = nl_gls_linear$estimates[6],
     alpha_est = nl_gls_linear$estimates[1:5]
   )
-  expect_equal(se_spline, 0.080210856, ignore_attr = "names")
-  expect_equal(se_linear, 0.064338448, ignore_attr = "names")
+  print(se_spline)
+  print(se_linear)
+  expect_equal(se_spline, 0.080210856)
+  expect_equal(se_linear, 0.064338448)
 })
+
+
+test_that(
+  "nonlinear_gls_estimator_vcov() works for estimating the variance-covariance matrix.",
+  {
+    # Run the nonlinear GLS estimator.
+    nl_gls_spline = nonlinear_gls_estimator(
+      time_points = 0:4,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
+      vcov = vcov_mmrm,
+      interpolation = "spline"
+    )
+    nl_gls_linear = nonlinear_gls_estimator(
+      time_points = 0:4,
+      ctrl_estimates = ctrl_estimates,
+      exp_estimates = exp_estimates,
+      vcov = vcov_mmrm,
+      interpolation = "linear"
+    )
+    vcov_spline = nonlinear_gls_estimator_vcov(
+      time_points = 0:4,
+      interpolation = "spline",
+      vcov = vcov_mmrm,
+      j = 1:4,
+      gamma_est = nl_gls_spline$estimates[6],
+      alpha_est = nl_gls_spline$estimates[1:5]
+    )
+    vcov_linear = nonlinear_gls_estimator_vcov(
+      time_points = 0:4,
+      interpolation = "linear",
+      vcov = vcov_mmrm,
+      j = 1:4,
+      gamma_est = nl_gls_linear$estimates[6],
+      alpha_est = nl_gls_linear$estimates[1:5]
+    )
+    expect_equal(
+      vcov_spline[1,],
+      c(
+        1.4675637e-01,
+        1.3563979e-01,
+        1.4569601e-01,
+        1.4919334e-01,
+        1.5865166e-01,
+        9.9603518e-05
+      )
+    )
+    expect_equal(
+      vcov_linear[2,],
+      c(
+        0.13485206382,
+        0.19213263889,
+        0.19468419248,
+        0.22334610970,
+        0.24495854755,
+        -0.00092349316
+      )
+    )
+  }
+)
+
 
 test_that("nonlinear_gls_test() works.", {
   # Run the nonlinear GLS estimator.
