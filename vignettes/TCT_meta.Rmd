@@ -14,6 +14,78 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+
+The goal of the this vignette is to show the `TCT_meta()` and `TCT_meta_common()`
+functions can be used for conducting Time-Component Test using only summary 
+information. 
+
 ```{r setup}
+# The TCT R-package is loaded.
 library(TCT)
 ```
+
+# Data
+
+The usage of the previously mentioned functions is illustrated with the 
+`simulated_test_trial` data available after loading the `TCT` package. These 
+data have been simulated to represent a typical trial in Alzheimer's disease. 
+A description of this data set can be accessed through `?simulated_test_trial`.
+For completeness, the most important features of these data are summarized in this
+vignette:
+
+* There are 5 measurement occasions, one of which is at baseline. There are thus 4
+post-randomization time points at which the acceleration factor can be
+estimated.
+* The total sample size is 1000 with 500 patients in each treatment arm. This
+corresponds to a rather large trial.
+* The patients are assumed to be followed for 100 weeks following randomization.
+In real-life data sets, there would obviously be missing data and possibly
+truncation by death. These potential issues are ignored, but should be dealt
+with appropriately in any real-life application of the TCT methodology.
+* The "true" acceleration factor is `1/1.3` in these data. Acknowledging the
+sampling variability, the estimated acceleration factor should be close to this
+value.
+
+
+# MMRM
+
+As previously mentioned, the meta-TCT methodology only requires summary-level
+information. In principle, this information can come from a wide variety of
+longitudinal models such as linear mixed models, generalized linear mixed
+models, and quantile regression models. In this vignette, the methodology will 
+be illustrated using the linear mixed model. Specifically, we will use the 
+so-called mixed-model for repeated measures (MMRM) as implemented in the `mmrm`
+R-package. 
+
+The summary level information should contain two components:
+
+1. Estimated mean outcome at each measurement occasion. It is further assumed
+that there is only 1 common estimated for the mean at baseline. Note that the 
+meta-TCT methods rely on asymptotic normality of these estimators.
+2. Estimated variance-covariance matrix for the estimated vector of mean
+parameters.
+
+Note that the mean can be replaced with any other function of the data such as 
+quantiles.
+
+```{r}
+# The data are fitted using the a built-in function that essentially is a
+# wrapper for the mmrm::mmrm() function.
+mmrm_fit = analyze_mmrm(simulated_test_trial)
+
+```
+
+
+# Meta-Analytic Time-Component Test
+
+
+
+
+
+
+
+```{r}
+
+```
+
