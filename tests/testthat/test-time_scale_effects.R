@@ -320,7 +320,7 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
                ignore_attr = "names")
 })
 
-test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimator and subset of estimates in exp_estimates", {
+test_that("TCT_meta_common() works with subset of estimates in exp_estimates", {
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -333,6 +333,7 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
   )
   TCT_Fit_summary = summary(TCT_Fit)
   set.seed(1)
+  # non-linear least squares method
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     inference = "least-squares",
@@ -346,5 +347,3 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
                check_vctr,
                ignore_attr = "names")
 })
-
-

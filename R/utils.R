@@ -159,9 +159,15 @@ linear_interpolation_f_factory = function(x_ref, y_ref) {
                                        y_ref,
                                        method = "linear",
                                        rule = 1)
+  # The derivative function is a step function. So, we can compute the value of
+  # each step.
+  deriv_steps = 1:(length(x_ref) - 1)
+  for (i in 1:length(x_ref)) {
+    deriv_steps[i] = (y_ref[i + 1] - y_ref[i]) / (x_ref[i + 1] - x_ref[i])
+  }
   linear_spline_deriv_fun = function(x) {
-    epsilon = 1e-6
-    (linear_spline_fun(x + epsilon) - linear_spline_fun(x)) / epsilon
+    ith_step = findInterval(x = x, vec = x_ref, all.inside = TRUE)
+    return(deriv_steps[ith_step])
   }
   function(x, deriv = 0) {
     if (deriv == 0) {
