@@ -335,7 +335,6 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
   set.seed(1)
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
-    B = 0,
     inference = "least-squares",
     select_coef = 3:4
   )
