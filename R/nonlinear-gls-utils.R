@@ -5,8 +5,10 @@ nonlinear_gls_criterion_constructor = function(time_points,
                                                vcov,
                                                j = 1:length(exp_estimates),
                                                gamma_0 = NULL) {
+  # Compute subsetting vector.
+  subset_vec = c(1:length(ctrl_estimates), j + length(ctrl_estimates))
   # The inverted variance-covariance matrix.
-  Sigma_inv = solve(vcov)
+  Sigma_inv = solve(vcov[subset_vec, subset_vec])
   if (is.null(gamma_0)) {
     # Define a function that returns that generalized least squares criterion for
     # the full model. That is the model where gamma is estimated.
@@ -26,7 +28,7 @@ nonlinear_gls_criterion_constructor = function(time_points,
                                ncol = 1)
       # The "observed data" vector. In this line of thought, the estimated means
       # represent the observed data.
-      data_vec = matrix(data = c(ctrl_estimates, exp_estimates), ncol = 1)
+      data_vec = matrix(data = c(ctrl_estimates, exp_estimates[j]), ncol = 1)
       # Compute and return the GLS criterion function.
       criterion = t(data_vec - predicted_means) %*% Sigma_inv %*% (data_vec - predicted_means)
       return(criterion)
@@ -52,7 +54,7 @@ nonlinear_gls_criterion_constructor = function(time_points,
                                ncol = 1)
       # The "observed data" vector. In this line of thought, the estimated means
       # represent the observed data.
-      data_vec = matrix(data = c(ctrl_estimates, exp_estimates), ncol = 1)
+      data_vec = matrix(data = c(ctrl_estimates, exp_estimates[j]), ncol = 1)
       # Compute and return the GLS criterion function.
       criterion = t(data_vec - predicted_means) %*% Sigma_inv %*% (data_vec - predicted_means)
       return(criterion)
@@ -68,8 +70,10 @@ gradient_gls_criterion_constructor = function(time_points,
                                               vcov,
                                               j = 1:length(exp_estimates),
                                               gamma_0 = NULL) {
+  # Compute subsetting vector.
+  subset_vec = c(1:length(ctrl_estimates), j + length(ctrl_estimates))
   # The inverted variance-covariance matrix.
-  Sigma_inv = solve(vcov)
+  Sigma_inv = solve(vcov[subset_vec, subset_vec])
   if (is.null(gamma_0)) {
     # Define a function that returns that gradient of the generalized least
     # squares criterion for the full model. That is the model where gamma is
@@ -90,7 +94,7 @@ gradient_gls_criterion_constructor = function(time_points,
                                ncol = 1)
       # The "observed data" vector. In this line of thought, the estimated means
       # represent the observed data.
-      data_vec = matrix(data = c(ctrl_estimates, exp_estimates), ncol = 1)
+      data_vec = matrix(data = c(ctrl_estimates, exp_estimates[j]), ncol = 1)
       # Compute the Jacobian for the trajectory function with respect to the
       # alpha-parameters.
       A = attr(
@@ -132,7 +136,7 @@ gradient_gls_criterion_constructor = function(time_points,
                                ncol = 1)
       # The "observed data" vector. In this line of thought, the estimated means
       # represent the observed data.
-      data_vec = matrix(data = c(ctrl_estimates, exp_estimates), ncol = 1)
+      data_vec = matrix(data = c(ctrl_estimates, exp_estimates[j]), ncol = 1)
       # Compute the Jacobian for the trajectory function with respect to the
       # alpha-parameters.
       A = attr(

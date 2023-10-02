@@ -320,4 +320,32 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
                ignore_attr = "names")
 })
 
+test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimator and subset of estimates in exp_estimates", {
+  set.seed(1)
+  TCT_Fit = TCT_meta(
+    time_points = 0:4,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
+    interpolation = "spline",
+    B = 0,
+    inference = "wald"
+  )
+  TCT_Fit_summary = summary(TCT_Fit)
+  set.seed(1)
+  TCT_common_fit = TCT_meta_common(
+    TCT_Fit = TCT_Fit,
+    B = 0,
+    inference = "least-squares",
+    select_coef = 3:4
+  )
+  TCT_common_summary = summary(TCT_common_fit)
+  TCT_output_vctr = c(TCT_common_fit$coefficients,
+                      TCT_common_summary$gamma_common_ci[1, 1:2])
+  check_vctr = c(0.83071747, 0.64949799, 0.99620621)
+  expect_equal(TCT_output_vctr,
+               check_vctr,
+               ignore_attr = "names")
+})
+
 

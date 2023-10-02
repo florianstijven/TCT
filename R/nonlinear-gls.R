@@ -143,6 +143,9 @@ nonlinear_gls_estimator_vcov = function(time_points,
                                         j,
                                         gamma_est,
                                         alpha_est){
+  # Compute subsetting vector.
+  subset_vec = c(1:length(ctrl_estimates), j + length(ctrl_estimates))
+  vcov = vcov[subset_vec, subset_vec]
   # Compute the reference trajectory.
   ref_fun = ref_fun_constructor(x_ref = time_points,
                                 y_ref = alpha_est,
