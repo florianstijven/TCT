@@ -97,14 +97,11 @@ gradient_gls_criterion_constructor = function(time_points,
       data_vec = matrix(data = c(ctrl_estimates, exp_estimates[j]), ncol = 1)
       # Compute the Jacobian for the trajectory function with respect to the
       # alpha-parameters.
-      A = attr(
-        deriv_f0_alpha(
-          t_m = gamma * time_points[j + 1],
-          x_ref = time_points,
-          y_ref = alpha_vec,
-          method = interpolation
-        ),
-        "gradient"
+      A = deriv_f0_alpha(
+        t_m = gamma * time_points[j + 1],
+        x_ref = time_points,
+        y_ref = alpha_vec,
+        method = interpolation
       )
       D_t = diag(time_points[j + 1])
       B = cbind(diag(1, nrow = length(alpha_vec)), matrix(0, nrow = length(alpha_vec), ncol = 1))
@@ -139,14 +136,11 @@ gradient_gls_criterion_constructor = function(time_points,
       data_vec = matrix(data = c(ctrl_estimates, exp_estimates[j]), ncol = 1)
       # Compute the Jacobian for the trajectory function with respect to the
       # alpha-parameters.
-      A = attr(
-        deriv_f0_alpha(
-          t_m = gamma * time_points[j + 1],
-          x_ref = time_points,
-          y_ref = alpha_vec,
-          method = interpolation
-        ),
-        "gradient"
+      A = deriv_f0_alpha(
+        t_m = gamma * time_points[j + 1],
+        x_ref = time_points,
+        y_ref = alpha_vec,
+        method = interpolation
       )
       B = diag(1, nrow = length(alpha_vec))
       C = A

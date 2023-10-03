@@ -81,14 +81,11 @@ score_test = function(time_points,
   K = length(exp_estimates)
   # Compute gradient of g_{\gamma}. The first length(time_points) elements of
   # the gradient are computed.
-  deriv_f0_alpha_t_j  = -1 * attr(
-    deriv_f0_alpha(
-      t_m = gamma_0 * time_points[j + 1],
-      x_ref = time_points,
-      y_ref = ctrl_estimates,
-      method = interpolation
-    ),
-    "gradient"
+  deriv_f0_alpha_t_j  = -1 * deriv_f0_alpha(
+    t_m = gamma_0 * time_points[j + 1],
+    x_ref = time_points,
+    y_ref = ctrl_estimates,
+    method = interpolation
   )
   # The remaining elements are all zeros and 1 one.
   grad_g = c(deriv_f0_alpha_t_j,

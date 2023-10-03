@@ -152,14 +152,11 @@ nonlinear_gls_estimator_vcov = function(time_points,
                                 method = interpolation)
   # Compute the Jacobian for the trajectory function with respect to the
   # alpha-parameters.
-  A = attr(
-    deriv_f0_alpha(
-      t_m = gamma_est * time_points[j + 1],
-      x_ref = time_points,
-      y_ref = alpha_est,
-      method = interpolation
-    ),
-    "gradient"
+  A = deriv_f0_alpha(
+    t_m = gamma_est * time_points[j + 1],
+    x_ref = time_points,
+    y_ref = alpha_est,
+    method = interpolation
   )
   D_t = diag(time_points[j + 1])
   B = cbind(diag(1, nrow = length(alpha_est)), matrix(0, nrow = length(alpha_est), ncol = 1))

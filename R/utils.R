@@ -138,15 +138,20 @@ interpol_fun_factory = function(x_ref, y_ref, method) {
     method,
     linear = linear_interpolation_f_factory(x_ref,
                                             y_ref),
-    spline = stats::splinefun(x_ref,
-                              y_ref,
-                              method = "natural"),
+    spline = spline_interpolation_f_factory(x_ref,
+                                            y_ref),
     monoH.FC = stats::splinefun(x_ref,
                                 y_ref,
                                 method = "monoH.FC"),
     fourPL = four_pl_f_factory(x_ref,
                                y_ref)# Methods can be added here
   )
+}
+
+spline_interpolation_f_factory = function(x_ref, y_ref) {
+  stats::splinefun(x_ref,
+                   y_ref,
+                   method = "natural")
 }
 
 #' Function factory for linear interpolation function
@@ -317,27 +322,42 @@ deriv_gamma_beta = function(t_m, t_j, ref_fun) {
   return(diag(x = diag_J))
 }
 
-deriv_gamma_alpha = function(t_m, t_j, x_ref, y_ref, method = "spline") {
+deriv_gamma_alpha = function(t_m, t_j, x_ref, y_ref, method = "spline", A = NULL) {
   ref_fun = ref_fun_constructor(x_ref, y_ref, method)
   -1 *diag(1 / (deriv_f0_t(ref_fun, t_m) * t_j)) %*%
-    attr(deriv_f0_alpha(t_m, x_ref, y_ref, method), "gradient")
+    deriv_f0_alpha(t_m, x_ref, y_ref, method)
 }
 
-deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline") {
-  myenv <- new.env()
-  myenv$x_ref <- x_ref
-  myenv$y_ref <- y_ref
-  myenv$method <- method
-  myenv$t_m <- t_m
-  myenv$ref_fun_constructor <- ref_fun_constructor
-  stats::numericDeriv(expr = quote({
-    ref_fun = ref_fun_constructor(x_ref, y_ref, method)
-    ref_fun(t_m)
-  }),
-  theta = c("y_ref"),
-  rho = myenv,
-  eps = 1e-8,
-  central = TRUE)
+deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline", A = NULL) {
+  # Analytic derivative is implemented for natural cubic spline interpolation.
+  if (FALSE & method == "spline") {
+    # k = length(x_ref)
+    # if (is.null(A)) {
+    #   X = splines::ns(x = x_ref, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
+    #   A = solve(t(X) %*% X) %*% t(X)
+    # }
+    # X_new = splines::ns(x = t_m, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
+    # return(X_new %*% A)
+  }
+  else {
+    myenv <- new.env()
+    myenv$x_ref <- x_ref
+    myenv$y_ref <- y_ref
+    myenv$method <- method
+    myenv$t_m <- t_m
+    myenv$ref_fun_constructor <- ref_fun_constructor
+    deriv_object = stats::numericDeriv(
+      expr = quote({
+        ref_fun = ref_fun_constructor(x_ref, y_ref, method)
+        ref_fun(t_m)
+      }),
+      theta = c("y_ref"),
+      rho = myenv,
+      eps = 1e-8,
+      central = TRUE
+    )
+    return(attr(deriv_object, "gradient"))
+  }
 }
 
 # deriv_f0_alpha_bis = function(t_m, x_ref, y_ref, finite_diff = 1e-6, method = "spline") {

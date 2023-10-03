@@ -187,15 +187,12 @@ score_vector_jacobian = function(time_points,
   K = length(j)
   # The Jacobian matrix is computed in two parts. First, the (K x K + 1) part is
   # computed.
-  J_f0_alpha_t  = -1 * attr(
-    deriv_f0_alpha(
+  J_f0_alpha_t  = -1 * deriv_f0_alpha(
       t_m = gamma_0 * time_points[j + 1],
       x_ref = time_points,
       y_ref = ctrl_estimates,
       method = interpolation
-    ),
-    "gradient"
-  )
+    )
   # Next, the second part of the Jacobian. This corresponds to the identity
   # matrix. We join both parts to get the Jacobian.
   J = cbind(J_f0_alpha_t, diag(x = 1, nrow = K))
