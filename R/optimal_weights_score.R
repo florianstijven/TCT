@@ -86,14 +86,14 @@ optimize_weights = function(time_points,
   }
   stopping_criterion = FALSE
 
-
+  gamma_old = gamma_new
   optim_value_new = sigma_squared(log_odds_w_new)
   while (!(stopping_criterion)) {
     log_odds_w_old = log_odds_w_new
     optim_value_old = optim_value_new
     w_K_old = 1 / (1 + sum(exp(log_odds_w_old)))
     w_old = w_K_old * exp(log_odds_w_old)
-    gamma_old = gamma_new
+
     optim_object = stats::optim(
       f = sigma_squared,
       par = log_odds_w_old,
