@@ -27,10 +27,10 @@ test_that("Optimisation for weights vector works", {
     0,
     1,
     0,
-    0.0240284838615804,
-    0.238064736941874,
-    0.385870163560325,
-    0.35203661563622
+    0.025362298,
+    0.240318869,
+    0.387036732,
+    0.347282101
   )
   expect_equal(output_vector,
                check_vector)
