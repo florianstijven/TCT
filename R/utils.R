@@ -349,7 +349,8 @@ deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline", A = NULL) {
     if (is.null(A)) {
       X = splines::ns(x = x_ref, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
       cov_temp = t(X) %*% X
-      A = mnormt::pd.solve(cov_temp) %*% t(X)
+      # A = mnormt::pd.solve(cov_temp) %*% t(X)
+      A = solve(cov_temp) %*% t(X)
     }
     X_new = splines::ns(x = t_m, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
     deriv_matrix = X_new %*% A
