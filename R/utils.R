@@ -122,6 +122,20 @@ extrapol_fun_factory = function(x_ref, y_ref) {
     }
   )
 }
+deriv_extrapol_alpha = function(t_m, x_ref, y_ref){
+  l = length(t_m)
+  p = length(y_ref)
+  x2 = x_ref[p]
+  x1 = x_ref[1]
+
+  vec_a = matrix(c(1, rep(0, p - 2), -1), ncol = 1)
+  A = vec_a %*% matrix(1, ncol = l, nrow = 1)
+  matrix_lower_ones = matrix(c(rep(0, p - 1), 1), ncol = 1) %*% matrix(rep(1, l) , nrow = 1)
+  return(
+    t(matrix_lower_ones + (x2 / (x2 - x1)) * A + (1 / (x2 - x1)) * -1 * vec_a %*% matrix(t_m, nrow = 1))
+  )
+}
+
 
 #' Function factory for the interpolating part of the reference profile
 #'
@@ -330,14 +344,23 @@ deriv_gamma_alpha = function(t_m, t_j, x_ref, y_ref, method = "spline", A = NULL
 
 deriv_f0_alpha = function(t_m, x_ref, y_ref, method = "spline", A = NULL) {
   # Analytic derivative is implemented for natural cubic spline interpolation.
-  if (FALSE & method == "spline") {
-    # k = length(x_ref)
-    # if (is.null(A)) {
-    #   X = splines::ns(x = x_ref, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
-    #   A = solve(t(X) %*% X) %*% t(X)
-    # }
-    # X_new = splines::ns(x = t_m, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
-    # return(X_new %*% A)
+  if (method == "spline") {
+    k = length(x_ref)
+    if (is.null(A)) {
+      X = splines::ns(x = x_ref, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
+      A = solve(t(X) %*% X) %*% t(X)
+    }
+    X_new = splines::ns(x = t_m, knots = x_ref[2:(k - 1)], Boundary.knots = x_ref[c(1, k)], intercept = TRUE)
+    deriv_matrix = X_new %*% A
+    # We need to take into account that t_m may contain values outside of the
+    # interpolation function's bounds. We therefore compute the derivative for
+    # the extrapolating linear function.
+    deriv_extrapolation = deriv_extrapol_alpha(t_m, x_ref, y_ref)
+    # Replace values in deriv_matrix corresponding to time points outside of the
+    # interpolation bounds.
+    out_of_bounds_tm = (t_m < min(x_ref)) | (t_m > max(x_ref))
+    deriv_matrix[out_of_bounds_tm, ] = deriv_extrapolation[out_of_bounds_tm, ]
+    return(deriv_matrix)
   }
   else {
     myenv <- new.env()

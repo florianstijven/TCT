@@ -74,6 +74,15 @@ gradient_gls_criterion_constructor = function(time_points,
   subset_vec = c(1:length(ctrl_estimates), j + length(ctrl_estimates))
   # The inverted variance-covariance matrix.
   Sigma_inv = solve(vcov[subset_vec, subset_vec])
+  # Compute values that will be re-used. This improves efficiency.
+  k = length(time_points)
+  X = splines::ns(
+    x = time_points,
+    knots = time_points[2:(k - 1)],
+    Boundary.knots = time_points[c(1, k)],
+    intercept = TRUE
+  )
+  A_helper = solve(t(X) %*% X) %*% t(X)
   if (is.null(gamma_0)) {
     # Define a function that returns that gradient of the generalized least
     # squares criterion for the full model. That is the model where gamma is
@@ -101,7 +110,8 @@ gradient_gls_criterion_constructor = function(time_points,
         t_m = gamma * time_points[j + 1],
         x_ref = time_points,
         y_ref = alpha_vec,
-        method = interpolation
+        method = interpolation,
+        A = A_helper
       )
       D_t = diag(time_points[j + 1])
       B = cbind(diag(1, nrow = length(alpha_vec)), matrix(0, nrow = length(alpha_vec), ncol = 1))
@@ -140,7 +150,8 @@ gradient_gls_criterion_constructor = function(time_points,
         t_m = gamma * time_points[j + 1],
         x_ref = time_points,
         y_ref = alpha_vec,
-        method = interpolation
+        method = interpolation,
+        A = A_helper
       )
       B = diag(1, nrow = length(alpha_vec))
       C = A
