@@ -220,6 +220,21 @@ nonlinear_gls_conf_int_common = function(time_points,
   }
   # Compute critical value for the test-statistic.
   t_sq_critical = stats::qchisq(1 - alpha, df = 1)
+
+  # Compute limits of search interval for computing the confidence intervals.
+  # This is based on the wald confidence interval, but adding additional
+  # tolerance.
+  gamma_se = nonlinear_gls_estimator_se(
+    time_points = time_points,
+    interpolation = interpolation,
+    vcov = vcov,
+    j = j,
+    gamma_est = gamma_est,
+    alpha_est = nl_gls_object$estimates[-1 * length(nl_gls_object$estimates)]
+  )
+  start_upper = gamma_est + stats::qnorm(1 - alpha / 5) * gamma_se
+  start_lower = gamma_est - stats::qnorm(1 - alpha / 5) * gamma_se
+
   # If the right limit of the test statistic, as a function of gamma, does not
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
@@ -230,9 +245,11 @@ nonlinear_gls_conf_int_common = function(time_points,
     upper_limit = stats::uniroot(
       f = function(gamma)
         sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-      interval = c(gamma_est - 1e-4,
-                   10),
+      interval = c(gamma_est,
+                   start_upper),
       tol = .Machine$double.eps ^ 0.5,
+      extendInt = "upX",
+      f.lower = - sqrt(t_sq_critical),
       maxiter = 1e3
     )$root
   }
@@ -245,9 +262,11 @@ nonlinear_gls_conf_int_common = function(time_points,
     lower_limit = stats::uniroot(
       f = function(gamma)
         sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-      interval = c(-10,
-                   gamma_est + 1e-4),
+      interval = c(start_lower,
+                   gamma_est),
       tol = .Machine$double.eps ^ 0.5,
+      extendInt = "downX",
+      f.upper = - sqrt(t_sq_critical),
       maxiter = 1e3
     )$root
   }
