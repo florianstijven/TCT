@@ -57,9 +57,6 @@ Variants. Should be one of
 
 \item{weights}{If \code{type == "custom"}, the user should specify a weight
 vector for weighting estimates at different time points differently.}
-
-\item{TCT_vcov}{Variance-Covariance matrix for the estimated acceleration
-factors.}
 }
 \value{
 A list with two element:

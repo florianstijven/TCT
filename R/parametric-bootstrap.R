@@ -115,8 +115,6 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 #' The [pm_bootstrap_vertical_to_common()] function implements a parametric
 #' bootstrap for the time-specific acceleration factors.
 #'
-#' @param TCT_vcov Variance-Covariance matrix for the estimated acceleration
-#'  factors.
 #' @param bs_fix_vcov (boolean) Fix the estimated variance-covariance matrix for
 #' the estimated acceleration factors? This speeds up computations, but can have
 #' a negative impact of the method's properties.
