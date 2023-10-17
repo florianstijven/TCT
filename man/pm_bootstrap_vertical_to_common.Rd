@@ -5,48 +5,25 @@
 \title{Parametric Bootstrap for a Common Acceleration Factor}
 \usage{
 pm_bootstrap_vertical_to_common(
-  time_points,
-  ctrl_estimates,
-  exp_estimates,
-  vcov,
-  TCT_vcov,
-  interpolation = "spline",
+  TCT_Fit,
+  inference,
   B = 100,
   bs_fix_vcov = TRUE,
   return_se = TRUE,
   null = FALSE,
   select_coef,
-  constraints = FALSE
+  constraints = FALSE,
+  type,
+  weights
 )
 }
 \arguments{
-\item{time_points}{Ordered vector that contains the times corresponding to
-the estimated means in the \code{ctrl_estimates} vector. The first element
-should be zero which generally corresponds to the time of randomization.}
+\item{TCT_Fit}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
 
-\item{ctrl_estimates}{Estimated mean outcome in the control group at the
-fixed occasions corresponding to the times in \code{time_points}.}
-
-\item{exp_estimates}{Estimated mean outcomes in the experimental group at
-fixed occasions corresponding to the times in \code{time_points[-1]}. Note that
-first element in \code{exp_estimates} should correspond to some time after
-randomization.}
-
-\item{vcov}{The variance-covariance matrix for the means. In order to map to
-the correct estimates, this matrix should be the variance-covariance matrix
-of \code{c(ctrl_means, exp_means)}.}
-
-\item{TCT_vcov}{Variance-Covariance matrix for the estimated acceleration
-factors.}
-
-\item{interpolation}{Which interpolation method to use?
-\itemize{
-\item \code{"linear"}: linear interpolation.
-\item \code{"spline"}: natural cubic spline interpolation. This interpolation method has been most
-thoroughly tested is most stable.
-\item \verb{"monoH.FC}: monotone Hermite spline according to the method of Fritsch
-and Carlson.
-}}
+\item{inference}{Which approach is used for estimation and inference? Should
+be \code{"wald"}, \code{"score"}, or \code{"least-squares"}. The \code{"wald"}-approach is explained and
+implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
+documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
 
 \item{B}{Number of bootstrap replications.}
 
@@ -68,6 +45,21 @@ be used in estimation the common acceleration factor.}
 
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
+
+\item{type}{Which type of test statistic should be used. See Test Statistic
+Variants. Should be one of
+\enumerate{
+\item \code{type = "omnibus"}
+\item \code{type = "directional"}
+\item \code{type = "inverse variance"}
+\item \code{type = "custom"}
+}}
+
+\item{weights}{If \code{type == "custom"}, the user should specify a weight
+vector for weighting estimates at different time points differently.}
+
+\item{TCT_vcov}{Variance-Covariance matrix for the estimated acceleration
+factors.}
 }
 \value{
 A list with two element:

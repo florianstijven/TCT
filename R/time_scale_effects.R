@@ -610,18 +610,15 @@ TCT_meta_common = function(TCT_Fit,
   }
 
   bs_estimates = pm_bootstrap_vertical_to_common(
-    time_points = time_points,
-    ctrl_estimates = ctrl_estimates,
-    exp_estimates = exp_estimates,
-    vcov = vcov_vertical[c(1:n_points, n_points + 1:length(coef(TCT_Fit))),
-                         c(1:n_points, n_points + 1:length(coef(TCT_Fit)))],
-    TCT_vcov = vcov,
-    interpolation = interpolation,
+    TCT_Fit = TCT_Fit,
+    inference = inference,
     B = B,
     bs_fix_vcov = bs_fix_vcov,
     return_se = TRUE,
     select_coef = select_coef,
-    constraints = constraints
+    constraints = constraints,
+    type = type,
+    weights = weights
   )
 
   # Test for common slowing parameter
@@ -685,6 +682,10 @@ new_TCT_meta_common = function(coefficients,
     ),
     class = "TCT_meta_common"
   )
+}
+
+vcov.TCT_meta_common = function(object, ...) {
+  object$vcov
 }
 
 #' Print TCT_meta_common object
@@ -954,6 +955,7 @@ print.summary_TCT_meta_common = function(x, ...) {
                                 format(x$ci_bootstrap[2], digits = 5),
                                 ")"),
       `p-value (bootstrap)` = x$p_bootstrap[1],
+      `Std. Error (bootstrap)` = x$se_bootstrap,
       check.names = FALSE
     )
   }
