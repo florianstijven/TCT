@@ -2,6 +2,8 @@
 #'
 #' @param gamma_0 Defaults to `NULL`. If a non-null value is given to this argument,
 #' the common acceleration factor is held constant at that value.
+#' @param start_gamma Starting value for the acceleration factor used for for the
+#' generalized least squares estimator.
 #' @inheritParams score_estimate_common
 #'
 #' @return A list with the following elements:
@@ -17,6 +19,7 @@ nonlinear_gls_estimator = function(time_points,
                                    vcov,
                                    j = 1:length(exp_estimates),
                                    gamma_0 = NULL,
+                                   start_gamma = 0.75,
                                    ...) {
   objective_function = nonlinear_gls_criterion_constructor(
     time_points,
@@ -39,7 +42,7 @@ nonlinear_gls_estimator = function(time_points,
   # Minimize the GLS criterion in the parameters.
   if (is.null(gamma_0)) {
     optim_object = stats::optim(
-      par = c(ctrl_estimates, 0.95),
+      par = c(ctrl_estimates, start_gamma),
       fn = objective_function,
       gr = gradient_function,
       method = "BFGS",
@@ -78,6 +81,7 @@ nonlinear_gls_test = function(time_points,
                               vcov,
                               j = 1:length(exp_estimates),
                               gamma_0 = 1,
+                              start_gamma = 0.75,
                               ...) {
   # Compute criterion function in optimum.
   criterion_full = nonlinear_gls_estimator(time_points,
@@ -87,6 +91,7 @@ nonlinear_gls_test = function(time_points,
                                            vcov,
                                            j = j,
                                            gamma_0 = NULL,
+                                           start_gamma = start_gamma,
                                            ...)$criterion
   # Compute criterion function under the null.
   criterion_reduced = nonlinear_gls_estimator(time_points,
@@ -96,6 +101,7 @@ nonlinear_gls_test = function(time_points,
                                            vcov,
                                            j = j,
                                            gamma_0 = gamma_0,
+                                           start_gamma = start_gamma,
                                            ...)$criterion
   test_statistic = criterion_reduced - criterion_full
   return(c(
@@ -179,7 +185,8 @@ nonlinear_gls_conf_int_common = function(time_points,
                                  interpolation,
                                  vcov,
                                  j = 1:length(exp_estimates),
-                                 alpha = 0.05){
+                                 alpha = 0.05,
+                                 start_gamma = 0.75){
   # Force argument values. This is required because we're using these arguments
   # in a function factory.
   force(time_points); force(ctrl_estimates); force(exp_estimates)
@@ -193,7 +200,8 @@ nonlinear_gls_conf_int_common = function(time_points,
     exp_estimates = exp_estimates,
     vcov = vcov,
     interpolation = interpolation,
-    j = j
+    j = j,
+    start_gamma = start_gamma
   )
   criterion_full = nl_gls_object$criterion
   gamma_est = nl_gls_object$estimates[length(nl_gls_object$estimates)]
@@ -209,7 +217,8 @@ nonlinear_gls_conf_int_common = function(time_points,
       vcov = vcov,
       interpolation = interpolation,
       j = j,
-      gamma_0 = gamma
+      gamma_0 = gamma,
+      start_gamma = start_gamma
     )$criterion
     # The absolute value of the difference is returned because in a epsilon
     # neighborhood around gamma, the difference could become negative.

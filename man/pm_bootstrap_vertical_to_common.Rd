@@ -14,7 +14,8 @@ pm_bootstrap_vertical_to_common(
   select_coef,
   constraints = FALSE,
   type,
-  weights
+  weights,
+  start_gamma
 )
 }
 \arguments{
@@ -57,6 +58,9 @@ Variants. Should be one of
 
 \item{weights}{If \code{type == "custom"}, the user should specify a weight
 vector for weighting estimates at different time points differently.}
+
+\item{start_gamma}{Starting value for the acceleration factor used for for the
+generalized least squares estimator.}
 }
 \value{
 A list with two element:

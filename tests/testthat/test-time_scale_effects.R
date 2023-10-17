@@ -288,7 +288,7 @@ test_that("TCT_meta_common() works with subset of estimates in exp_estimates", {
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_summary$gamma_common_ci[1, 1:2],
                       TCT_common_summary$se_bootstrap)
-  check_vctr = c(0.83071747, 0.64949799, 0.99620621, 0.088907886)
+  check_vctr = c(0.830717202, 0.649497989, 0.996206209, 0.088907909)
   expect_equal(TCT_output_vctr,
                check_vctr,
                ignore_attr = "names")

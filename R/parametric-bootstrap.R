@@ -137,7 +137,8 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
                                            select_coef,
                                            constraints = FALSE,
                                            type,
-                                           weights) {
+                                           weights,
+                                           start_gamma) {
   if (B == 0)
     return(NULL)
 
@@ -198,8 +199,8 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
       X = par_sampled,
       MARGIN = 1,
       FUN = function(x) {
-        constrained_vertical_estimator(x[1:length_alpha],
-                                       x[-1 * (1:length_alpha)],
+        constrained_vertical_estimator(x[1:n_points],
+                                       x[n_points + 1:length(coef(TCT_Fit))],
                                        vcov_vertical)
       }
     )
@@ -281,7 +282,8 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
           select_coef = select_coef,
           constraints = FALSE,
           type = type,
-          weight = weights
+          weight = weights,
+          start_gamma = start_gamma
           )
         return(TCT_common_fit)
       }

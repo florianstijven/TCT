@@ -12,7 +12,8 @@ TCT_meta_common(
   select_coef = 1:length(coef(TCT_Fit)),
   constraints = FALSE,
   type = NULL,
-  weights = NULL
+  weights = NULL,
+  start_gamma = 0.75
 )
 }
 \arguments{
@@ -50,6 +51,9 @@ Variants. Should be one of
 
 \item{weights}{If \code{type == "custom"}, the user should specify a weight
 vector for weighting estimates at different time points differently.}
+
+\item{start_gamma}{Starting value for the acceleration factor used for for the
+generalized least squares estimator.}
 }
 \value{
 S3 object of class \code{"TCT_meta_common"}

@@ -12,6 +12,7 @@ nonlinear_gls_test(
   vcov,
   j = 1:length(exp_estimates),
   gamma_0 = 1,
+  start_gamma = 0.75,
   ...
 )
 }
@@ -45,6 +46,9 @@ of \code{c(ctrl_means, exp_means)}.}
 corresponds to \code{exp_estimates[j]}.}
 
 \item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
+
+\item{start_gamma}{Starting value for the acceleration factor used for for the
+generalized least squares estimator.}
 
 \item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }

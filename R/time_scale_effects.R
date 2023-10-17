@@ -479,6 +479,7 @@ print.summary_TCT_meta = function(x, ...) {
 #' @inheritParams TCT_meta
 #' @inheritParams score_test_common
 #' @inheritParams pm_bootstrap_vertical_to_common
+#' @inheritParams nonlinear_gls_estimator
 #'
 #' @return S3 object of class `"TCT_meta_common"`
 #' @export
@@ -516,7 +517,8 @@ TCT_meta_common = function(TCT_Fit,
                            select_coef = 1:length(coef(TCT_Fit)),
                            constraints = FALSE,
                            type = NULL,
-                           weights = NULL)
+                           weights = NULL,
+                           start_gamma = 0.75)
 {
   gls_est = TRUE
   # Extract information from the TCT_meta object that is used further on.
@@ -592,7 +594,8 @@ TCT_meta_common = function(TCT_Fit,
       exp_estimates = exp_estimates,
       interpolation = interpolation,
       vcov = vcov_vertical,
-      j = select_coef
+      j = select_coef,
+      start_gamma = start_gamma
     )$estimate
     # Extract estimate for the common acceleration factor.
     gamma_common_estimate = estimates_vec[length(ctrl_estimates) + 1]
@@ -618,7 +621,8 @@ TCT_meta_common = function(TCT_Fit,
     select_coef = select_coef,
     constraints = constraints,
     type = type,
-    weights = weights
+    weights = weights,
+    start_gamma = start_gamma
   )
 
   # Test for common slowing parameter

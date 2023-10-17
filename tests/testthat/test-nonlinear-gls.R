@@ -19,7 +19,7 @@ test_that("nonlinear_gls_estimator() works for estimating the common acceleratio
     criterion = 3.4122015
   )
   check_object_linear = list(
-    estimates = c(22.54145662, 22.85460212, 25.53659717, 28.42443216, 30.22969846, 0.85970034),
+    estimates = c(22.54145917, 22.85460550, 25.53660298, 28.42443752, 30.22970660, 0.85969996),
     criterion = 1.8085288
   )
   expect_equal(nl_gls_spline, check_object_spline, ignore_attr = "names")
@@ -80,10 +80,8 @@ test_that("nonlinear_gls_estimator_se() works for estimating the SE of the commo
     gamma_est = nl_gls_linear$estimates[6],
     alpha_est = nl_gls_linear$estimates[1:5]
   )
-  print(se_spline, digits = 8)
-  print(se_linear, digits = 8)
   expect_equal(se_spline, 0.080210856)
-  expect_equal(se_linear, 0.064338448)
+  expect_equal(se_linear, 0.064338500)
 })
 
 

@@ -12,6 +12,7 @@ nonlinear_gls_estimator(
   vcov,
   j = 1:length(exp_estimates),
   gamma_0 = NULL,
+  start_gamma = 0.75,
   ...
 )
 }
@@ -47,6 +48,9 @@ i.e., all elements are used.}
 
 \item{gamma_0}{Defaults to \code{NULL}. If a non-null value is given to this argument,
 the common acceleration factor is held constant at that value.}
+
+\item{start_gamma}{Starting value for the acceleration factor used for for the
+generalized least squares estimator.}
 
 \item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }
