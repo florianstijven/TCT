@@ -12,8 +12,7 @@ pm_bootstrap_vertical_to_horizontal(
   interpolation = "spline",
   B = 100,
   null = FALSE,
-  constraints,
-  type
+  constraints
 )
 }
 \arguments{

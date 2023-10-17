@@ -45,8 +45,7 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
                                                interpolation = "spline",
                                                B = 100,
                                                null = FALSE,
-                                               constraints,
-                                               type) {
+                                               constraints) {
   if (B == 0)
     return(NULL)
 
