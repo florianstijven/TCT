@@ -520,7 +520,6 @@ TCT_meta_common = function(TCT_Fit,
                            weights = NULL,
                            start_gamma = 0.75)
 {
-  gls_est = TRUE
   # Extract information from the TCT_meta object that is used further on.
   ctrl_estimates = TCT_Fit$vertical_model$ctrl_estimates
   exp_estimates = TCT_Fit$vertical_model$exp_estimates
@@ -531,16 +530,12 @@ TCT_meta_common = function(TCT_Fit,
   ref_fun = ref_fun_constructor(time_points,
                                 ctrl_estimates,
                                 interpolation)
+
   # Use wald-based inference if this is asked by the user.
-  estimates = coef(TCT_Fit)[select_coef]
-  if (gls_est) {
-    vcov = TCT_Fit$vcov[select_coef, select_coef]
-  }
-  else {
-    vcov = diag(diag(TCT_Fit$vcov[select_coef, select_coef]))
-  }
   n_points = length(TCT_Fit$vertical_model$time_points)
   if (inference == "wald") {
+    estimates = coef(TCT_Fit)[select_coef]
+    vcov = TCT_Fit$vcov[select_coef, select_coef]
     # delta method
     p = length(estimates)
     vec_1 = matrix(1, nrow = p, ncol = 1)
@@ -626,19 +621,20 @@ TCT_meta_common = function(TCT_Fit,
   )
 
   # Test for common slowing parameter
-  lht_matrix = matrix(0,
-                      nrow = length(estimates) - 1,
-                      ncol = length(estimates) - 1)
-  diag(lht_matrix) = -1
-  lht_matrix = cbind(1, lht_matrix)
+  # lht_matrix = matrix(0,
+  #                     nrow = length(estimates) - 1,
+  #                     ncol = length(estimates) - 1)
+  # diag(lht_matrix) = -1
+  # lht_matrix = cbind(1, lht_matrix)
 
-  lht_common = linearHypothesis.default(
-    model = TCT_Fit,
-    vcov. = vcov,
-    coef. = estimates,
-    rhs = rep(0, length(estimates) - 1),
-    hypothesis.matrix = lht_matrix
-  )
+  # lht_common = linearHypothesis.default(
+  #   model = TCT_Fit,
+  #   vcov. = vcov,
+  #   coef. = estimates,
+  #   rhs = rep(0, length(estimates) - 1),
+  #   hypothesis.matrix = lht_matrix
+  # )
+  lht_common = NULL
 
 
   new_TCT_meta_common(
@@ -1000,13 +996,13 @@ print.summary_TCT_meta_common = function(x, ...) {
 
 
 
-  cat("Test for proportional slowing factor:\n")
-  print(
-    data.frame("Df" = x$lht_common$Df[2],
-               "Chisq" = x$lht_common$Chisq[2],
-               "p-value" = x$lht_common$`Pr(>Chisq)`[2]),
-    digits = 5
-  )
+  # cat("Test for proportional slowing factor:\n")
+  # print(
+  #   data.frame("Df" = x$lht_common$Df[2],
+  #              "Chisq" = x$lht_common$Chisq[2],
+  #              "p-value" = x$lht_common$`Pr(>Chisq)`[2]),
+  #   digits = 5
+  # )
 }
 
 
