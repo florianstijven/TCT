@@ -823,7 +823,8 @@ summary.TCT_meta_common = function(object,
         interpolation = interpolation,
         vcov = vcov_vertical,
         j = select_coef,
-        alpha = alpha
+        alpha = alpha,
+        start_gamma = coef(object)
       ),
       ncol = 2
     )
