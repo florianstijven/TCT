@@ -24,14 +24,69 @@ devtools::install_github("florianstijven/TCT")
 ## Example
 
 This is a basic example which shows you how to use the Meta-TCT
-methodology in combination with an estimated MMRM model. First the MMRM
-is estimated. All we need from this estimated model is the estimated
-mean vector and estimated variance-covariance matrix for this estimated
+methodology in combination with an estimated MMRM model. These are
+simulated data and are available as `simulated_test_trial` from the
+`TCT` package. We first explore the data set graphically.
+
+``` r
+library(ggplot2)
+library(TCT)
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+simulated_test_trial %>%
+  ggplot(aes(x = Week, y = ADAScog_integer, color = as.factor(arm))) +
+  # geom_jitter(width = 1, alpha = 0.1) +
+  geom_smooth(method = "lm",
+              formula = y ~ splines::bs(x = x,
+                                        intercept = FALSE, 
+                                        df = 4)
+              ) + 
+  geom_point(
+    data = simulated_test_trial %>%
+      group_by(Week, arm) %>%
+      summarize(mean = mean(ADAScog_integer)),
+    aes(x = Week, y = mean, color = as.factor(arm)),
+    size = 2
+  ) +
+  scale_color_discrete(name = "Treatment Arm")
+```
+
+    ## `summarise()` has grouped output by 'Week'. You can override using the
+    ## `.groups` argument.
+
+![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+The first step in a meta TCT analysis is to estimate a longitudinal
+model. We fit a mixed model for repeated measures (MMRM) next, but other
+models could be used as well. There are only two requirements for such
+longitudinal models:
+
+1.  The models returns an estimate of the mean (or median, quantile
+    etc.) at each treatment-time combination, except for the baseline
+    measurement occasion. For this occasion, we can assume a common
+    parameter for both treatment groups. In what follows, we will always
+    refer to these parameters as means.
+2.  The sampling distribution of the estimator is (asymptotically)
+    multivariate normal.
+
+All we need from the estimated longitudinal model is the estimated mean
+vector and the estimated variance-covariance matrix for this estimated
 vector.
 
 ``` r
-library(TCT)
-library(dplyr)
 # Example data set transformed to format required by TCT()
 data_test = simulated_test_trial %>%
   mutate(
@@ -41,7 +96,7 @@ data_test = simulated_test_trial %>%
                       paste0(arm, ":", time_int))
   )
 # Fit a MMRM model to the data set. The parameter estimates of this model form
-# the basis to perform the time component tests.
+# the basis to perform the meta time component tests.
 mmrm_fit = analyze_mmrm(data_test)
 ```
 
@@ -52,6 +107,19 @@ inference are available. Note that the estimators in these different
 approaches are equivalent, but the corresponding measures of uncertainty
 are not equivalent. Information on these approaches can be found in the
 function documentation.
+
+In the following output, a table is printed with the following
+information:
+
+- `Value`: The estimated time-specific acceleration factor.
+- `Std. Error`: The estimated standard error for the estimated
+  time-specific acceleration factor.
+- `z value`: Z statistic for the score test because we selected
+  `inference = "score"`.
+- `p value`: p-value based on the Z statistic.
+- `CI`: 95% confidence interval based on the score test.
+- `CI (bootstrap)`: 95% confidence interval based on the parametric
+  bootstrap based on `B = 1e4` bootstrap replications.
 
 ``` r
 # TCT_meta() is the main function for performing time component tests. The estimated
@@ -75,15 +143,15 @@ summary(TCT_fit)
     ## 
     ## Coefficients: 
     ##               Value Std. Error  z value  p value                  CI
-    ## arm_time1:2 0.73275   0.620432 -0.59571 0.551368 (-0.28696, 1.35407)
-    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215366 ( 0.66403, 1.07477)
-    ## arm_time1:4 0.79370   0.080407 -2.13016 0.033159 ( 0.64368, 0.97891)
-    ## arm_time1:5 0.75102   0.096581 -1.71943 0.085537 ( 0.60176, 1.03671)
+    ## arm_time1:2 0.73276   0.620430 -0.59571 0.551370 (-0.28696, 1.35407)
+    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215368 ( 0.66403, 1.07477)
+    ## arm_time1:4 0.79370   0.080407 -2.13015 0.033159 ( 0.64368, 0.97891)
+    ## arm_time1:5 0.75102   0.096582 -1.71942 0.085537 ( 0.60176, 1.03671)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.28327, 1.35804)
-    ## arm_time1:3 ( 0.66305, 1.07537)
-    ## arm_time1:4 ( 0.64629, 0.97823)
-    ## arm_time1:5 ( 0.60259, 1.03787)
+    ## arm_time1:2 (-0.29945, 1.34241)
+    ## arm_time1:3 ( 0.66907, 1.07197)
+    ## arm_time1:4 ( 0.64264, 0.97843)
+    ## arm_time1:5 ( 0.60293, 1.03808)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -126,16 +194,17 @@ summary(TCT_common_fit)
 
 The output shown above indicates that the optimal weights put all weight
 on the third measurement occasion. Alternatively, one could set
-`inference = "omnibus"`. The p-value for this estimator is consistent
-with the results from “classical” hypothesis tests for
-$H_0: \alpha_j = \beta_j \; \forall \; j$ where $\alpha_j$ and $\beta_j$
-are the mean outcomes at $t_j$ in the control and treatment group,
-respectively. This estimator is an attractive complement to the
-classical hypothesis tests as the corresponding confidence interval
-provides a very easy to interpret quantification of the treatment
-effect. The analysis is repeated below with this alternative estimator.
-Note that the standard error is `NA` because a corresponding estimator
-has not yet been implemented.
+`inference = "omnibus"`. The corresponding estimator is still
+score-based, but uses a different weighting strategy. The p-value for
+this estimator is consistent with the results from “classical”
+hypothesis tests for $H_0: \alpha_j = \beta_j \; \forall \; j$ where
+$\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in the control
+and treatment group, respectively. This estimator is an attractive
+complement to the classical hypothesis tests as the corresponding
+confidence interval provides a very easy to interpret quantification of
+the treatment effect. The analysis is repeated below with this
+alternative estimator. Note that the standard error is `NA` because a
+corresponding estimator has not yet been implemented.
 
 ``` r
 TCT_common_fit = TCT_meta_common(TCT_fit,
@@ -148,8 +217,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error chi-squared p value               CI
-    ## chi-squared  0.85503         NA      6.2652  0.1802 (0.6647, 1.0845)
+    ##             Estimate Std. Error chi-squared p value                CI
+    ## chi-squared  0.85503         NA      6.2652  0.1802 (0.66471, 1.0845)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -185,4 +254,30 @@ test_statistic = 4 * classical_test$f_stat
 1 - pchisq(test_statistic, 4)
 ```
 
-    ## [1] 0.1801958
+    ## [1] 0.1801965
+
+Finally, we show the results for the non-linear generalized least
+squares (NL-GLS) estimator. In simulations, this estimator performs best
+and should therefore be generally preferred.
+
+``` r
+TCT_common_fit = TCT_meta_common(TCT_fit,
+                                 B = 0,
+                                 inference = "least-squares")
+summary(TCT_common_fit)
+```
+
+    ## Meta-Time Component Test - Common Acceleration Factor:
+    ## 
+    ## Estimated Common Acceleration Factor: 
+    ##             Estimate Std. Error chi-squared  p value               CI
+    ## chi-squared  0.85503   0.080045      2.8392 0.091987 (0.70101, 1.028)
+    ## alpha = 0.05
+    ## 
+    ## Interpolation Method: spline
+    ## Time Points Used in Estimator: 1 2 3 4
+    ## Estimation and Inference: least-squares
+    ## 
+    ## Test for proportional slowing factor:
+    ##   Df  Chisq p.value
+    ## 1  3 4.1219  0.2486

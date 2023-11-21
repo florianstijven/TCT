@@ -24,13 +24,48 @@ devtools::install_github("florianstijven/TCT")
 ## Example 
 
 This is a basic example which shows you how to use the Meta-TCT methodology in
-combination with an estimated MMRM model. First the MMRM is estimated. All we
-need from this estimated model is the estimated mean vector and estimated
-variance-covariance matrix for this estimated vector.
+combination with an estimated MMRM model. These are simulated data and are
+available as `simulated_test_trial` from the `TCT` package. We first explore the
+data set graphically.
 
-```{r example, message=FALSE}
+```{r, warning=FALSE}
+library(ggplot2)
 library(TCT)
 library(dplyr)
+simulated_test_trial %>%
+  ggplot(aes(x = Week, y = ADAScog_integer, color = as.factor(arm))) +
+  # geom_jitter(width = 1, alpha = 0.1) +
+  geom_smooth(method = "lm",
+              formula = y ~ splines::bs(x = x,
+                                        intercept = FALSE, 
+                                        df = 4)
+              ) + 
+  geom_point(
+    data = simulated_test_trial %>%
+      group_by(Week, arm) %>%
+      summarize(mean = mean(ADAScog_integer)),
+    aes(x = Week, y = mean, color = as.factor(arm)),
+    size = 2
+  ) +
+  scale_color_discrete(name = "Treatment Arm")
+```
+
+
+The first step in a meta TCT analysis is to estimate a longitudinal model. We
+fit a mixed model for repeated measures (MMRM) next, but other models could be
+used as well. There are only two requirements for such longitudinal models:
+
+1. The models returns an estimate of the mean (or median, quantile etc.) at each
+treatment-time combination, except for the baseline measurement occasion. For
+this occasion, we can assume a common parameter for both treatment groups. In what
+follows, we will always refer to these parameters as means.
+2. The sampling distribution of the estimator is (asymptotically) multivariate
+normal.
+
+All we need from the estimated longitudinal model is the estimated mean vector
+and the estimated variance-covariance matrix for this estimated vector.
+
+```{r example, message=FALSE}
 # Example data set transformed to format required by TCT()
 data_test = simulated_test_trial %>%
   mutate(
@@ -40,7 +75,7 @@ data_test = simulated_test_trial %>%
                       paste0(arm, ":", time_int))
   )
 # Fit a MMRM model to the data set. The parameter estimates of this model form
-# the basis to perform the time component tests.
+# the basis to perform the meta time component tests.
 mmrm_fit = analyze_mmrm(data_test)
 ```
 
@@ -50,6 +85,17 @@ time point. Different approaches for inference are available. Note that the
 estimators in these different approaches are equivalent, but the corresponding
 measures of uncertainty are not equivalent. Information on these approaches can
 be found in the function documentation. 
+
+In the following output, a table is printed with the following information:
+
+* `Value`: The estimated time-specific acceleration factor.
+* `Std. Error`: The estimated standard error for the estimated time-specific
+acceleration factor.
+* `z value`: Z statistic for the score test because we selected `inference = "score"`.
+* `p value`: p-value based on the Z statistic.
+* `CI`: 95% confidence interval based on the score test.
+* `CI (bootstrap)`: 95% confidence interval based on the parametric bootstrap based on 
+`B = 1e4` bootstrap replications.
 
 ```{r cars}
 # TCT_meta() is the main function for performing time component tests. The estimated
@@ -89,14 +135,16 @@ summary(TCT_common_fit)
 
 The output shown above indicates that the optimal weights put all weight on the
 third measurement occasion. Alternatively, one could set `inference =
-"omnibus"`. The p-value for this estimator is consistent with the results from
-"classical" hypothesis tests for $H_0: \alpha_j = \beta_j \; \forall \; j$ where
-$\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in the control and
-treatment group, respectively. This estimator is an attractive complement to the
-classical hypothesis tests as the corresponding confidence interval provides a
-very easy to interpret quantification of the treatment effect. The analysis is
-repeated below with this alternative estimator. Note that the standard error is
-`NA` because a corresponding estimator has not yet been implemented.
+"omnibus"`. The corresponding estimator is still score-based, but uses a
+different weighting strategy. The p-value for this estimator is consistent with
+the results from "classical" hypothesis tests for $H_0: \alpha_j = \beta_j \;
+\forall \; j$ where $\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in
+the control and treatment group, respectively. This estimator is an attractive
+complement to the classical hypothesis tests as the corresponding confidence
+interval provides a very easy to interpret quantification of the treatment
+effect. The analysis is repeated below with this alternative estimator. Note
+that the standard error is `NA` because a corresponding estimator has not yet
+been implemented.
 
 ```{r}
 TCT_common_fit = TCT_meta_common(TCT_fit,
@@ -127,6 +175,17 @@ test_statistic = 4 * classical_test$f_stat
 # Compute p-value using chi-squared distribution. This p-value is identical to the
 # one obtained with TCT_meta_common() in the previous code chunk.
 1 - pchisq(test_statistic, 4)
+```
+
+Finally, we show the results for the non-linear generalized least squares
+(NL-GLS) estimator. In simulations, this estimator performs best and should
+therefore be generally preferred.
+
+```{r}
+TCT_common_fit = TCT_meta_common(TCT_fit,
+                                 B = 0,
+                                 inference = "least-squares")
+summary(TCT_common_fit)
 ```
 
 
