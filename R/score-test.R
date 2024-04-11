@@ -532,18 +532,26 @@ score_estimate_common_se = function(gamma_est,
   if (type != "custom") {
     return(NA)
   }
-  gr_gamma_w = gradient_gamma_w_analytical(
-    time_points = time_points,
-    ctrl_estimates = ctrl_estimates,
-    exp_estimates = exp_estimates,
-    interpolation = interpolation,
-    gamma_0 = gamma_est,
-    j = j,
-    weights = weights
-  )
-  se = sqrt(t(gr_gamma_w) %*%
+
+  # Compute derivative of psi with respect to gamma.
+  deriv_psi_gamma = v_deriv_gamma(time_points,
+                                  ctrl_estimates,
+                                  interpolation,
+                                  gamma_est,
+                                  j,
+                                  weights)
+
+  # Compute derivative of psi with respect to (alpha, beta).
+  grad_psi_alpha_beta = v_deriv_alpha_beta(time_points,
+                                           ctrl_estimates,
+                                           interpolation,
+                                           gamma_est,
+                                           j,
+                                           weights)
+
+  se = (deriv_psi_gamma**-2) * grad_psi_alpha_beta %*%
     vcov %*%
-    gr_gamma_w)
+      t(grad_psi_alpha_beta)
   return(as.numeric(se))
 }
 

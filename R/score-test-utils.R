@@ -224,6 +224,29 @@ v_deriv_alpha_beta = function(time_points,
   return(v_deriv)
 }
 
+v_deriv_gamma = function(time_points,
+                         ctrl_estimates,
+                         interpolation,
+                         gamma_0,
+                         j,
+                         weights) {
+  # Diagonal matrix with time_points vector as diagonal.
+  D_t = diag(time_points[j + 1])
+  # Construct reference function trajectory.
+  ref_fun = ref_fun_constructor(x_ref = time_points,
+                                y_ref = ctrl_estimates,
+                                method = interpolation)
+  # Derivative of the reference trajectory at the time_points multiplied with
+  # gamma_0. These are essentially the "corresponding" time points for the
+  # active treatment group.
+  f0_gradient_t_gamma0 = f0_gradient_t(ref_fun, time_points[j + 1] * gamma_0)
+
+  # Row vector with weights.
+  weights_row = matrix(weights, nrow = 1)
+
+  return(weights_row %*% D_t %*% f0_gradient_t_gamma0)
+}
+
 #' Gradient of the reference trajectory at fixed time point
 #'
 #' The [f0_gradient_t()] function is a simple wrapper that returns
