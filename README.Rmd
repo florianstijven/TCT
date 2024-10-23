@@ -26,7 +26,7 @@ devtools::install_github("florianstijven/TCT")
 This is a basic example which shows you how to use the Meta-TCT methodology in
 combination with an estimated MMRM model. These are simulated data and are
 available as `simulated_test_trial` from the `TCT` package. We first explore the
-data set graphically.
+data set graphically. 
 
 ```{r, warning=FALSE}
 library(ggplot2)
