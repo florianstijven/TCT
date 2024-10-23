@@ -106,7 +106,7 @@ nonlinear_gls_test = function(time_points,
   test_statistic = criterion_reduced - criterion_full
   return(c(
     "chi-squared" = test_statistic,
-    "p-value" = pchisq(test_statistic, df = 1, lower.tail = FALSE)
+    "p-value" = stats::pchisq(test_statistic, df = 1, lower.tail = FALSE)
   ))
 
 }

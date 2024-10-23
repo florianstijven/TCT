@@ -620,7 +620,7 @@ TCT_meta_common = function(TCT_Fit,
     start_gamma = start_gamma
   )
 
-  # Test for common slowing parameter
+  # Test for common slowing parameter (OLD)
   # lht_matrix = matrix(0,
   #                     nrow = length(estimates) - 1,
   #                     ncol = length(estimates) - 1)
@@ -634,6 +634,18 @@ TCT_meta_common = function(TCT_Fit,
   #   rhs = rep(0, length(estimates) - 1),
   #   hypothesis.matrix = lht_matrix
   # )
+  # Test for common slowing factor based on the general least squares criterion.
+  proportional_slowing_test = proportional_slowing_gls_test(
+    time_points = time_points,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    interpolation = interpolation,
+    vcov = vcov_vertical,
+    j = select_coef,
+    start_gamma = start_gamma
+  )
+
+
   lht_common = NULL
 
 
@@ -647,7 +659,8 @@ TCT_meta_common = function(TCT_Fit,
     type = type,
     weights = weights,
     vertical_model = TCT_Fit$vertical_model,
-    select_coef = select_coef
+    select_coef = select_coef,
+    proportional_slowing_test = proportional_slowing_test
   )
 }
 
@@ -660,7 +673,8 @@ new_TCT_meta_common = function(coefficients,
                           type,
                           weights,
                           vertical_model,
-                          select_coef
+                          select_coef,
+                          proportional_slowing_test
                           ) {
   # All options regarding inference are put into a single list.
   inference_options = list(
@@ -678,12 +692,15 @@ new_TCT_meta_common = function(coefficients,
       inference_options = inference_options,
       bootstrap_estimates = bootstrap_estimates,
       lht_common = lht_common,
-      vertical_model = vertical_model
+      vertical_model = vertical_model,
+      proportional_slowing_test = proportional_slowing_test
     ),
     class = "TCT_meta_common"
   )
 }
 
+
+#' @export
 vcov.TCT_meta_common = function(object, ...) {
   object$vcov
 }
@@ -736,6 +753,7 @@ summary.TCT_meta_common = function(object,
   type = object$inference_options$type
   select_coef = object$inference_options$select_coef
   weights = object$inference_options$weights
+  proportional_slowing_test = object$proportional_slowing_test
   # Wald-based inference
   if (inference == "wald") {
     if (delta_transformation == "identity") {
@@ -875,7 +893,8 @@ summary.TCT_meta_common = function(object,
     se_bootstrap = se_bootstrap,
     ci_bootstrap = ci_bootstrap,
     p_bootstrap = p_bootstrap,
-    alpha = alpha
+    alpha = alpha,
+    proportional_slowing_test = proportional_slowing_test
   )
 }
 
@@ -889,7 +908,8 @@ new_summary_TCT_meta_common = function(
     se_bootstrap,
     ci_bootstrap,
     p_bootstrap,
-    alpha
+    alpha,
+    proportional_slowing_test
 ) {
   structure(unclass(append(
     x,
@@ -902,7 +922,8 @@ new_summary_TCT_meta_common = function(
       se_bootstrap = se_bootstrap,
       ci_bootstrap = ci_bootstrap,
       p_bootstrap = p_bootstrap,
-      alpha = alpha
+      alpha = alpha,
+      proportional_slowing_test = proportional_slowing_test
     )
   )),
   class = "summary_TCT_meta_common")
@@ -996,7 +1017,7 @@ print.summary_TCT_meta_common = function(x, ...) {
 
 
 
-
+  # Print test for proportional slowing (OLD)
   # cat("Test for proportional slowing factor:\n")
   # print(
   #   data.frame("Df" = x$lht_common$Df[2],
@@ -1004,6 +1025,18 @@ print.summary_TCT_meta_common = function(x, ...) {
   #              "p-value" = x$lht_common$`Pr(>Chisq)`[2]),
   #   digits = 5
   # )
+
+  # Print test for proportional slowing based on minimized GLS criterion.
+  cat("Test for proportional slowing factor (at the selected time points):\n")
+  print(
+    data.frame(
+      "Df" = x$proportional_slowing_test["df"],
+      "Chisq" = x$proportional_slowing_test["chi_squared"],
+      "p-value" = x$proportional_slowing_test["p_value"]
+    ),
+    digits = 5,
+    row.names = FALSE
+  )
 }
 
 
