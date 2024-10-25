@@ -971,7 +971,7 @@ print.summary_TCT_meta_common = function(x, ...) {
     colnames(coefficients_df)[3] = "chi-squared"
   }
 
-  print(coefficients_df, digits = 5)
+  print(coefficients_df, digits = 5, row.names = FALSE)
   cat(paste0("alpha = ", x$alpha))
   cat("\n")
   cat("\nInterpolation Method: ")

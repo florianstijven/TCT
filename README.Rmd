@@ -174,7 +174,7 @@ classical_test = mmrm::df_md(mmrm_fit,
 test_statistic = 4 * classical_test$f_stat
 # Compute p-value using chi-squared distribution. This p-value is identical to the
 # one obtained with TCT_meta_common() in the previous code chunk.
-1 - pchisq(test_statistic, 4)
+1 - stats::pchisq(test_statistic, 4)
 ```
 
 Finally, we show the results for the non-linear generalized least squares

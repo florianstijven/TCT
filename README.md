@@ -143,15 +143,15 @@ summary(TCT_fit)
     ## 
     ## Coefficients: 
     ##               Value Std. Error  z value  p value                  CI
-    ## arm_time1:2 0.73276   0.620430 -0.59571 0.551370 (-0.28696, 1.35407)
-    ## arm_time1:3 0.87347   0.101620 -1.23894 0.215368 ( 0.66403, 1.07477)
-    ## arm_time1:4 0.79370   0.080407 -2.13015 0.033159 ( 0.64368, 0.97891)
-    ## arm_time1:5 0.75102   0.096582 -1.71942 0.085537 ( 0.60176, 1.03671)
+    ## arm_time1:2 0.73268   0.620592 -0.59579 0.551319 (-0.28697, 1.35406)
+    ## arm_time1:3 0.87351   0.101608 -1.23878 0.215429 ( 0.66409, 1.07478)
+    ## arm_time1:4 0.79369   0.080397 -2.13043 0.033136 ( 0.64370, 0.97888)
+    ## arm_time1:5 0.75101   0.096568 -1.71957 0.085510 ( 0.60178, 1.03669)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.29945, 1.34241)
-    ## arm_time1:3 ( 0.66907, 1.07197)
-    ## arm_time1:4 ( 0.64264, 0.97843)
-    ## arm_time1:5 ( 0.60293, 1.03808)
+    ## arm_time1:2 (-0.28522, 1.35803)
+    ## arm_time1:3 ( 0.66244, 1.07225)
+    ## arm_time1:4 ( 0.64412, 0.97769)
+    ## arm_time1:5 ( 0.60424, 1.03727)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -178,8 +178,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##   Estimate Std. Error z value  p value                 CI
-    ## z   0.7937   0.080407 -2.1302 0.033159 (0.64368, 0.97891)
+    ##  Estimate Std. Error z value  p value                CI
+    ##   0.79369  0.0064636 -2.1304 0.033136 (0.6437, 0.97888)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -187,24 +187,20 @@ summary(TCT_common_fit)
     ## Estimation and Inference: score
     ##  Type of Score Test: custom
     ##  Weights: 0 0 1 0
-    ## 
-    ## Test for proportional slowing factor:
-    ##   Df  Chisq p.value
-    ## 1  3 4.1219  0.2486
 
 The output shown above indicates that the optimal weights put all weight
 on the third measurement occasion. Alternatively, one could set
 `inference = "omnibus"`. The corresponding estimator is still
 score-based, but uses a different weighting strategy. The p-value for
 this estimator is consistent with the results from “classical”
-hypothesis tests for $H_0: \alpha_j = \beta_j \; \forall \; j$ where
-$\alpha_j$ and $\beta_j$ are the mean outcomes at $t_j$ in the control
-and treatment group, respectively. This estimator is an attractive
-complement to the classical hypothesis tests as the corresponding
-confidence interval provides a very easy to interpret quantification of
-the treatment effect. The analysis is repeated below with this
-alternative estimator. Note that the standard error is `NA` because a
-corresponding estimator has not yet been implemented.
+hypothesis tests for $H_0: \alpha_j = \beta_j \;
+\forall \; j$ where $\alpha_j$ and $\beta_j$ are the mean outcomes at
+$t_j$ in the control and treatment group, respectively. This estimator
+is an attractive complement to the classical hypothesis tests as the
+corresponding confidence interval provides a very easy to interpret
+quantification of the treatment effect. The analysis is repeated below
+with this alternative estimator. Note that the standard error is `NA`
+because a corresponding estimator has not yet been implemented.
 
 ``` r
 TCT_common_fit = TCT_meta_common(TCT_fit,
@@ -217,18 +213,14 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error chi-squared p value                CI
-    ## chi-squared  0.85503         NA      6.2652  0.1802 (0.66471, 1.0845)
+    ##  Estimate Std. Error chi-squared p value                CI
+    ##   0.85504         NA      6.2673 0.18005 (0.66475, 1.0845)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
     ## Time Points Used in Estimator: 1 2 3 4
     ## Estimation and Inference: score
     ##  Type of Score Test: omnibus
-    ## 
-    ## Test for proportional slowing factor:
-    ##   Df  Chisq p.value
-    ## 1  3 4.1219  0.2486
 
 We show that the p-value above is identical to the one obtained with a
 classical hypothesis test if we use the asymptotic chi-squared
@@ -251,10 +243,10 @@ classical_test = mmrm::df_md(mmrm_fit,
 test_statistic = 4 * classical_test$f_stat
 # Compute p-value using chi-squared distribution. This p-value is identical to the
 # one obtained with TCT_meta_common() in the previous code chunk.
-1 - pchisq(test_statistic, 4)
+1 - stats::pchisq(test_statistic, 4)
 ```
 
-    ## [1] 0.1801965
+    ## [1] 0.1800534
 
 Finally, we show the results for the non-linear generalized least
 squares (NL-GLS) estimator. In simulations, this estimator performs best
@@ -270,14 +262,10 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error chi-squared  p value               CI
-    ## chi-squared  0.85503   0.080045      2.8392 0.091987 (0.70101, 1.028)
+    ##  Estimate Std. Error chi-squared  p value                CI
+    ##   0.85504   0.080044      2.8384 0.092033 (0.70102, 1.0281)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
     ## Time Points Used in Estimator: 1 2 3 4
     ## Estimation and Inference: least-squares
-    ## 
-    ## Test for proportional slowing factor:
-    ##   Df  Chisq p.value
-    ## 1  3 4.1219  0.2486
