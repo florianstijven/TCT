@@ -66,7 +66,7 @@ All we need from the estimated longitudinal model is the estimated mean vector
 and the estimated variance-covariance matrix for this estimated vector.
 
 ```{r example, message=FALSE}
-# Example data set transformed to format required by TCT()
+# Example data set transformed to format required by TCT_meta()
 data_test = simulated_test_trial %>%
   mutate(
     time_int = (Week %/% 25) + 1,
@@ -124,7 +124,7 @@ This estimator weights the different measurement occasions so that the variance
 of the corresponding estimator is minimized.
 
 ```{r}
-# The object returned by TCT() can be used as argument to the TCT_common() function.
+# The object returned by TCT_meta() can be used as argument to the TCT_common() function.
 # This function estimates a single common acceleration factor.
 TCT_common_fit = TCT_meta_common(TCT_fit,
                                  B = 0,

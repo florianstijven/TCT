@@ -87,7 +87,7 @@ vector and the estimated variance-covariance matrix for this estimated
 vector.
 
 ``` r
-# Example data set transformed to format required by TCT()
+# Example data set transformed to format required by TCT_meta()
 data_test = simulated_test_trial %>%
   mutate(
     time_int = (Week %/% 25) + 1,
@@ -147,11 +147,11 @@ summary(TCT_fit)
     ## arm_time1:3 0.87351   0.101608 -1.23878 0.215429 ( 0.66409, 1.07478)
     ## arm_time1:4 0.79369   0.080397 -2.13043 0.033136 ( 0.64370, 0.97888)
     ## arm_time1:5 0.75101   0.096568 -1.71957 0.085510 ( 0.60178, 1.03669)
-    ##                 CI (bootstrap)
-    ## arm_time1:2 (-0.29088, 1.3674)
-    ## arm_time1:3 ( 0.66484, 1.0815)
-    ## arm_time1:4 ( 0.64533, 0.9912)
-    ## arm_time1:5 ( 0.60357, 1.0418)
+    ##                  CI (bootstrap)
+    ## arm_time1:2 (-0.29490, 1.35774)
+    ## arm_time1:3 ( 0.65944, 1.07357)
+    ## arm_time1:4 ( 0.64144, 0.97689)
+    ## arm_time1:5 ( 0.59994, 1.03538)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -166,7 +166,7 @@ occasions so that the variance of the corresponding estimator is
 minimized.
 
 ``` r
-# The object returned by TCT() can be used as argument to the TCT_common() function.
+# The object returned by TCT_meta() can be used as argument to the TCT_common() function.
 # This function estimates a single common acceleration factor.
 TCT_common_fit = TCT_meta_common(TCT_fit,
                                  B = 0,
