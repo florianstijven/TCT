@@ -18,7 +18,7 @@ You can install the development version of TCT from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("florianstijven/TCT")
+devtools::install_github("florianstijven/TCT@test-proportional-slowing")
 ```
 
 ## Example
@@ -148,10 +148,10 @@ summary(TCT_fit)
     ## arm_time1:4 0.79369   0.080397 -2.13043 0.033136 ( 0.64370, 0.97888)
     ## arm_time1:5 0.75101   0.096568 -1.71957 0.085510 ( 0.60178, 1.03669)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.29490, 1.35774)
-    ## arm_time1:3 ( 0.65944, 1.07357)
-    ## arm_time1:4 ( 0.64144, 0.97689)
-    ## arm_time1:5 ( 0.59994, 1.03538)
+    ## arm_time1:2 (-0.28586, 1.34981)
+    ## arm_time1:3 ( 0.66839, 1.07653)
+    ## arm_time1:4 ( 0.64645, 0.98019)
+    ## arm_time1:5 ( 0.60556, 1.03301)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
