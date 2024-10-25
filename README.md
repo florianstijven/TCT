@@ -147,11 +147,11 @@ summary(TCT_fit)
     ## arm_time1:3 0.87351   0.101608 -1.23878 0.215429 ( 0.66409, 1.07478)
     ## arm_time1:4 0.79369   0.080397 -2.13043 0.033136 ( 0.64370, 0.97888)
     ## arm_time1:5 0.75101   0.096568 -1.71957 0.085510 ( 0.60178, 1.03669)
-    ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.28684, 1.35501)
-    ## arm_time1:3 ( 0.66632, 1.07498)
-    ## arm_time1:4 ( 0.64380, 0.97988)
-    ## arm_time1:5 ( 0.60460, 1.04524)
+    ##                 CI (bootstrap)
+    ## arm_time1:2 (-0.29088, 1.3674)
+    ## arm_time1:3 ( 0.66484, 1.0815)
+    ## arm_time1:4 ( 0.64533, 0.9912)
+    ## arm_time1:5 ( 0.60357, 1.0418)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -178,8 +178,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##   Estimate Std. Error z value  p value                CI
-    ## z  0.79369  0.0064636 -2.1304 0.033136 (0.6437, 0.97888)
+    ##  Estimate Std. Error z value  p value                CI
+    ##   0.79369  0.0064636 -2.1304 0.033136 (0.6437, 0.97888)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -217,8 +217,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error chi-squared p value                CI
-    ## chi-squared  0.85504         NA      6.2673 0.18005 (0.66475, 1.0845)
+    ##  Estimate Std. Error chi-squared p value                CI
+    ##   0.85504         NA      6.2673 0.18005 (0.66475, 1.0845)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -251,7 +251,7 @@ classical_test = mmrm::df_md(mmrm_fit,
 test_statistic = 4 * classical_test$f_stat
 # Compute p-value using chi-squared distribution. This p-value is identical to the
 # one obtained with TCT_meta_common() in the previous code chunk.
-1 - pchisq(test_statistic, 4)
+1 - stats::pchisq(test_statistic, 4)
 ```
 
     ## [1] 0.1800534
@@ -270,8 +270,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##             Estimate Std. Error chi-squared  p value                CI
-    ## chi-squared  0.85504   0.080044      2.8384 0.092033 (0.70102, 1.0281)
+    ##  Estimate Std. Error chi-squared  p value                CI
+    ##   0.85504   0.080044      2.8384 0.092033 (0.70102, 1.0281)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
