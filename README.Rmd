@@ -72,11 +72,19 @@ data_test = simulated_test_trial %>%
     time_int = (Week %/% 25) + 1,
     arm_time = ifelse(time_int == 1L,
                       "baseline",
-                      paste0(arm, ":", time_int))
+                      paste0(arm, ":", time_int)),
+    SubjId = as.factor(SubjId),
+    time_int = as.factor(time_int)
   )
 # Fit a MMRM model to the data set. The parameter estimates of this model form
-# the basis to perform the meta time component tests.
-mmrm_fit = analyze_mmrm(data_test)
+# the basis to perform the meta time component tests. We do not include an
+# intercept such that the model's mean parameters correspond to the
+# time-specific means.
+mmrm_fit = mmrm::mmrm(
+  formula = ADAScog_integer ~ arm_time - 1 + us(time_int | SubjId),
+  data = data_test,
+  reml = TRUE
+)
 ```
 
 After fitting a MMRM model, we can use the `TCT_meta()` function to perform the
