@@ -19,14 +19,14 @@ You can install the development version of TCT from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("florianstijven/TCT")
+devtools::install_github("florianstijven/TCT@test-proportional-slowing")
 ```
 ## Example 
 
 This is a basic example which shows you how to use the Meta-TCT methodology in
 combination with an estimated MMRM model. These are simulated data and are
 available as `simulated_test_trial` from the `TCT` package. We first explore the
-data set graphically.
+data set graphically. 
 
 ```{r, warning=FALSE}
 library(ggplot2)
@@ -66,17 +66,25 @@ All we need from the estimated longitudinal model is the estimated mean vector
 and the estimated variance-covariance matrix for this estimated vector.
 
 ```{r example, message=FALSE}
-# Example data set transformed to format required by TCT()
+# Example data set transformed to format required by TCT_meta()
 data_test = simulated_test_trial %>%
   mutate(
     time_int = (Week %/% 25) + 1,
     arm_time = ifelse(time_int == 1L,
                       "baseline",
-                      paste0(arm, ":", time_int))
+                      paste0(arm, ":", time_int)),
+    SubjId = as.factor(SubjId),
+    time_int = as.factor(time_int)
   )
 # Fit a MMRM model to the data set. The parameter estimates of this model form
-# the basis to perform the meta time component tests.
-mmrm_fit = analyze_mmrm(data_test)
+# the basis to perform the meta time component tests. We do not include an
+# intercept such that the model's mean parameters correspond to the
+# time-specific means.
+mmrm_fit = mmrm::mmrm(
+  formula = ADAScog_integer ~ arm_time - 1 + us(time_int | SubjId),
+  data = data_test,
+  reml = TRUE
+)
 ```
 
 After fitting a MMRM model, we can use the `TCT_meta()` function to perform the
@@ -124,7 +132,7 @@ This estimator weights the different measurement occasions so that the variance
 of the corresponding estimator is minimized.
 
 ```{r}
-# The object returned by TCT() can be used as argument to the TCT_common() function.
+# The object returned by TCT_meta() can be used as argument to the TCT_common() function.
 # This function estimates a single common acceleration factor.
 TCT_common_fit = TCT_meta_common(TCT_fit,
                                  B = 0,

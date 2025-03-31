@@ -18,7 +18,7 @@ You can install the development version of TCT from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("florianstijven/TCT")
+devtools::install_github("florianstijven/TCT@test-proportional-slowing")
 ```
 
 ## Example
@@ -87,17 +87,25 @@ vector and the estimated variance-covariance matrix for this estimated
 vector.
 
 ``` r
-# Example data set transformed to format required by TCT()
+# Example data set transformed to format required by TCT_meta()
 data_test = simulated_test_trial %>%
   mutate(
     time_int = (Week %/% 25) + 1,
     arm_time = ifelse(time_int == 1L,
                       "baseline",
-                      paste0(arm, ":", time_int))
+                      paste0(arm, ":", time_int)),
+    SubjId = as.factor(SubjId),
+    time_int = as.factor(time_int)
   )
 # Fit a MMRM model to the data set. The parameter estimates of this model form
-# the basis to perform the meta time component tests.
-mmrm_fit = analyze_mmrm(data_test)
+# the basis to perform the meta time component tests. We do not include an
+# intercept such that the model's mean parameters correspond to the
+# time-specific means.
+mmrm_fit = mmrm::mmrm(
+  formula = ADAScog_integer ~ arm_time - 1 + us(time_int | SubjId),
+  data = data_test,
+  reml = TRUE
+)
 ```
 
 After fitting a MMRM model, we can use the `TCT_meta()` function to
@@ -143,15 +151,15 @@ summary(TCT_fit)
     ## 
     ## Coefficients: 
     ##               Value Std. Error  z value  p value                  CI
-    ## arm_time1:2 0.73268   0.620592 -0.59579 0.551319 (-0.28697, 1.35406)
-    ## arm_time1:3 0.87351   0.101608 -1.23878 0.215429 ( 0.66409, 1.07478)
-    ## arm_time1:4 0.79369   0.080397 -2.13043 0.033136 ( 0.64370, 0.97888)
-    ## arm_time1:5 0.75101   0.096568 -1.71957 0.085510 ( 0.60178, 1.03669)
+    ## arm_time1:2 0.73273   0.621669 -0.59459 0.552115 (-0.28765, 1.35489)
+    ## arm_time1:3 0.87347   0.101820 -1.23650 0.216274 ( 0.66357, 1.07518)
+    ## arm_time1:4 0.79370   0.080569 -2.12583 0.033517 ( 0.64340, 0.97939)
+    ## arm_time1:5 0.75102   0.096777 -1.71596 0.086170 ( 0.60151, 1.03733)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.28522, 1.35803)
-    ## arm_time1:3 ( 0.66244, 1.07225)
-    ## arm_time1:4 ( 0.64412, 0.97769)
-    ## arm_time1:5 ( 0.60424, 1.03727)
+    ## arm_time1:2 (-0.29101, 1.34446)
+    ## arm_time1:3 ( 0.66200, 1.07213)
+    ## arm_time1:4 ( 0.63910, 0.97984)
+    ## arm_time1:5 ( 0.59965, 1.03530)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -166,7 +174,7 @@ occasions so that the variance of the corresponding estimator is
 minimized.
 
 ``` r
-# The object returned by TCT() can be used as argument to the TCT_common() function.
+# The object returned by TCT_meta() can be used as argument to the TCT_common() function.
 # This function estimates a single common acceleration factor.
 TCT_common_fit = TCT_meta_common(TCT_fit,
                                  B = 0,
@@ -179,7 +187,7 @@ summary(TCT_common_fit)
     ## 
     ## Estimated Common Acceleration Factor: 
     ##  Estimate Std. Error z value  p value                CI
-    ##   0.79369  0.0064636 -2.1304 0.033136 (0.6437, 0.97888)
+    ##    0.7937  0.0064913 -2.1258 0.033517 (0.6434, 0.97939)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -187,6 +195,10 @@ summary(TCT_common_fit)
     ## Estimation and Inference: score
     ##  Type of Score Test: custom
     ##  Weights: 0 0 1 0
+    ## 
+    ## Test for proportional slowing factor (at the selected time points):
+    ##  Df  Chisq p.value
+    ##   3 3.4122 0.33233
 
 The output shown above indicates that the optimal weights put all weight
 on the third measurement occasion. Alternatively, one could set
@@ -214,13 +226,17 @@ summary(TCT_common_fit)
     ## 
     ## Estimated Common Acceleration Factor: 
     ##  Estimate Std. Error chi-squared p value                CI
-    ##   0.85504         NA      6.2673 0.18005 (0.66475, 1.0845)
+    ##   0.85504         NA      6.2391 0.18199 (0.66416, 1.0855)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
     ## Time Points Used in Estimator: 1 2 3 4
     ## Estimation and Inference: score
     ##  Type of Score Test: omnibus
+    ## 
+    ## Test for proportional slowing factor (at the selected time points):
+    ##  Df  Chisq p.value
+    ##   3 3.4122 0.33233
 
 We show that the p-value above is identical to the one obtained with a
 classical hypothesis test if we use the asymptotic chi-squared
@@ -246,7 +262,7 @@ test_statistic = 4 * classical_test$f_stat
 1 - stats::pchisq(test_statistic, 4)
 ```
 
-    ## [1] 0.1800534
+    ## [1] 0.1819881
 
 Finally, we show the results for the non-linear generalized least
 squares (NL-GLS) estimator. In simulations, this estimator performs best
@@ -263,9 +279,13 @@ summary(TCT_common_fit)
     ## 
     ## Estimated Common Acceleration Factor: 
     ##  Estimate Std. Error chi-squared  p value                CI
-    ##   0.85504   0.080044      2.8384 0.092033 (0.70102, 1.0281)
+    ##   0.85504   0.080211      2.8269 0.092696 (0.70072, 1.0285)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
     ## Time Points Used in Estimator: 1 2 3 4
     ## Estimation and Inference: least-squares
+    ## 
+    ## Test for proportional slowing factor (at the selected time points):
+    ##  Df  Chisq p.value
+    ##   3 3.4122 0.33233
