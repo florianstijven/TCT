@@ -16,7 +16,10 @@
 #'   randomization.
 #' @param vcov The variance-covariance matrix for the means. In order to map to
 #'   the correct estimates, this matrix should be the variance-covariance matrix
-#'   of `c(ctrl_means, exp_means)`.
+#'   of `c(ctrl_means, exp_means)`. If an element of `c(ctrl_means, exp_means)`
+#'   is known (e.g., mean at baseline is zero when using change from baseline as
+#'   outcome), then the corresponding row and column in `vcov` should be set to
+#'   zero.
 #' @param inference Which approach is used for estimation and inference? Should
 #'   be `"wald"`, `"score"`, or `"least-squares"`. The `"wald"`-approach is explained and
 #'   implemented in [DeltaMethod()], the `"score"`-approach is explained and
@@ -115,6 +118,12 @@ TCT_meta = function(time_points,
                constraints = FALSE) {
   # Apply constraint GLS estimator if asked.
   if (constraints) {
+    # Known mean parameters has not been implemented for the constrained GLS
+    # estimator. An error should be raised when the user tries to use the
+    # constrained estimator with known means.
+    if (any(rowSums(vcov()) == 0) || any(colSums(vcov()) == 0)) {
+      stop("`vcov` cannot contain zero variances when `constraints = TRUE`. This feature has not been implemented yet.")
+    }
     contrained_estimates = constrained_vertical_estimator(ctrl_estimates,
                                                           exp_estimates,
                                                           vcov)
@@ -567,6 +576,7 @@ TCT_meta_common = function(TCT_Fit,
       j = select_coef,
       weights = weights
     )
+
     gamma_common_vcov = score_estimate_common_se(
       gamma_est = gamma_common_estimate,
       time_points = time_points,
