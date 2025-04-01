@@ -115,6 +115,12 @@ TCT_meta = function(time_points,
                constraints = FALSE) {
   # Apply constraint GLS estimator if asked.
   if (constraints) {
+    # Known mean parameters has not been implemented for the constrained GLS
+    # estimator. An error should be raised when the user tries to use the
+    # constrained estimator with known means.
+    if (any(rowSums(vcov()) == 0) || any(colSums(vcov()) == 0)) {
+      stop("´vcov´ cannot contain zero variances when `constraints = TRUE`. This feature has not been implemented yet.")
+    }
     contrained_estimates = constrained_vertical_estimator(ctrl_estimates,
                                                           exp_estimates,
                                                           vcov)
