@@ -20,7 +20,7 @@ You can install the development version of TCT from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("florianstijven/TCT@test-proportional-slowing")
+devtools::install_github("florianstijven/TCT")
 ```
 ## Example 
 
