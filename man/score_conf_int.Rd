@@ -42,7 +42,10 @@ and Carlson.
 
 \item{vcov}{The variance-covariance matrix for the means. In order to map to
 the correct estimates, this matrix should be the variance-covariance matrix
-of \code{c(ctrl_means, exp_means)}.}
+of \code{c(ctrl_means, exp_means)}. If an element of \code{c(ctrl_means, exp_means)}
+is known (e.g., mean at baseline is zero when using change from baseline as
+outcome), then the corresponding row and column in \code{vcov} should be set to
+zero.}
 
 \item{j}{Measurement occasion to test acceleration factor for. This
 corresponds to \code{exp_estimates[j]}.}

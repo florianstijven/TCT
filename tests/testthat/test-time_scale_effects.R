@@ -202,6 +202,81 @@ test_that("TCT_meta() and TCT_meta_common() function works with cubic spline int
                ignore_attr = "names")
 })
 
+
+test_that("TCT_meta() and TCT_meta_common() yield similar results with known and quasi-known parameter", {
+  set.seed(1)
+  # Set first row and column of vcov_mmrm to zeroes, reflecting the fact that
+  # the mean at the origin (i.e., time zero) is known. This reflects, for
+  # instance, the setting where the endpoint is change from baseline.
+  vcov_mmrm_known = vcov_mmrm
+  vcov_mmrm_known[1, ] = 0
+  vcov_mmrm_known[, 1] = 0
+
+  # Set first row and column of `vcov_mmrm` to very small number. This ensures
+  # that the standard algorithm is run, but with a quasi-known parameter (i.e.,
+  # the first time point). The result should be very similar when the
+  # corresponding variance is set to zero.
+  vcov_mmrm_quasi_known = vcov_mmrm
+  vcov_mmrm_quasi_known[1, ] = 1e-8 # Set the first row to a small value.
+  vcov_mmrm_quasi_known[, 1] = 1e-8 # Set the first column to a small value.
+
+  TCT_Fit_known = TCT_meta(
+    time_points = 0:4,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm_known,
+    inference = "score",
+    interpolation = "spline",
+    B = 1e1
+  )
+  TCT_Fit_known_summary = summary(TCT_Fit_known)
+  TCT_common_fit_known = TCT_meta_common(
+    TCT_Fit = TCT_Fit_known,
+    B = 10,
+    bs_fix_vcov = TRUE,
+    inference = "least-squares",
+    type = "custom"
+  )
+  TCT_common_summary_known = summary(TCT_common_fit_known)
+
+  TCT_Fit_quasi_known = TCT_meta(
+    time_points = 0:4,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm_quasi_known,
+    inference = "score",
+    interpolation = "spline",
+    B = 1e1
+  )
+  TCT_Fit_quasi_known_summary = summary(TCT_Fit_quasi_known)
+  TCT_common_fit_quasi_known = TCT_meta_common(
+    TCT_Fit = TCT_Fit_quasi_known,
+    B = 10,
+    bs_fix_vcov = TRUE,
+    inference = "least-squares",
+    type = "custom"
+  )
+  TCT_common_summary_quasi_known = summary(TCT_common_fit_quasi_known)
+
+
+  # Check whether the results from TCT_meta() and TCT_meta_common() are similar
+  # for both known and quasi-known parameter settings.
+  expect_equal(
+    c(TCT_Fit_known$coefficients,
+      TCT_Fit_known_summary$ci_matrix[1, 1],
+      TCT_Fit_known_summary$ci_matrix[2, 2]),
+    c(TCT_Fit_quasi_known$coefficients,
+      TCT_Fit_quasi_known_summary$ci_matrix[1, 1],
+      TCT_Fit_quasi_known_summary$ci_matrix[2, 2])
+  )
+  expect_equal(
+    c(TCT_common_fit_known$coefficients,
+      TCT_common_summary_known$gamma_common_ci[1, 1:2]),
+    c(TCT_common_fit_quasi_known$coefficients,
+      TCT_common_summary_quasi_known$gamma_common_ci[1, 1:2])
+  )
+})
+
 test_that("TCT_meta() and its summary work with cubic spline interpolation and score-based inference", {
   set.seed(1)
   TCT_Fit = TCT_meta(
