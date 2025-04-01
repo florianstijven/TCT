@@ -6,6 +6,8 @@
 [![R-CMD-check](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/florianstijven/TCT/actions/workflows/R-CMD-check.yaml)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Test
+coverage](https://github.com/florianstijven/TCT/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/florianstijven/TCT/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
 The goal the TCT package is to provide a set of easy to use functions to
@@ -154,12 +156,12 @@ summary(TCT_fit)
     ## arm_time1:2 0.73273   0.621669 -0.59459 0.552115 (-0.28765, 1.35489)
     ## arm_time1:3 0.87347   0.101820 -1.23650 0.216274 ( 0.66357, 1.07518)
     ## arm_time1:4 0.79370   0.080569 -2.12583 0.033517 ( 0.64340, 0.97939)
-    ## arm_time1:5 0.75102   0.096777 -1.71596 0.086170 ( 0.60151, 1.03733)
+    ## arm_time1:5 0.75102   0.096777 -1.71595 0.086170 ( 0.60151, 1.03733)
     ##                  CI (bootstrap)
-    ## arm_time1:2 (-0.29101, 1.34446)
-    ## arm_time1:3 ( 0.66200, 1.07213)
-    ## arm_time1:4 ( 0.63910, 0.97984)
-    ## arm_time1:5 ( 0.59965, 1.03530)
+    ## arm_time1:2 (-0.28326, 1.35633)
+    ## arm_time1:3 ( 0.66791, 1.07727)
+    ## arm_time1:4 ( 0.64465, 0.97925)
+    ## arm_time1:5 ( 0.60450, 1.03936)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -186,8 +188,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##  Estimate Std. Error z value  p value                CI
-    ##    0.7937  0.0064913 -2.1258 0.033517 (0.6434, 0.97939)
+    ##   Estimate Std. Error z value  p value                CI
+    ## z   0.7937  0.0064913 -2.1258 0.033517 (0.6434, 0.97939)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -225,8 +227,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##  Estimate Std. Error chi-squared p value                CI
-    ##   0.85504         NA      6.2391 0.18199 (0.66416, 1.0855)
+    ##             Estimate Std. Error chi-squared p value                CI
+    ## chi-squared  0.85504         NA      6.2391 0.18199 (0.66416, 1.0855)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
@@ -262,7 +264,7 @@ test_statistic = 4 * classical_test$f_stat
 1 - stats::pchisq(test_statistic, 4)
 ```
 
-    ## [1] 0.1819881
+    ## [1] 0.1819878
 
 Finally, we show the results for the non-linear generalized least
 squares (NL-GLS) estimator. In simulations, this estimator performs best
@@ -278,8 +280,8 @@ summary(TCT_common_fit)
     ## Meta-Time Component Test - Common Acceleration Factor:
     ## 
     ## Estimated Common Acceleration Factor: 
-    ##  Estimate Std. Error chi-squared  p value                CI
-    ##   0.85504   0.080211      2.8269 0.092696 (0.70072, 1.0285)
+    ##             Estimate Std. Error chi-squared  p value                CI
+    ## chi-squared  0.85504   0.080211      2.8269 0.092696 (0.70072, 1.0285)
     ## alpha = 0.05
     ## 
     ## Interpolation Method: spline
