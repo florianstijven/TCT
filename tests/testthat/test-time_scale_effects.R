@@ -157,6 +157,51 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
                ignore_attr = "names")
 })
 
+test_that("TCT_meta() and TCT_meta_common() function works with cubic spline interpolation and known origin mean", {
+  set.seed(1)
+  # Set first row and column of vcov_mmrm to zeroes, reflecting the fact that
+  # the mean at the origin (i.e., time zero) is known. This reflects, for
+  # instance, the setting where the endpoint is change from baseline.
+  vcov_mmrm_new = vcov_mmrm
+  vcov_mmrm_new[1, ] = 0
+  vcov_mmrm_new[, 1] = 0
+
+  TCT_Fit = TCT_meta(
+    time_points = 0:4,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm_new,
+    inference = "score",
+    interpolation = "spline",
+    B = 1e1
+  )
+  TCT_Fit_summary = summary(TCT_Fit)
+
+  TCT_common_fit = TCT_meta_common(
+    TCT_Fit = TCT_Fit,
+    B = 10,
+    bs_fix_vcov = TRUE,
+    inference = "least-squares",
+    type = "custom"
+  )
+  TCT_common_summary = summary(TCT_common_fit)
+
+  # Extract the computed values.
+  TCT_output_vctr = c(coef(TCT_Fit),
+                      TCT_Fit$bootstrap_estimates[1:2],
+                      TCT_Fit$vcov[1, 2])
+  TCT_common_output_vctr = c(TCT_common_fit$coefficients,
+                             TCT_common_summary$gamma_common_ci[1, 1:2])
+  # Set expected values.
+  check_vctr_TCT_meta = c(0.73272539, 0.87347422, 0.79370231, 0.75102487, 0.43709139, 1.01568520, 0.04100701)
+  check_vctr_TCT_common = c(0.85419054, 0.69587063, 1.02827121)
+  # Check that the computed values match the expected values.
+  expect_equal(TCT_output_vctr, check_vctr_TCT_meta,
+               ignore_attr = "names")
+  expect_equal(TCT_common_output_vctr, check_vctr_TCT_common,
+               ignore_attr = "names")
+})
+
 test_that("TCT_meta() and its summary work with cubic spline interpolation and score-based inference", {
   set.seed(1)
   TCT_Fit = TCT_meta(

@@ -39,10 +39,25 @@ nonlinear_gls_estimator = function(time_points,
     j = j,
     gamma_0 = gamma_0
   )
+  # If there is a row/column of zeroes in vcov, this signifies a known mean at a
+  # certain time point. We need to remove these rows/columns from the vcov
+  # matrix and further treat the correspond mean "estimate" as known.
+  if (any(rowSums(vcov) == 0)) {
+    # Compute the indices of the known means.
+    known_means_index = which(rowSums(vcov) == 0)
+    # Compute the indices of the known means in the ctrl_estimates.
+    known_ctrl_means_index = known_means_index[known_means_index <= length(ctrl_estimates)]
+    # Compute the indices of the estimated means in the ctrl_estimates.
+    est_ctrl_means_index = (1:length(ctrl_estimates))[-known_ctrl_means_index]
+  } else {
+    known_means_index = c()
+    known_ctrl_means_index = c()
+    est_ctrl_means_index = 1:length(ctrl_estimates)
+  }
   # Minimize the GLS criterion in the parameters.
   if (is.null(gamma_0)) {
     optim_object = stats::optim(
-      par = c(ctrl_estimates, start_gamma),
+      par = c(ctrl_estimates[est_ctrl_means_index], start_gamma),
       fn = objective_function,
       gr = gradient_function,
       method = "BFGS",
@@ -51,17 +66,30 @@ nonlinear_gls_estimator = function(time_points,
   }
   else {
     optim_object = stats::optim(
-      par = c(ctrl_estimates),
+      par = c(ctrl_estimates[est_ctrl_means_index]),
       fn = objective_function,
       gr = gradient_function,
       method = "BFGS",
       control = list(abstol = 1e-7, reltol = 1e-8)
     )
   }
+  # If there are known means, we need to add them to the estimated parameters.
+  # The `estimates` vector contains both estimated and known means.
+  if (length(known_means_index) > 0) {
+    estimates = ctrl_estimates
+    if (is.null(gamma_0)) {
+      estimates[c(est_ctrl_means_index, length(ctrl_estimates) + 1)] = optim_object$par
+    } else {
+      estimates[est_ctrl_means_index] = optim_object$par
+    }
+  } else {
+    estimates = optim_object$par
+  }
+
   # Return the estimated parameters and the value of the minimized object function.
   return(
     list(
-      estimates = optim_object$par,
+      estimates = estimates,
       criterion = optim_object$value
     )
   )
@@ -149,9 +177,42 @@ nonlinear_gls_estimator_vcov = function(time_points,
                                         j,
                                         gamma_est,
                                         alpha_est){
+  # If there is a row/column of zeroes in vcov, this signifies a known mean at a
+  # certain time point. We need to remove these rows/columns from the vcov
+  # matrix and further treat the correspond mean "estimate" as known.
+  if (any(rowSums(vcov) == 0)) {
+    # Compute the indices of the known means.
+    known_means_index = which(rowSums(vcov) == 0)
+    # Compute the indices of the known means in the alpha_est.
+    known_ctrl_means_index = known_means_index[known_means_index <= length(alpha_est)]
+    # Compute the indices of the estimated means in the ctrl_estimates.
+    est_ctrl_means_index = (1:length(alpha_est))[-known_ctrl_means_index]
+  } else {
+    known_means_index = c()
+    known_ctrl_means_index = c()
+    est_ctrl_means_index = 1:length(alpha_est)
+  }
+
+  # The truly estimated mean parameters in the control group.
+  alpha_vec_est = alpha_est[est_ctrl_means_index]
+
+  # The mean parameters in the experimental group corresponding to `j` may not
+  # be known. If this is the case, an error is raised.
+  if (!is.null(known_means_index)) {
+    if (known_means_index %in% (j + length(alpha_est))) {
+      stop("The mean parameters in the experimental group corresponding to `j` must have a non-zero variance.")
+    }
+  }
+
   # Compute subsetting vector.
-  subset_vec = c(1:length(time_points), j + length(time_points))
+  subset_vec = c(1:length(alpha_est), j + length(alpha_est))
+  # Remove mean "estimates" which are known. If all means are estimated, no
+  # elements are removed.
+  if (length(known_means_index) > 0) {
+    subset_vec = subset_vec[!(subset_vec %in% known_means_index)]
+  }
   vcov = vcov[subset_vec, subset_vec]
+
   # Compute the reference trajectory.
   ref_fun = ref_fun_constructor(x_ref = time_points,
                                 y_ref = alpha_est,
@@ -164,8 +225,11 @@ nonlinear_gls_estimator_vcov = function(time_points,
     y_ref = alpha_est,
     method = interpolation
   )
+  # The "known" alpha parameters have to be excluded.
+  A = A[, est_ctrl_means_index]
+
   D_t = diag(time_points[j + 1])
-  B = cbind(diag(1, nrow = length(alpha_est)), matrix(0, nrow = length(alpha_est), ncol = 1))
+  B = cbind(diag(1, nrow = length(alpha_vec_est)), matrix(0, nrow = length(alpha_vec_est), ncol = 1))
   C = cbind(A, D_t %*% f0_gradient_t(ref_fun, time_points[j + 1] * gamma_est))
   J = rbind(B, C)
   # Compute and return the variance-covariance matrix.

@@ -567,6 +567,7 @@ TCT_meta_common = function(TCT_Fit,
       j = select_coef,
       weights = weights
     )
+
     gamma_common_vcov = score_estimate_common_se(
       gamma_est = gamma_common_estimate,
       time_points = time_points,

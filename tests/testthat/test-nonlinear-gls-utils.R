@@ -45,3 +45,4 @@ test_that("numerical and analytical derivatives match for GLS criterion function
                               x = x)
   expect_equal(output_vctr, check_vctr)
 })
+
