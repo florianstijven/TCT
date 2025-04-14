@@ -14,6 +14,7 @@
 #' slowing.
 #' * `p_value`: The p-value based on the asymptotic chi-squared distribution
 #' with `df` degrees of freedom.
+#' @export
 proportional_slowing_gls_test = function(time_points,
                                          ctrl_estimates,
                                          exp_estimates,

@@ -153,6 +153,17 @@ score_conf_int = function(time_points,
                       j,
                       gamma_0 = gamma)[1])
   }
+  # Below, a confidence region is computed based on the equivalence between
+  # hypothesis testing and confidence regions. We assume that the confidence
+  # region is a confidence interval. The limits can then be obtained as the
+  # parameter values for which the corresponding p-value for the null that the
+  # true value is equal to the parameter value is equal to alpha, or
+  # equivalently, the critical z-value (typically 1.96 and 1.96). Depending on
+  # the context, the lower confidence limit is the parameter with a
+  # corresponding z-value equal to -1.96 or 1.96. Below, we assume that this is
+  # -1.96 for the lower limit and 1.96 for the upper limit. If this assumption
+  # was wrong, we just switch the computed limits.
+
   # Find upper limit
   z_critical = stats::qnorm(p = 1 - alpha / 2)
   upper_limit = stats::uniroot(
@@ -172,9 +183,11 @@ score_conf_int = function(time_points,
     tol = .Machine$double.eps ^ 0.5,
     maxiter = 1e3
   )$root
-  # Return estimated confidence interval.
+  # Return estimated confidence interval. As mentioned in the comment above, we
+  # switch the confidence limits if required.
   return(
-    c(lower_limit, upper_limit)
+    c(min(lower_limit, upper_limit),
+      max(lower_limit, upper_limit))
   )
 }
 
