@@ -176,6 +176,17 @@ test_that("TCT_meta() and TCT_meta_common() function works with cubic spline int
     B = 1e1
   )
   TCT_Fit_summary = summary(TCT_Fit)
+  # Expect warning if the bounds for the search interval for score-based CIs are bad.
+  suppressWarnings(
+    expect_warning(
+      summary(TCT_Fit, bounds = c(5, 6))
+    )
+  )
+
+  # Expect no warning if the bounds are good.
+  expect_no_warning(
+    TCT_Fit_summary <- summary(TCT_Fit, bounds = c(-1, 2))
+  )
 
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
@@ -321,7 +332,7 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
   TCT_common_summary = summary(TCT_common_fit)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_summary$gamma_common_ci[1, 1:2])
-  check_vctr = c(0.79370276, 0.64340024, 0.97939229)
+  check_vctr = c(0.79370279, 0.64340024, 0.97939229)
   expect_equal(TCT_output_vctr,
                check_vctr,
                ignore_attr = "names")
@@ -350,7 +361,7 @@ test_that("TCT_meta_common(inference = score) can be combine with TCT_meta(infer
   TCT_common_summary = summary(TCT_common_fit)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_summary$gamma_common_ci[1, 1:2])
-  check_vctr = c(0.79370276, 0.64340024, 0.97939229)
+  check_vctr = c(0.79370279, 0.64340024, 0.97939229)
   expect_equal(TCT_output_vctr,
                check_vctr,
                ignore_attr = "names")

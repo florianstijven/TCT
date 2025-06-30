@@ -4,7 +4,13 @@
 \alias{summary.TCT_meta}
 \title{Summarize fitted Meta-Time Component Test model}
 \usage{
-\method{summary}{TCT_meta}(object, alpha = 0.05, delta_transformation = "identity", ...)
+\method{summary}{TCT_meta}(
+  object,
+  alpha = 0.05,
+  delta_transformation = "identity",
+  bounds = c(-5, 5),
+  ...
+)
 }
 \arguments{
 \item{object}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}.}
@@ -13,6 +19,10 @@
 
 \item{delta_transformation}{Transformation when applying the delta-method to
 obtain confidence intervals.}
+
+\item{bounds}{(numeric) vector with two elements that defines the bounds of
+the search interval for the (score-based) confidence limits or estimate.
+Defaults to \code{c(-5, 5)}.}
 
 \item{...}{
   Arguments passed on to \code{\link[base:summary]{base::summary}}

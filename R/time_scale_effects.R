@@ -263,10 +263,12 @@ new_summary_TCT_meta = function(
 #' @return S3 object of class `"summary_TCT_meta"`
 #' @export
 #' @inherit TCT_meta examples
+#' @inheritParams score_conf_int
 #' @importFrom stats coef
 summary.TCT_meta = function(object,
                             alpha = 0.05,
                             delta_transformation = "identity",
+                            bounds = c(-5, 5),
                             ...) {
   # Extract information from the TCT_meta object that is used further on.
   inference = object$inference_options$inference
@@ -324,7 +326,8 @@ summary.TCT_meta = function(object,
           interpolation = interpolation,
           vcov = vcov_vertical,
           j = j,
-          alpha = alpha
+          alpha = alpha,
+          bounds = bounds
         )
       }
     )

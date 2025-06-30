@@ -16,6 +16,7 @@ score_estimate_common(
   j = 1:length(exp_estimates),
   weights = NULL,
   penalty = function(x) 0,
+  bounds = c(-5, 5),
   ...
 )
 }
@@ -71,6 +72,10 @@ vector for weighting estimates at different time points differently.}
 statistics. Defaults to a constant function. This is mostly useful for
 small samples to put a penalty on values of gamma outside the unit
 interval.}
+
+\item{bounds}{(numeric) vector with two elements that defines the bounds of
+the search interval for the (score-based) confidence limits or estimate.
+Defaults to \code{c(-5, 5)}.}
 
 \item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }

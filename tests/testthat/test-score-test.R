@@ -31,6 +31,28 @@ test_that("score TCT CI is correct", {
   expect_equal(conf_int, c(-0.28764977, 1.35489195))
 })
 
+test_that("score TCT CI does not fail for very wide first CI", {
+  ref_fun = ref_fun_constructor(0:4, ctrl_estimates, "spline")
+  # Make the SE for the second time point very wide.
+  vcov_mmrm_modified = vcov_mmrm
+  vcov_mmrm_modified[6, 6] = vcov_mmrm[6, 6] * 50000
+  # z-value for TCT score test
+  suppressWarnings(
+    expect_warning(
+      conf_int <- score_conf_int(
+        time_points = 0:4,
+        ctrl_estimates = ctrl_estimates,
+        exp_estimates = exp_estimates,
+        vcov = vcov_mmrm_modified,
+        interpolation = "spline",
+        ref_fun = ref_fun,
+        j = 1
+      ))
+  )
+
+  expect_equal(conf_int, c(-Inf, +Inf))
+})
+
 test_that("omnibus score TCT test for common treatment effect is correct", {
   ref_fun = ref_fun_constructor(0:4,
                                 ctrl_estimates,
@@ -397,66 +419,3 @@ test_that("all type of multivariate score TCT estimators are correct", {
   expect_equal(output_vector, expect_vector, tolerance = 1e-5)
 })
 
-
-# v_function(
-#   time_points = 0:4,
-#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-#   exp_estimates = coef(mmrm_fit)[5:8],
-#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-#   interpolation = "spline",
-#   ref_fun = ref_fun,
-#   gamma_0 = 0.78630034,
-#   j = 1:4,
-#   weights = c(0, 1, 2, 2)
-# )
-#
-# gr_gamma_w = gradient_gamma_w(
-#   time_points = 0:4,
-#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-#   exp_estimates = coef(mmrm_fit)[5:8],
-#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-#   interpolation = "spline",
-#   gamma_0 = 0.8743958,
-#   j = 1:4,
-#   weights = c(w_opt, 1 - sum(w_opt))
-#
-#
-# gr_gamma_w = gradient_gamma_w(
-#   time_points = 0:4,
-#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-#   exp_estimates = coef(mmrm_fit)[5:8],
-#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-#   interpolation = "spline",
-#   gamma_0 = 0.8743958,
-#   j = 1:4,
-#   weights = c(0, 0, 1, 0))
-#
-#
-#
-# matrix(gr_gamma_w, nrow = 1) %*%
-#   vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)] %*%
-#   matrix(gr_gamma_w, ncol = 1)
-#
-#
-# score_estimate_common(
-#   time_points = 0:4,
-#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-#   exp_estimates = coef(mmrm_fit)[5:8],
-#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-#   interpolation = "spline",
-#   ref_fun = ref_fun,
-#   type = "custom",
-#   j = 1:4,
-#   weights = c(w_opt, 1 - sum(w_opt))
-# )
-#
-# w_opt = optimize_weights(
-#   time_points = 0:4,
-#   ctrl_estimates = coef(mmrm_fit)[c(9, 1:4)],
-#   exp_estimates = coef(mmrm_fit)[5:8],
-#   vcov = vcov(mmrm_fit)[c(9, 1:4, 5:8), c(9, 1:4, 5:8)],
-#   interpolation = "spline",
-#   ref_fun = ref_fun,
-#   weights = c(0.2, 1, 3, 1),
-#   j = 1:4
-# )

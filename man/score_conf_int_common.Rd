@@ -15,7 +15,8 @@ score_conf_int_common(
   type = "omnibus",
   j = 1:length(exp_estimates),
   weights = NULL,
-  alpha = 0.05
+  alpha = 0.05,
+  bounds = c(-5, 5)
 )
 }
 \arguments{
@@ -70,6 +71,10 @@ vector for weighting estimates at different time points differently.}
 
 \item{alpha}{\code{1 - alpha} represents the two-sided confidence level. Defaults
 to \code{0.05}.}
+
+\item{bounds}{(numeric) vector with two elements that defines the bounds of
+the search interval for the (score-based) confidence limits or estimate.
+Defaults to \code{c(-5, 5)}.}
 }
 \value{
 (numeric) vector with two elements. The first element is the lower

@@ -112,6 +112,9 @@ score_test = function(time_points,
 #'
 #' @param alpha `1 - alpha` represents the two-sided confidence level. Defaults
 #'   to `0.05`.
+#' @param bounds (numeric) vector with two elements that defines the bounds of
+#'   the search interval for the (score-based) confidence limits or estimate.
+#'   Defaults to `c(-5, 5)`.
 #' @inheritParams score_test
 #'
 #' @details
@@ -141,7 +144,8 @@ score_conf_int = function(time_points,
                           interpolation,
                           vcov,
                           j,
-                          alpha = 0.05){
+                          alpha = 0.05,
+                          bounds = c(-5, 5)) {
   # Construct function of gamma that return the z-value.
   z_value = function(gamma) {
     return(score_test(time_points,
@@ -166,23 +170,49 @@ score_conf_int = function(time_points,
 
   # Find upper limit
   z_critical = stats::qnorm(p = 1 - alpha / 2)
-  upper_limit = stats::uniroot(
-    f = function(gamma)
-      z_value(gamma) + z_critical,
-    interval = c(-5,
-                 5),
-    tol = .Machine$double.eps ^ 0.5,
-    maxiter = 1e3
-  )$root
-  # Find lower limit
-  lower_limit = stats::uniroot(
-    f = function(gamma)
-      z_value(gamma) - z_critical,
-    interval = c(-5,
-                 5),
-    tol = .Machine$double.eps ^ 0.5,
-    maxiter = 1e3
-  )$root
+
+  # Test whether the z-value crosses z_critical going from the lower to the
+  # upper bound of the search interval.
+  if (sign(z_value(bounds[1]) + z_critical) != sign(z_value(bounds[2]) + z_critical)) {
+    # If the sign changes, then the z-value crosses the critical value.
+    # Therefore, we can compute the upper confidence limit.
+    upper_limit = stats::uniroot(
+      f = function(gamma)
+        z_value(gamma) + z_critical,
+      interval = bounds,
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+  }
+  else {
+    # If the sign does not change, then the z-value does not cross the critical
+    # value. Therefore, we set the upper limit to infinity and raise a warning.
+    upper_limit = +Inf
+    warning("The z-value does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+            The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
+  }
+
+  # Test whether the z-value crosses z_critical going from the lower to the
+  # upper bound of the search interval.
+  if (sign(z_value(bounds[1]) - z_critical) != sign(z_value(bounds[2]) - z_critical)) {
+    # If the sign changes, then the z-value crosses the critical value.
+    # Therefore, we can compute the upper confidence limit.
+    lower_limit = stats::uniroot(
+      f = function(gamma)
+        z_value(gamma) - z_critical,
+      interval = bounds,
+      tol = .Machine$double.eps ^ 0.5,
+      maxiter = 1e3
+    )$root
+  }
+  else {
+    # If the sign does not change, then the z-value does not cross the critical
+    # value. Therefore, we set the upper limit to infinity and raise a warning.
+    lower_limit = -Inf
+    warning("The z-value does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+            The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
+  }
+
   # Return estimated confidence interval. As mentioned in the comment above, we
   # switch the confidence limits if required.
   return(
@@ -346,7 +376,8 @@ score_conf_int_common = function(time_points,
                                  type = "omnibus",
                                  j = 1:length(exp_estimates),
                                  weights = NULL,
-                                 alpha = 0.05){
+                                 alpha = 0.05,
+                                 bounds = c(-5, 5)){
   # Force argument values. This is required because we're using these arguments
   # in a function factory.
   force(time_points); force(ctrl_estimates); force(exp_estimates)
@@ -406,6 +437,8 @@ score_conf_int_common = function(time_points,
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
   if (t_sq_value(10) < t_sq_critical) {
+    warning("The test statistic does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+            The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
     upper_limit = +Inf
   }
   else {
@@ -413,7 +446,7 @@ score_conf_int_common = function(time_points,
       f = function(gamma)
         sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
       interval = c(gamma_est,
-                   10),
+                   bounds[2]),
       tol = .Machine$double.eps ^ 0.5,
       maxiter = 1e3
     )$root
@@ -421,13 +454,15 @@ score_conf_int_common = function(time_points,
 
   # Find lower limit
   if (t_sq_value(-10) < t_sq_critical) {
+    warning("The test statistic does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+            The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
     lower_limit = -Inf
   }
   else {
     lower_limit = stats::uniroot(
       f = function(gamma)
         sqrt(t_sq_value(gamma)) - sqrt(t_sq_critical),
-      interval = c(-10,
+      interval = c(bounds[1],
                    gamma_est),
       tol = .Machine$double.eps ^ 0.5,
       maxiter = 1e3
@@ -450,6 +485,7 @@ score_conf_int_common = function(time_points,
 #' statistic.
 #'
 #' @inheritParams score_test_common
+#' @inheritParams score_conf_int
 #' @param ... Tuning parameters that are passed to [stats::optim()].
 #' @param penalty This a function that is added to the (squared) test
 #'   statistics. Defaults to a constant function. This is mostly useful for
@@ -467,6 +503,7 @@ score_estimate_common = function(time_points,
                                  j = 1:length(exp_estimates),
                                  weights = NULL,
                                  penalty = function(x) 0,
+                                 bounds = c(-5, 5),
                                  ...) {
   # Help function that computes the squared test statistics for a given gamma.
   # If the test statistic is a chi-squared value, then we do not have to square.
@@ -512,15 +549,23 @@ score_estimate_common = function(time_points,
   objectives = sapply(X = gammas, FUN = objective_function)
   # Select starting value
   gamma_start = gammas[which.min(objectives)]
-  stats::optim(
+  gamma_est = stats::optim(
     par = gamma_start,
     fn = objective_function,
     hessian = FALSE,
     method = "L-BFGS-B",
-    lower = -2,
-    upper = 4,
+    lower = bounds[1],
+    upper = bounds[2],
     ...
   )$par
+
+  # Raise warning of the estimate equals the bounds approximately.
+
+
+  if (abs(gamma_est - bounds[1]) < 1e-4 || abs(gamma_est - bounds[2]) < 1e-4) {
+    warning("The estimated common acceleration factor is equal to the lower or upper bound of the search interval. Consider increasing the search interval bounds using the `bounds` argument.")
+  }
+  return(gamma_est)
 }
 
 #' Standard Error of Score-based estimator of the common acceleration factor
