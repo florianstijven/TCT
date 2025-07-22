@@ -21,7 +21,7 @@
 obtain confidence intervals.}
 
 \item{bounds}{(numeric) vector with two elements that defines the bounds of
-the search interval for the (score-based) confidence limits or estimate.
+the search interval for the (contrast-based) confidence limits or estimate.
 Defaults to \code{c(-5, 5)}.}
 
 \item{...}{

@@ -21,9 +21,7 @@
 #'   outcome), then the corresponding row and column in `vcov` should be set to
 #'   zero.
 #' @param inference Which approach is used for estimation and inference? Should
-#'   be `"wald"`, `"score"`, or `"least-squares"`. The `"wald"`-approach is explained and
-#'   implemented in [DeltaMethod()], the `"score"`-approach is explained and
-#'   documented in [score_test()] and [score_test_common()].
+#'   be `"contrast"` or `"delta-method"`.
 #' @param interpolation Which interpolation method to use?
 #'  * `"linear"`: linear interpolation.
 #'  * `"spline"`: natural cubic spline interpolation. This interpolation method has been most
@@ -67,10 +65,10 @@
 #' # Estimation and Inference
 #'
 #' Following options for estimation and inference are available:
-#' * Delta method. More information in [DeltaMethod()].
+#' * Contrast test: More information in [contrast_test()] and [contrast_test_common()].
 #' * Parametric bootstrap. More information in
 #' [pm_bootstrap_vertical_to_horizontal()].
-#' * Score test: More information in [score_test()] and [score_test_common()].
+#' * Delta method. More information in [DeltaMethod()].
 #'
 #' Note that the estimators in the above three methods are equivalent. The
 #' estimates for the acceleration factor at \eqn{t_j} will thus be identical.
@@ -78,10 +76,10 @@
 #' and confidence intervals.
 #'
 #' Inference based on a direct application of the delta method can be unstable
-#' and should be avoided. The parametric bootstrap and score test generally
-#' yield very similar inferences. The main advanatage of the score test is that
+#' and should be avoided. The parametric bootstrap and contrast test generally
+#' yield very similar inferences. The main advantage of the contrast test is that
 #' it reduces to "classical" hypothesis tests for \eqn{H_0: \alpha_j = \beta_j}.
-#' The p-value of the score test will thus equal that of classical hypothesis
+#' The p-value of the contrast test will thus equal that of classical hypothesis
 #' tests.
 #'
 #' @examples
@@ -113,7 +111,7 @@ TCT_meta = function(time_points,
                exp_estimates,
                vcov,
                interpolation = "spline",
-               inference = "wald",
+               inference = "contrast",
                B = 0,
                constraints = FALSE) {
   # Apply constraint GLS estimator if asked.
@@ -263,7 +261,7 @@ new_summary_TCT_meta = function(
 #' @return S3 object of class `"summary_TCT_meta"`
 #' @export
 #' @inherit TCT_meta examples
-#' @inheritParams score_conf_int
+#' @inheritParams contrast_conf_int
 #' @importFrom stats coef
 summary.TCT_meta = function(object,
                             alpha = 0.05,
@@ -279,7 +277,7 @@ summary.TCT_meta = function(object,
   vcov_vertical = object$vertical_model$vcov
 
   # Wald-based inference if the inference option is equal to "wald".
-  if (inference == "wald") {
+  if (inference == "delta-method") {
     if (delta_transformation == "identity") {
       se_delta = sqrt(diag(object$vcov))
       z_values = (1 - coef(object)) / se_delta
@@ -304,8 +302,8 @@ summary.TCT_meta = function(object,
       byrow = FALSE
     )
   }
-  # Score-based inference if the inference option is equal to "score".
-  if (inference == "score") {
+  # contrast-based inference if the inference option is equal to "contrast".
+  if (inference == "contrast") {
     se_delta = sqrt(diag(object$vcov))
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
@@ -314,11 +312,11 @@ summary.TCT_meta = function(object,
       interpolation
     )
     # Compute confidence intervals for the measurement occasion-specific
-    # acceleration factors based on the score test.
+    # acceleration factors based on the contrast test.
     ci_list = lapply(
       X = 1:length(exp_estimates),
       FUN = function(j) {
-        score_conf_int(
+        contrast_conf_int(
           time_points = time_points,
           ctrl_estimates = ctrl_estimates,
           exp_estimates = exp_estimates,
@@ -335,11 +333,11 @@ summary.TCT_meta = function(object,
     # contains the lower limits, the second column contains the upper limits.
     ci_matrix = matrix(unlist(ci_list), ncol = 2, byrow = TRUE)
     # Compute the z-statistics for the measurement occasion-specific
-    # acceleration factors based on the score test.
+    # acceleration factors based on the contrast test.
     z_values = vapply(
       X = 1:length(exp_estimates),
       FUN = function(j) {
-        score_test(
+        contrast_test(
           time_points = time_points,
           ctrl_estimates = ctrl_estimates,
           exp_estimates = exp_estimates,
@@ -488,8 +486,10 @@ print.summary_TCT_meta = function(x, ...) {
 #'  that the proportional slowing assumption does not hold, e.g., for the first
 #'  measurement after randomization, then the corresponding estimate should not
 #'  be used in estimation the common acceleration factor.
+#' @param inference Which approach is used for estimation and inference? Should
+#'   be `"contrast"`, `"least-squares"`, or `"delta-method"`.
 #' @inheritParams TCT_meta
-#' @inheritParams score_test_common
+#' @inheritParams contrast_test_common
 #' @inheritParams pm_bootstrap_vertical_to_common
 #' @inheritParams nonlinear_gls_estimator
 #'
@@ -523,7 +523,7 @@ print.summary_TCT_meta = function(x, ...) {
 #'   inference = "wald"
 #' )
 TCT_meta_common = function(TCT_Fit,
-                           inference = "wald",
+                           inference = "least-squares",
                            B = 0,
                            bs_fix_vcov = FALSE,
                            select_coef = 1:length(coef(TCT_Fit)),
@@ -543,9 +543,9 @@ TCT_meta_common = function(TCT_Fit,
                                 ctrl_estimates,
                                 interpolation)
 
-  # Use wald-based inference if this is asked by the user.
+  # Use delta-method inference if this is asked by the user.
   n_points = length(TCT_Fit$vertical_model$time_points)
-  if (inference == "wald") {
+  if (inference == "delta-method") {
     estimates = coef(TCT_Fit)[select_coef]
     vcov = TCT_Fit$vcov[select_coef, select_coef]
     # delta method
@@ -555,7 +555,7 @@ TCT_meta_common = function(TCT_Fit,
       (t(vec_1) %*% solve(vcov) %*% vec_1)
     gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1) ** (-1)
   }
-  else if (inference == "score") {
+  else if (inference == "contrast") {
     # Compute optimal weights if the user did not provide weights themselves.
     if ((type == "custom") & (is.null(weights))) {
       weights = optimize_weights(
@@ -568,7 +568,7 @@ TCT_meta_common = function(TCT_Fit,
         j = select_coef
       )
     }
-    gamma_common_estimate = score_estimate_common(
+    gamma_common_estimate = contrast_estimate_common(
       time_points = time_points,
       ctrl_estimates = ctrl_estimates,
       exp_estimates = exp_estimates,
@@ -580,7 +580,7 @@ TCT_meta_common = function(TCT_Fit,
       weights = weights
     )
 
-    gamma_common_vcov = score_estimate_common_se(
+    gamma_common_vcov = contrast_estimate_common_se(
       gamma_est = gamma_common_estimate,
       time_points = time_points,
       ctrl_estimates = ctrl_estimates,
@@ -633,20 +633,6 @@ TCT_meta_common = function(TCT_Fit,
     start_gamma = start_gamma
   )
 
-  # Test for common slowing parameter (OLD)
-  # lht_matrix = matrix(0,
-  #                     nrow = length(estimates) - 1,
-  #                     ncol = length(estimates) - 1)
-  # diag(lht_matrix) = -1
-  # lht_matrix = cbind(1, lht_matrix)
-
-  # lht_common = linearHypothesis.default(
-  #   model = TCT_Fit,
-  #   vcov. = vcov,
-  #   coef. = estimates,
-  #   rhs = rep(0, length(estimates) - 1),
-  #   hypothesis.matrix = lht_matrix
-  # )
   # Test for common slowing factor based on the general least squares criterion.
   proportional_slowing_test = proportional_slowing_gls_test(
     time_points = time_points,
@@ -768,7 +754,7 @@ summary.TCT_meta_common = function(object,
   weights = object$inference_options$weights
   proportional_slowing_test = object$proportional_slowing_test
   # Wald-based inference
-  if (inference == "wald") {
+  if (inference == "delta-method") {
     if (delta_transformation == "identity") {
       gamma_common_se = sqrt(diag(object$vcov))
       z_value = (1 - coef(object)) / gamma_common_se
@@ -794,8 +780,8 @@ summary.TCT_meta_common = function(object,
     )
     p_value =  (1 - stats::pnorm(abs(z_value))) * 2
   }
-  # Score based inference
-  if (inference == "score") {
+  # contrast based inference
+  if (inference == "contrast") {
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
       time_points,
@@ -804,7 +790,7 @@ summary.TCT_meta_common = function(object,
     )
     # Compute confidence interval
     gamma_common_ci = matrix(
-      data = score_conf_int_common(
+      data = contrast_conf_int_common(
         time_points = time_points,
         ctrl_estimates = ctrl_estimates,
         exp_estimates = exp_estimates,
@@ -819,8 +805,8 @@ summary.TCT_meta_common = function(object,
       ),
       ncol = 2
     )
-    # Compute score test statistic and p-value
-    temp = score_test_common(
+    # Compute contrast test statistic and p-value
+    temp = contrast_test_common(
       time_points = time_points,
       ctrl_estimates = ctrl_estimates,
       exp_estimates = exp_estimates,
@@ -994,9 +980,9 @@ print.summary_TCT_meta_common = function(x, ...) {
       check.names = FALSE
     )
   }
-  # If the omnibus score-test is used, the test statistic is not a z-value, but
+  # If the omnibus contrast-test is used, the test statistic is not a z-value, but
   # rather chi-squared statistic.
-  if (x$inference_options$inference == "score") {
+  if (x$inference_options$inference == "contrast") {
     if (x$inference_options$type == "omnibus") {
       colnames(coefficients_df)[3] = "chi-squared"
     }
@@ -1014,10 +1000,10 @@ print.summary_TCT_meta_common = function(x, ...) {
   cat(x$vertical_model$time_points[x$inference_options$select_coef + 1])
   cat("\nEstimation and Inference: ")
   cat(x$inference_options$inference)
-  if (x$inference_options$inference == "score") {
+  if (x$inference_options$inference == "contrast") {
     cat("\n")
     cat("\t")
-    cat(paste0("Type of Score Test: ", x$inference_options$type))
+    cat(paste0("Type of contrast Test: ", x$inference_options$type))
     if (x$inference_options$type == "custom") {
       cat("\n")
       cat("\t")

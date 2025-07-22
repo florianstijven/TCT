@@ -10,7 +10,7 @@ TCT_meta(
   exp_estimates,
   vcov,
   interpolation = "spline",
-  inference = "wald",
+  inference = "contrast",
   B = 0,
   constraints = FALSE
 )
@@ -45,9 +45,7 @@ and Carlson.
 }}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"wald"}, \code{"score"}, or \code{"least-squares"}. The \code{"wald"}-approach is explained and
-implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
-documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
+be \code{"contrast"} or \code{"delta-method"}.}
 
 \item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
 bootstrap is performed (default).}
@@ -92,10 +90,10 @@ slow as patients in the control group.
 \section{Estimation and Inference}{
 Following options for estimation and inference are available:
 \itemize{
-\item Delta method. More information in \code{\link[=DeltaMethod]{DeltaMethod()}}.
+\item Contrast test: More information in \code{\link[=contrast_test]{contrast_test()}} and \code{\link[=contrast_test_common]{contrast_test_common()}}.
 \item Parametric bootstrap. More information in
 \code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}}.
-\item Score test: More information in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.
+\item Delta method. More information in \code{\link[=DeltaMethod]{DeltaMethod()}}.
 }
 
 Note that the estimators in the above three methods are equivalent. The
@@ -104,10 +102,10 @@ The difference lies in the procedures to computing standard errors, p-values,
 and confidence intervals.
 
 Inference based on a direct application of the delta method can be unstable
-and should be avoided. The parametric bootstrap and score test generally
-yield very similar inferences. The main advanatage of the score test is that
+and should be avoided. The parametric bootstrap and contrast test generally
+yield very similar inferences. The main advantage of the contrast test is that
 it reduces to "classical" hypothesis tests for \eqn{H_0: \alpha_j = \beta_j}.
-The p-value of the score test will thus equal that of classical hypothesis
+The p-value of the contrast test will thus equal that of classical hypothesis
 tests.
 }
 

@@ -22,9 +22,7 @@ pm_bootstrap_vertical_to_common(
 \item{TCT_Fit}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"wald"}, \code{"score"}, or \code{"least-squares"}. The \code{"wald"}-approach is explained and
-implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
-documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
+be \code{"contrast"}, \code{"least-squares"}, or \code{"delta-method"}.}
 
 \item{B}{Number of bootstrap replications.}
 

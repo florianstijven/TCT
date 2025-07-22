@@ -1,8 +1,8 @@
-#' Compute TCT score test z-value
+#' Compute TCT contrast test z-value
 #'
-#' The [score_test()] function computes the z-value for the score test at
+#' The [contrast_test()] function computes the z-value for the contrast test at
 #' measurement `j`. This corresponds to `exp_estimates[j]`. For technical
-#' details on the score test, see Details.
+#' details on the contrast test, see Details.
 #'
 #' @param j Measurement occasion to test acceleration factor for. This
 #'   corresponds to `exp_estimates[j]`.
@@ -11,9 +11,9 @@
 #'
 #' @details
 #'
-#' # Score Test
+#' # contrast Test
 #'
-#' For constructing a score test, we start from the null hypothesis,
+#' For constructing a contrast test, we start from the null hypothesis,
 #' \deqn{H_{\gamma_0}: \gamma_j = \gamma_0,} where \eqn{\gamma_j} is the
 #' acceleration factor at time \eqn{t_j}. Under this null hypothesis, and taking
 #' the control group as reference, we can
@@ -26,9 +26,9 @@
 #' \eqn{\boldsymbol{\alpha}} is not known, but only estimated. Indeed, \eqn{\beta_{0,
 #' j}} is itself estimated by \eqn{\hat{\beta}_{0, j} =  f_0( \gamma_0 \cdot t_{j};
 #' \hat{\boldsymbol{\alpha}})}. Still, this provides the starting point for a
-#' score test that draws upon well-established statistical tests.
+#' contrast test that draws upon well-established statistical tests.
 #'
-#' We first define the score vector as follows, \deqn{\boldsymbol{s}(\gamma
+#' We first define the contrast vector as follows, \deqn{\boldsymbol{s}(\gamma
 #' \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) =
 #' \hat{\boldsymbol{\beta}} - \boldsymbol{f_0}(\gamma \cdot \boldsymbol{t};
 #' \hat{\boldsymbol{\alpha}})}
@@ -62,14 +62,14 @@
 #' this test will thus depend to a large extent on the accuracy of the delta
 #' method, i.e., the degree of non-linearity of
 #' \eqn{g_{\gamma_0}(\boldsymbol{\alpha}, \boldsymbol{\beta}; t_j)} around the
-#' true parameter values. The [score_test()] function returns the above z-value.
+#' true parameter values. The [contrast_test()] function returns the above z-value.
 #'
 #' @return Named (numeric) vector with two elements:
 #'
 #' 1. `"z"`. This test-statistic follows a standard normal distribution under
 #' the null hypothesis.
 #' 2. `"p-value"`: two-sided p-value.
-score_test = function(time_points,
+contrast_test = function(time_points,
                       ctrl_estimates,
                       exp_estimates,
                       ref_fun,
@@ -104,31 +104,31 @@ score_test = function(time_points,
          )
 }
 
-#' Compute Confidence Interval Based on Score Test
+#' Compute Confidence Interval Based on contrast Test
 #'
-#' The [score_conf_int()] function computes the confidence interval for the
-#' score test at measurement `j`. This confidence interval is based on the
-#' score test implemented in [score_test()].
+#' The [contrast_conf_int()] function computes the confidence interval for the
+#' contrast test at measurement `j`. This confidence interval is based on the
+#' contrast test implemented in [contrast_test()].
 #'
 #' @param alpha `1 - alpha` represents the two-sided confidence level. Defaults
 #'   to `0.05`.
 #' @param bounds (numeric) vector with two elements that defines the bounds of
-#'   the search interval for the (score-based) confidence limits or estimate.
+#'   the search interval for the (contrast-based) confidence limits or estimate.
 #'   Defaults to `c(-5, 5)`.
-#' @inheritParams score_test
+#' @inheritParams contrast_test
 #'
 #' @details
 #'
-#' # Score Test Confidence Intervals
+#' # contrast Test Confidence Intervals
 #'
-#' For the construction of a confidence interval based on the scores, we make
+#' For the construction of a confidence interval based on the contrasts, we make
 #' use of the relationship between confidence intervals and hypothesis tests. A
 #' \eqn{1 − α} confidence interval can be defined as follows, \deqn{\left\{
 #' \gamma : p(\gamma) > \alpha \right\}} where \eqn{p(\gamma)} is the p-value
 #' for the null that the acceleration factor is equal to \eqn{\gamma}. This
-#' p-value can be based on the time-specific score test implemented in
-#' [score_test()], or can be based on the joint score test implemented in
-#' [score_test_common()]. The former gives a confidence interval for the
+#' p-value can be based on the time-specific contrast test implemented in
+#' [contrast_test()], or can be based on the joint contrast test implemented in
+#' [contrast_test_common()]. The former gives a confidence interval for the
 #' time-specific acceleration factor while the latter gives a confidence
 #' interval for the common acceleration factor. The latter interval should be
 #' used with some care. Indeed, the confidence interval for a common
@@ -137,7 +137,7 @@ score_test = function(time_points,
 #'
 #' @return (numeric) vector with two elements. The first element is the lower
 #'   confidence limit, the second element is the upper confidence limit.
-score_conf_int = function(time_points,
+contrast_conf_int = function(time_points,
                           ctrl_estimates,
                           exp_estimates,
                           ref_fun,
@@ -148,7 +148,7 @@ score_conf_int = function(time_points,
                           bounds = c(-5, 5)) {
   # Construct function of gamma that return the z-value.
   z_value = function(gamma) {
-    return(score_test(time_points,
+    return(contrast_test(time_points,
                       ctrl_estimates,
                       exp_estimates,
                       ref_fun,
@@ -188,7 +188,7 @@ score_conf_int = function(time_points,
     # If the sign does not change, then the z-value does not cross the critical
     # value. Therefore, we set the upper limit to infinity and raise a warning.
     upper_limit = +Inf
-    warning("The z-value does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+    warning("The z-value does not cross the critical value in the search interval for computing the contrast-based confidence interval. \\
             The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
   }
 
@@ -209,7 +209,7 @@ score_conf_int = function(time_points,
     # If the sign does not change, then the z-value does not cross the critical
     # value. Therefore, we set the upper limit to infinity and raise a warning.
     lower_limit = -Inf
-    warning("The z-value does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+    warning("The z-value does not cross the critical value in the search interval for computing the contrast-based confidence interval. \\
             The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
   }
 
@@ -221,9 +221,9 @@ score_conf_int = function(time_points,
   )
 }
 
-#' Score test for common acceleration factor
+#' contrast test for common acceleration factor
 #'
-#' The [score_test_common()] function implements the score test under the
+#' The [contrast_test_common()] function implements the contrast test under the
 #' assumption that there exists a common acceleration factor. Multiple variants
 #' to this test exist and are implemented.
 #'
@@ -234,17 +234,17 @@ score_conf_int = function(time_points,
 #'   3. `type = "inverse variance"`
 #'   4. `type = "custom"`
 #' @param j (Integer) vector that indicates which elements in `exp_estimates`
-#'   should be used for the score test. Defaults to `1:length(exp_estimates)`,
+#'   should be used for the contrast test. Defaults to `1:length(exp_estimates)`,
 #'   i.e., all elements are used.
 #' @param weights If `type == "custom"`, the user should specify a weight
 #'   vector for weighting estimates at different time points differently.
-#' @inheritParams score_test
-#' @inheritSection score_test Score Test
+#' @inheritParams contrast_test
+#' @inheritSection contrast_test contrast Test
 #' @details
 #'
 #' # Test Statistic Variants
 #'
-#' Two types of test statistics are implemented in the [score_test_common()]
+#' Two types of test statistics are implemented in the [contrast_test_common()]
 #' function:
 #'
 #' 1. `type = "omnibus"`
@@ -254,7 +254,7 @@ score_conf_int = function(time_points,
 #'
 #' ## Omnibus
 #'
-#' The omnibus score test is based on the "classic" chi-squared statistic that is
+#' The omnibus contrast test is based on the "classic" chi-squared statistic that is
 #' defined as follows,
 #' \deqn{t^2 = \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t \cdot \Sigma_s^{-1} \cdot \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}).}
 #' which follows a chi-squared distribution with K degrees of freedom under
@@ -265,7 +265,7 @@ score_conf_int = function(time_points,
 #'
 #' ## Custom
 #'
-#' The "custom" score test allows for user-specified weights, \eqn{w}. The test
+#' The "custom" contrast test allows for user-specified weights, \eqn{w}. The test
 #' statistic is defined as follows,
 #' \deqn{z = \frac{v(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}; \gamma_0)}{\sqrt{\boldsymbol{w}^t \Sigma_s \boldsymbol{w}}} \; \dot\sim \; N(0, 1).}
 #' As indicated above, this test statistic follows a standard normal
@@ -282,7 +282,7 @@ score_conf_int = function(time_points,
 #' 2. `"p-value"`: two-sided p-value.
 #'
 #' @export
-score_test_common = function(time_points,
+contrast_test_common = function(time_points,
                              ctrl_estimates,
                              exp_estimates,
                              ref_fun,
@@ -293,19 +293,19 @@ score_test_common = function(time_points,
                              j = 1:length(exp_estimates),
                              weights = NULL){
   K = length(j)
-  J = score_vector_jacobian(
+  J = contrast_vector_jacobian(
     time_points,
     ctrl_estimates,
     interpolation,
     gamma_0,
     j
   )
-  # Compute the variance of the "test statistic "score vector", g_gamma_0 under
+  # Compute the variance of the "test statistic "contrast vector", g_gamma_0 under
   # the null. The inverse of this matrix is also computed.
   Sigma_g = J %*% vcov[c(1:length(time_points), length(time_points) + j),
                           c(1:length(time_points), length(time_points) + j)] %*% t(J)
   Sigma_g_inv = solve(Sigma_g)
-  # Compute the score vector.
+  # Compute the contrast vector.
   g = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1]))
   if (type == "omnibus") {
     # Compute test-statistic
@@ -355,18 +355,18 @@ score_test_common = function(time_points,
 
 
 
-#' Confidence interval based on score test
+#' Confidence interval based on contrast test
 #'
-#' The [score_conf_int_common()] function computes the confidence interval for
-#' common acceleration factor. This confidence interval is based on the score
-#' test implemented in [score_test_common()].
+#' The [contrast_conf_int_common()] function computes the confidence interval for
+#' common acceleration factor. This confidence interval is based on the contrast
+#' test implemented in [contrast_test_common()].
 #'
-#' @inheritParams score_estimate_common
-#' @inheritParams score_conf_int
+#' @inheritParams contrast_estimate_common
+#' @inheritParams contrast_conf_int
 #' @param gamma_est Estimate for the common acceleration factor.
-#' @inheritSection score_conf_int Score Test Confidence Intervals
-#' @inherit score_conf_int return
-score_conf_int_common = function(time_points,
+#' @inheritSection contrast_conf_int contrast Test Confidence Intervals
+#' @inherit contrast_conf_int return
+contrast_conf_int_common = function(time_points,
                                  ctrl_estimates,
                                  exp_estimates,
                                  ref_fun,
@@ -386,7 +386,7 @@ score_conf_int_common = function(time_points,
   if (type %in% c("omnibus", "directional")) {
     # Construct function of gamma that return the z-value.
     t_sq_value = function(gamma) {
-      t_sq = score_test_common(
+      t_sq = contrast_test_common(
         time_points,
         ctrl_estimates,
         exp_estimates,
@@ -404,7 +404,7 @@ score_conf_int_common = function(time_points,
   else {
     # Construct function of gamma that return the z-value.
     t_sq_value = function(gamma) {
-      t_sq = score_test_common(
+      t_sq = contrast_test_common(
         time_points,
         ctrl_estimates,
         exp_estimates,
@@ -427,7 +427,7 @@ score_conf_int_common = function(time_points,
   # If the test statistic evaluated in the estimated value is larger than the
   # critical value, then we cannot compute the confidence interval. This means
   # that a common acceleration factor is not consistent with the data.
-  # Nonetheless, the score-based estimator remains well-defined. A confidence
+  # Nonetheless, the contrast-based estimator remains well-defined. A confidence
   # interval can still be computed from the bootstrap. However, this should be
   # done with care.
   if (t_sq_value(gamma_est) > t_sq_critical) return(NA)
@@ -437,7 +437,7 @@ score_conf_int_common = function(time_points,
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
   if (t_sq_value(bounds[2]) < t_sq_critical) {
-    warning("The test statistic does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+    warning("The test statistic does not cross the critical value in the search interval for computing the contrast-based confidence interval. \\
             The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
     upper_limit = +Inf
   }
@@ -454,7 +454,7 @@ score_conf_int_common = function(time_points,
 
   # Find lower limit
   if (t_sq_value(bounds[1]) < t_sq_critical) {
-    warning("The test statistic does not cross the critical value in the search interval for computing the score-based confidence interval. \\
+    warning("The test statistic does not cross the critical value in the search interval for computing the contrast-based confidence interval. \\
             The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
     lower_limit = -Inf
   }
@@ -475,17 +475,17 @@ score_conf_int_common = function(time_points,
   )
 }
 
-#' Estimate the common acceleration factor by minimizing the squared score
+#' Estimate the common acceleration factor by minimizing the squared contrast
 #' statistic
 #'
-#' The [score_estimate_common()] function estimates the common acceleration
+#' The [contrast_estimate_common()] function estimates the common acceleration
 #' factor. The estimate is the common acceleration factor which minimizes the
 #' test statistic for the corresponding null hypothesis, i.e., the most likely
 #' value of \eqn{\gamma} where "likelihood" is defined in terms of a test
 #' statistic.
 #'
-#' @inheritParams score_test_common
-#' @inheritParams score_conf_int
+#' @inheritParams contrast_test_common
+#' @inheritParams contrast_conf_int
 #' @param ... Tuning parameters that are passed to [stats::optim()].
 #' @param penalty This a function that is added to the (squared) test
 #'   statistics. Defaults to a constant function. This is mostly useful for
@@ -493,7 +493,7 @@ score_conf_int_common = function(time_points,
 #'   interval.
 #'
 #' @return (numeric) estimated for the common acceleration factor.
-score_estimate_common = function(time_points,
+contrast_estimate_common = function(time_points,
                                  ctrl_estimates,
                                  exp_estimates,
                                  ref_fun,
@@ -510,7 +510,7 @@ score_estimate_common = function(time_points,
   # For a z-statistic, we compute the square.
   if (type %in% c("omnibus", "directional")) {
     objective_function = function(gamma) {
-      test_statistic = score_test_common(
+      test_statistic = contrast_test_common(
         time_points,
         ctrl_estimates,
         exp_estimates,
@@ -527,7 +527,7 @@ score_estimate_common = function(time_points,
   }
   else {
     objective_function = function(gamma) {
-      test_statistic = score_test_common(
+      test_statistic = contrast_test_common(
         time_points,
         ctrl_estimates,
         exp_estimates,
@@ -568,14 +568,14 @@ score_estimate_common = function(time_points,
   return(gamma_est)
 }
 
-#' Standard Error of Score-based estimator of the common acceleration factor
+#' Standard Error of contrast-based estimator of the common acceleration factor
 #'
 #'
 #' @param gamma_est Estimated value for the common acceleration factor.
-#' @inheritParams score_estimate_common
+#' @inheritParams contrast_estimate_common
 #'
 #' @return (numeric) Estimated SE of the estimator.
-score_estimate_common_se = function(gamma_est,
+contrast_estimate_common_se = function(gamma_est,
                                     time_points,
                                     ctrl_estimates,
                                     exp_estimates,

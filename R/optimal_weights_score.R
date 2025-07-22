@@ -7,7 +7,7 @@ update_gamma = function(time_points,
                         type,
                         j,
                         weights) {
-  score_estimate_common(
+  contrast_estimate_common(
     time_points,
     ctrl_estimates,
     exp_estimates,
@@ -21,14 +21,14 @@ update_gamma = function(time_points,
 }
 
 
-#' Find the "optimal" weights for the score estimator
+#' Find the "optimal" weights for the contrast estimator
 #'
-#' The [optimize_weights()] function finds the weights for the score estimator
+#' The [optimize_weights()] function finds the weights for the contrast estimator
 #' that minimize the estimated variance of this estimator. The estimated
 #' variance is based in the delta method.
 #'
 #'
-#' @inheritParams score_test_common
+#' @inheritParams contrast_test_common
 #' @param weights Staring values for the weights vector.
 #' @param epsilon Tolerance to stop optimization algorithm. If the l2-norm of
 #'   the difference in weights from two subsequent iterations is smaller than

@@ -4,7 +4,7 @@
 #' the common acceleration factor is held constant at that value.
 #' @param start_gamma Starting value for the acceleration factor used for for the
 #' generalized least squares estimator.
-#' @inheritParams score_estimate_common
+#' @inheritParams contrast_estimate_common
 #'
 #' @return A list with the following elements:
 #' * `estimates`: Estimated parameters by minimizing the generalized least
@@ -97,11 +97,11 @@ nonlinear_gls_estimator = function(time_points,
 
 #' Compute test statistic and p-value for the nonlinear GLS estimator
 #'
-#' @inheritParams score_test
+#' @inheritParams contrast_test
 #' @inheritParams nonlinear_gls_estimator
 #'
 #'
-#' @inherit score_test_common return
+#' @inherit contrast_test_common return
 nonlinear_gls_test = function(time_points,
                               ctrl_estimates,
                               exp_estimates,

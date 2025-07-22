@@ -2,7 +2,7 @@
 % Please edit documentation in R/optimal_weights_score.R
 \name{optimize_weights}
 \alias{optimize_weights}
-\title{Find the "optimal" weights for the score estimator}
+\title{Find the "optimal" weights for the contrast estimator}
 \usage{
 optimize_weights(
   time_points,
@@ -49,7 +49,7 @@ outcome), then the corresponding row and column in \code{vcov} should be set to
 zero.}
 
 \item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
-should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+should be used for the contrast test. Defaults to \code{1:length(exp_estimates)},
 i.e., all elements are used.}
 
 \item{weights}{Staring values for the weights vector.}
@@ -62,7 +62,7 @@ the difference in weights from two subsequent iterations is smaller than
 (numeric) vector with optimal weights.
 }
 \description{
-The \code{\link[=optimize_weights]{optimize_weights()}} function finds the weights for the score estimator
+The \code{\link[=optimize_weights]{optimize_weights()}} function finds the weights for the contrast estimator
 that minimize the estimated variance of this estimator. The estimated
 variance is based in the delta method.
 }

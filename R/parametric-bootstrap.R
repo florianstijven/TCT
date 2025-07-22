@@ -208,7 +208,7 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
   }
 
   # Re-estimate common acceleration factor for Wald-based inference
-  if (inference == "wald") {
+  if (inference == "delta-method") {
     for (i in seq_along(estimates_bootstrap)) {
       if (bs_fix_vcov) {
         vcov_gls = TCT_vcov[select_coef, select_coef]
@@ -251,7 +251,7 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
     }
   }
 
-  else if (inference %in% c("score", "least-squares")){
+  else if (inference %in% c("contrast", "least-squares")){
     bootstrap_replications_model = apply(
       X = par_sampled,
       MARGIN = 1,
@@ -267,7 +267,7 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
           interpolation = interpolation,
           # Inference in TCT_meta() does not matter when calling
           # TCT_meta_common() further on.
-          inference = "wald",
+          inference = "delta-method",
           B = 0,
           # We can set the constraints to zero because this has already been
           # checked while drawing the vertical parameter estimates.

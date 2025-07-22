@@ -170,15 +170,15 @@ gradient_gamma_w_analytical = function(time_points,
 
 }
 
-#' Compute Jacobian of the score vector
+#' Compute Jacobian of the contrast vector
 #'
-#' The [score_vector_jacobian()] function computes the Jacobian of the score
+#' The [contrast_vector_jacobian()] function computes the Jacobian of the contrast
 #' vector with respect to \eqn{(\boldsymbol{\alpha},\boldsymbol{\beta})'},
 #' \deqn{\frac{\partial \boldsymbol{s}(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta})}{\partial (\boldsymbol{\alpha}, \boldsymbol{\beta})}}.
 #'
-#' @inheritParams score_test_common
+#' @inheritParams contrast_test_common
 #' @return The Jacobian matrix.
-score_vector_jacobian = function(time_points,
+contrast_vector_jacobian = function(time_points,
                                  ctrl_estimates,
                                  interpolation,
                                  gamma_0,
@@ -205,7 +205,7 @@ score_vector_jacobian = function(time_points,
 #' This function computes
 #' \eqn{\frac{\partial v(\boldsymbol{\alpha}, \boldsymbol{\beta}; \gamma_0)}{\partial (\boldsymbol{\alpha}, \boldsymbol{\beta})}}.
 #'
-#' @inheritParams score_test_common
+#' @inheritParams contrast_test_common
 #'
 #' @return (numeric) The derivative described above, evaluated in `gamma_0`.
 v_deriv_alpha_beta = function(time_points,
@@ -214,8 +214,8 @@ v_deriv_alpha_beta = function(time_points,
                               gamma_0,
                               j,
                               weights) {
-  # Compute the jacobian of the score vector.
-  J = score_vector_jacobian(time_points,
+  # Compute the jacobian of the contrast vector.
+  J = contrast_vector_jacobian(time_points,
                             ctrl_estimates,
                             interpolation,
                             gamma_0,
@@ -298,13 +298,13 @@ v_function = function(time_points,
   ref_fun = ref_fun_constructor(time_points,
                                 ctrl_estimates,
                                 interpolation)
-  # Compute the jacobian of the score vector.
-  J = score_vector_jacobian(time_points,
+  # Compute the jacobian of the contrast vector.
+  J = contrast_vector_jacobian(time_points,
                             ctrl_estimates,
                             interpolation,
                             gamma_0,
                             j)
-  # Compute the score vector.
+  # Compute the contrast vector.
   g = (exp_estimates[j] - ref_fun(gamma_0 * time_points[j + 1]))
   weights = matrix(weights, ncol = 1)
   v = t(weights) %*% g

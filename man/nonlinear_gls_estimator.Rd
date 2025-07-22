@@ -46,7 +46,7 @@ outcome), then the corresponding row and column in \code{vcov} should be set to
 zero.}
 
 \item{j}{(Integer) vector that indicates which elements in \code{exp_estimates}
-should be used for the score test. Defaults to \code{1:length(exp_estimates)},
+should be used for the contrast test. Defaults to \code{1:length(exp_estimates)},
 i.e., all elements are used.}
 
 \item{gamma_0}{Defaults to \code{NULL}. If a non-null value is given to this argument,

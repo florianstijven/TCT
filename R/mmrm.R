@@ -5,7 +5,7 @@
 #'
 #' @param data_trial A data frame from a single clinical trial. The following
 #'   variables should be present:
-#'   * `ADAScog_integer`: integer-valued ADAScog score
+#'   * `ADAScog_integer`: integer-valued ADAS-Cog score
 #'   * `arm_time`: factor that characterizes the treatment arm-time combination.
 #'   * `time_int`: integer that indicates the measurement occasion. Should start
 #'   with `1` for the first occasion, values for subsequent occasions should be

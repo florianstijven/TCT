@@ -5,7 +5,7 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
       ctrl_estimates = ctrl_estimates,
       exp_estimates = exp_estimates,
       vcov = vcov_mmrm,
-      inference = "wald",
+      inference = "delta-method",
       interpolation = "spline",
       B = 1e1
     )
@@ -34,7 +34,7 @@ test_that("TCT_meta_common() function works with cubic spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = TRUE)
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = TRUE, inference = "delta-method")
   summary(TCT_common_fit)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
@@ -82,7 +82,8 @@ test_that("TCT_meta_common() function works with monoH.FC spline interpolation",
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 1e1,
-    bs_fix_vcov = FALSE
+    bs_fix_vcov = FALSE,
+    inference = "delta-method"
   )
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
@@ -129,7 +130,7 @@ test_that("TCT_meta_common() function works with linear spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE)
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE, inference = "delta-method")
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
@@ -145,7 +146,7 @@ test_that("TCT_meta() function works with cubic spline interpolation", {
     ctrl_estimates = ctrl_estimates,
     exp_estimates = exp_estimates,
     vcov = vcov_mmrm,
-    inference = "wald",
+    inference = "delta-method",
     interpolation = "spline",
     B = 1e1
   )
@@ -171,12 +172,12 @@ test_that("TCT_meta() and TCT_meta_common() function works with cubic spline int
     ctrl_estimates = ctrl_estimates,
     exp_estimates = exp_estimates,
     vcov = vcov_mmrm_new,
-    inference = "score",
+    inference = "contrast",
     interpolation = "spline",
     B = 1e1
   )
   TCT_Fit_summary = summary(TCT_Fit)
-  # Expect warning if the bounds for the search interval for score-based CIs are bad.
+  # Expect warning if the bounds for the search interval for contrast-based CIs are bad.
   suppressWarnings(
     expect_warning(
       summary(TCT_Fit, bounds = c(5, 6))
@@ -236,7 +237,7 @@ test_that("TCT_meta() and TCT_meta_common() yield similar results with known and
     ctrl_estimates = ctrl_estimates,
     exp_estimates = exp_estimates,
     vcov = vcov_mmrm_known,
-    inference = "score",
+    inference = "contrast",
     interpolation = "spline",
     B = 1e1
   )
@@ -255,7 +256,7 @@ test_that("TCT_meta() and TCT_meta_common() yield similar results with known and
     ctrl_estimates = ctrl_estimates,
     exp_estimates = exp_estimates,
     vcov = vcov_mmrm_quasi_known,
-    inference = "score",
+    inference = "contrast",
     interpolation = "spline",
     B = 1e1
   )
@@ -288,7 +289,7 @@ test_that("TCT_meta() and TCT_meta_common() yield similar results with known and
   )
 })
 
-test_that("TCT_meta() and its summary work with cubic spline interpolation and score-based inference", {
+test_that("TCT_meta() and its summary work with cubic spline interpolation and contrast-based inference", {
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -297,7 +298,7 @@ test_that("TCT_meta() and its summary work with cubic spline interpolation and s
     vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0,
-    inference = "score"
+    inference = "contrast"
   )
   TCT_Fit_summary = summary(TCT_Fit)
   TCT_output_vctr = c(TCT_Fit$coefficients[1:2],
@@ -309,7 +310,7 @@ test_that("TCT_meta() and its summary work with cubic spline interpolation and s
                ignore_attr = "names")
 })
 
-test_that("TCT_meta_common() and its summary work with cubic spline interpolation and score-based inference", {
+test_that("TCT_meta_common() and its summary work with cubic spline interpolation and contrast-based inference", {
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -318,7 +319,7 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
     vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0,
-    inference = "score"
+    inference = "contrast"
   )
   TCT_Fit_summary = summary(TCT_Fit)
   set.seed(1)
@@ -326,7 +327,7 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
     TCT_Fit = TCT_Fit,
     B = 10,
     bs_fix_vcov = TRUE,
-    inference = "score",
+    inference = "contrast",
     type = "custom"
   )
   TCT_common_summary = summary(TCT_common_fit)
@@ -338,7 +339,7 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
                ignore_attr = "names")
 })
 
-test_that("TCT_meta_common(inference = score) can be combine with TCT_meta(inference = wald)", {
+test_that("TCT_meta_common(inference = contrast) can be combine with TCT_meta(inference = delta-method)", {
   set.seed(1)
   TCT_Fit = TCT_meta(
     time_points = 0:4,
@@ -347,7 +348,7 @@ test_that("TCT_meta_common(inference = score) can be combine with TCT_meta(infer
     vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0,
-    inference = "wald"
+    inference = "delta-method"
   )
   TCT_Fit_summary = summary(TCT_Fit)
   set.seed(1)
@@ -355,7 +356,7 @@ test_that("TCT_meta_common(inference = score) can be combine with TCT_meta(infer
     TCT_Fit = TCT_Fit,
     B = 10,
     bs_fix_vcov = TRUE,
-    inference = "score",
+    inference = "contrast",
     type = "custom"
   )
   TCT_common_summary = summary(TCT_common_fit)
@@ -376,7 +377,7 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
     vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0,
-    inference = "wald"
+    inference = "delta-method"
   )
   TCT_Fit_summary = summary(TCT_Fit)
   set.seed(1)
@@ -404,7 +405,7 @@ test_that("TCT_meta_common() works with subset of estimates in exp_estimates", {
     vcov = vcov_mmrm,
     interpolation = "spline",
     B = 0,
-    inference = "wald"
+    inference = "delta-method"
   )
   TCT_Fit_summary = summary(TCT_Fit)
   set.seed(1)

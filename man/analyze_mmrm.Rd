@@ -10,7 +10,7 @@ analyze_mmrm(data_trial, method = "ML", type = "full", package = "mmrm")
 \item{data_trial}{A data frame from a single clinical trial. The following
 variables should be present:
 \itemize{
-\item \code{ADAScog_integer}: integer-valued ADAScog score
+\item \code{ADAScog_integer}: integer-valued ADAS-Cog score
 \item \code{arm_time}: factor that characterizes the treatment arm-time combination.
 \item \code{time_int}: integer that indicates the measurement occasion. Should start
 with \code{1} for the first occasion, values for subsequent occasions should be

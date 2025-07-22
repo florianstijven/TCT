@@ -6,7 +6,7 @@
 \usage{
 TCT_meta_common(
   TCT_Fit,
-  inference = "wald",
+  inference = "least-squares",
   B = 0,
   bs_fix_vcov = FALSE,
   select_coef = 1:length(coef(TCT_Fit)),
@@ -20,9 +20,7 @@ TCT_meta_common(
 \item{TCT_Fit}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"wald"}, \code{"score"}, or \code{"least-squares"}. The \code{"wald"}-approach is explained and
-implemented in \code{\link[=DeltaMethod]{DeltaMethod()}}, the \code{"score"}-approach is explained and
-documented in \code{\link[=score_test]{score_test()}} and \code{\link[=score_test_common]{score_test_common()}}.}
+be \code{"contrast"}, \code{"least-squares"}, or \code{"delta-method"}.}
 
 \item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
 bootstrap is performed (default).}
