@@ -302,13 +302,13 @@ nonlinear_gls_conf_int_common = function(time_points,
     gamma_est = gamma_est,
     alpha_est = nl_gls_object$estimates[-1 * length(nl_gls_object$estimates)]
   )
-  start_upper = gamma_est + stats::qnorm(1 - alpha / 5) * gamma_se
-  start_lower = gamma_est - stats::qnorm(1 - alpha / 5) * gamma_se
+  start_upper = gamma_est + stats::qnorm(1 - alpha / 10) * gamma_se
+  start_lower = gamma_est - stats::qnorm(1 - alpha / 10) * gamma_se
 
   # If the right limit of the test statistic, as a function of gamma, does not
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
-  if (t_sq_value(10) < t_sq_critical) {
+  if (t_sq_value(start_upper) < t_sq_critical) {
     upper_limit = +Inf
   }
   else {
@@ -325,7 +325,7 @@ nonlinear_gls_conf_int_common = function(time_points,
   }
 
   # Find lower limit
-  if (t_sq_value(-10) < t_sq_critical) {
+  if (t_sq_value(start_lower) < t_sq_critical) {
     lower_limit = -Inf
   }
   else {
