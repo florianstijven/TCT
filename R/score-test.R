@@ -436,7 +436,7 @@ score_conf_int_common = function(time_points,
   # If the right limit of the test statistic, as a function of gamma, does not
   # cross the critical value, the upper confidence limit is infinity. The same
   # principle applies to the lower limit.
-  if (t_sq_value(10) < t_sq_critical) {
+  if (t_sq_value(bounds[2]) < t_sq_critical) {
     warning("The test statistic does not cross the critical value in the search interval for computing the score-based confidence interval. \\
             The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
     upper_limit = +Inf
@@ -453,7 +453,7 @@ score_conf_int_common = function(time_points,
   }
 
   # Find lower limit
-  if (t_sq_value(-10) < t_sq_critical) {
+  if (t_sq_value(bounds[1]) < t_sq_critical) {
     warning("The test statistic does not cross the critical value in the search interval for computing the score-based confidence interval. \\
             The corresponding confidence limit is set to Inf. Consider increasing the search interval bounds using the `bounds` argument.")
     lower_limit = -Inf
