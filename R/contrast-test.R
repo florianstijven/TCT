@@ -638,7 +638,7 @@ contrast_estimate_common_se = function(gamma_est,
   se = (deriv_psi_gamma**-2) * grad_psi_alpha_beta %*%
     vcov %*%
       t(grad_psi_alpha_beta)
-  return(as.numeric(se))
+  return(sqrt(as.numeric(se)))
 }
 
 

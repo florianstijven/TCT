@@ -419,3 +419,23 @@ test_that("all type of multivariate contrast TCT estimators are correct", {
   expect_equal(output_vector, expect_vector, tolerance = 1e-5)
 })
 
+# contrast based estimators
+test_that("The SE for the contrast-based estimator for the common acceleration factor is correct", {
+  ref_fun = ref_fun_constructor(0:4,
+                                ctrl_estimates,
+                                "spline")
+
+  se_est = contrast_estimate_common_se(
+    gamma_est = 0.866,
+    time_points = 0:4,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
+    interpolation = "spline",
+    ref_fun = ref_fun,
+    type = "custom",
+    weights = 1:4
+  )
+  expect_equal(se_est, 0.1110468507)
+})
+
