@@ -10,7 +10,7 @@ TCT_meta(
   exp_estimates,
   vcov,
   interpolation = "spline",
-  inference = "contrast",
+  inference = "least-squares",
   B = 0,
   constraints = FALSE
 )
@@ -18,7 +18,7 @@ TCT_meta(
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
 the estimated means in the \code{ctrl_estimates} vector. The first element
-should be zero which generally corresponds to the time of randomization.}
+should be zero and correspond to the time of randomization.}
 
 \item{ctrl_estimates}{Estimated mean outcome in the control group at the
 fixed occasions corresponding to the times in \code{time_points}.}
@@ -45,7 +45,7 @@ and Carlson.
 }}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"contrast"} or \code{"delta-method"}.}
+be \code{"least-squares"}, \code{"contrast"}or \code{"delta-method"}.}
 
 \item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
 bootstrap is performed (default).}
@@ -66,7 +66,9 @@ the Time-Component Test (TCT) methodology.
 Time-component tests (TCT) constitutes a general methodology to evaluating
 treatment effects with longitudinal data on the time scale. Conventional
 treatment effects with longitudinal data are so-called vertical treatment
-effects; these are comparisons of group means at fixed measurement occasions.
+effects; these are comparisons of group means (or other summary measures like
+the median) at fixed measurement occasions. Throughout the documentation, we
+assumed that the mean is the summary measure of interest.
 
 Let \eqn{\boldsymbol{t} = (t_0 = 0, t_1, ..., t_K)'} be the fixed measurement
 occasions (\code{timepoints} in this function). Let \eqn{\boldsymbol{\alpha} =
@@ -75,38 +77,49 @@ control group. Let \eqn{\boldsymbol{\beta} = (\beta_1, ..., \beta_{K})} be
 the corresponding means in the experimental group. Note that the index starts
 here at 1, i.e., the first measurement \emph{after} start of the treatment. Let
 the mean trajectory in the control and experimental group be, respectively,
-\eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}.
+\eqn{E(Y_t(0)) =: f_0(t; \boldsymbol{\alpha})} and \eqn{E(Y_t(0)) =: f_1(t; \boldsymbol{\beta})},
+where \eqn{E(Y_t(z))} is the potential outcome at time \eqn{t} under treatment
+\eqn{z} (0 for control, 1 for experimental group).
 
 The treatment effects on the time scale are acceleration factors, analogous
 to accelerated failure time models. These are defined as follows at
 \eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
 \boldsymbol{\alpha})}
-where \eqn{\gamma_j} is the so-called acceleration factor at \eqn{t_j}, i.e.,
+where \eqn{\gamma_j} is the so-called time-specific acceleration factor at \eqn{t_j}, i.e.,
 treatment causes an acceleration of \eqn{\gamma_j}. For example, if
 \eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
-slow as patients in the control group.
+slow as patients in the control group. The time-specific acceleration factors
+are estimated by the \code{\link[=TCT_meta]{TCT_meta()}} function. Also note that no testable assumptions
+are required for estimating the time-specific acceleration factors.
+
+One may assume that \eqn{\gamma_j = \gamma} for all \eqn{j}, which
+corresponds to proportional slowing (or a constant acceleration factor in
+accelerated-failure time model terminology). The \code{\link[=TCT_meta_common]{TCT_meta_common()}} function
+estimates the common acceleration factor under the assumption of proportional
+slowing. Estimating the common acceleration factor may be more efficient than
+estimating time-specific acceleration factors and leads to a more
+parsimonious interpretation of the treatment effect, but this relies on the
+proportional slowing assumption. This is a testable assumption, a test for
+which is automatically performed by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.
 }
 
 \section{Estimation and Inference}{
 Following options for estimation and inference are available:
 \itemize{
-\item Contrast test: More information in \code{\link[=contrast_test]{contrast_test()}} and \code{\link[=contrast_test_common]{contrast_test_common()}}.
+\item Least-squares based estimation and inference. More information in \code{\link[=nonlinear_gls_estimator]{nonlinear_gls_estimator()}}.
+\item Contrast-based estimation and inference: More information in \code{\link[=contrast_test]{contrast_test()}} and
+\code{\link[=contrast_test_common]{contrast_test_common()}}. For estimation and inference about time-specific acceleration factors,
+this is equivalent to least squares (but not for the common acceleration factor).
 \item Parametric bootstrap. More information in
-\code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}}.
-\item Delta method. More information in \code{\link[=DeltaMethod]{DeltaMethod()}}.
+\code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}}. If \code{B > 1} then the parametric
+bootstrap is performed.
+\item Delta method. More information in \code{\link[=DeltaMethod]{DeltaMethod()}}. This approach to inference
+is not recommended, but is available for completeness.
 }
 
-Note that the estimators in the above three methods are equivalent. The
-estimates for the acceleration factor at \eqn{t_j} will thus be identical.
-The difference lies in the procedures to computing standard errors, p-values,
-and confidence intervals.
-
-Inference based on a direct application of the delta method can be unstable
-and should be avoided. The parametric bootstrap and contrast test generally
-yield very similar inferences. The main advantage of the contrast test is that
-it reduces to "classical" hypothesis tests for \eqn{H_0: \alpha_j = \beta_j}.
-The p-value of the contrast test will thus equal that of classical hypothesis
-tests.
+Note that the estimators for the time-specific acceleration factors in the
+above methods are equivalent. The difference lies in the procedures to
+computing standard errors, p-values, and confidence intervals.
 }
 
 \examples{

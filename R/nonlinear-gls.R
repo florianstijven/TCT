@@ -1,10 +1,79 @@
-#' TCT Estimation by Nonlinear GLS
+#' Common Acceleration Factor Estimation via Generalized Least Squares
+#'
+#' [nonlinear_gls_estimator()] estimates the common acceleration factor through
+#' minimizing a generalized least-squares criterion.
 #'
 #' @param gamma_0 Defaults to `NULL`. If a non-null value is given to this argument,
 #' the common acceleration factor is held constant at that value.
-#' @param start_gamma Starting value for the acceleration factor used for for the
-#' generalized least squares estimator.
+#' @param start_gamma Starting value for the common acceleration factor in the
+#' optimization procedure. Defaults to `0.75`.
 #' @inheritParams contrast_estimate_common
+#'
+#' @details
+#'
+#' In the following sections, we use notation introduced in the documentation of
+#' [TCT_meta()].
+#'
+#' # Generalized Least Squares
+#'
+#' The generalized least squares (GLS) estimator \eqn{(\hat{\boldsymbol{\alpha}}_n, \hat{\gamma}_n)}
+#' is defined as the minimizer of the following criterion:
+#'
+#' \deqn{
+#' (\hat{\boldsymbol{\alpha}}_n, \hat{\gamma}_n)
+#' = \arg \min_{(\boldsymbol{\alpha}, \gamma)} \left\{
+#' \begin{pmatrix}
+#' \hat{\boldsymbol{\alpha}}_n \\
+#' \hat{\boldsymbol{\beta}}_n
+#' \end{pmatrix}
+#' -
+#' \begin{pmatrix}
+#' \boldsymbol{\alpha} \\
+#' \boldsymbol{f}_0(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha})
+#' \end{pmatrix}
+#' \right\}^\top \hat{\Sigma}_n^{-1}
+#' \left\{
+#' \begin{pmatrix}
+#' \hat{\boldsymbol{\alpha}}_n \\
+#' \hat{\boldsymbol{\beta}}_n
+#' \end{pmatrix}
+#' -
+#' \begin{pmatrix}
+#' \boldsymbol{\alpha} \\
+#' \boldsymbol{f}_0(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha})
+#' \end{pmatrix}
+#' \right\},
+#' }
+#' where
+#' \eqn{\boldsymbol{f}_0(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha}) =
+#' (f_0(\gamma \cdot t_1; \boldsymbol{\alpha}), \dots, f_0(\gamma \cdot t_K; \boldsymbol{\alpha}))'}
+#'
+#'
+#' This criterion jointly estimates \eqn{\boldsymbol{\alpha}} and \eqn{\gamma},
+#' even though one is generally only interested in the common acceleration
+#' factor, \eqn{\gamma}.
+#'
+#' # Inference
+#'
+#' One can use the minimized GLS criterion for hypothesis testing and confidence
+#' intervals. Let \eqn{Q_{1, n}} be the above GLS criterion minimized in
+#' \eqn{\boldsymbol{\alpha}} and \eqn{\gamma} and multiplied with \eqn{n}, and
+#' let \eqn{Q_{0, n}(\gamma_0)} be the corresponding GLS criterion minimized in
+#' \eqn{\boldsymbol{\alpha}} while holding \eqn{\gamma} constant at
+#' \eqn{\gamma_0}. Then, under the null hypothesis that
+#' \eqn{\gamma = \gamma_0}, the test statistic \eqn{T_n = Q_{0, n}(\gamma_0) -
+#' Q_{1, n}} follows asymptotically a chi-squared distribution with one degree
+#' of freedom (under regularity conditions). This test statistic is also used
+#' for computing confidence intervals for the common acceleration factor.
+#'
+#' Along the same arguments as in the previous paragraph, we have that
+#' \eqn{Q_{1, n}} follows a chi-squared distribution with \eqn{K - 1} degrees of
+#' freedom under the proportional-slowing assumption (and a correct
+#' interpolation method). This result is used for testing the
+#' proportional-slowing assumption.
+#'
+#'
+#'
 #'
 #' @return A list with the following elements:
 #' * `estimates`: Estimated parameters by minimizing the generalized least

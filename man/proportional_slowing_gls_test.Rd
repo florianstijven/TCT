@@ -17,7 +17,7 @@ proportional_slowing_gls_test(
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
 the estimated means in the \code{ctrl_estimates} vector. The first element
-should be zero which generally corresponds to the time of randomization.}
+should be zero and correspond to the time of randomization.}
 
 \item{ctrl_estimates}{Estimated mean outcome in the control group at the
 fixed occasions corresponding to the times in \code{time_points}.}
@@ -47,8 +47,8 @@ zero.}
 should be used for the contrast test. Defaults to \code{1:length(exp_estimates)},
 i.e., all elements are used.}
 
-\item{start_gamma}{Starting value for the acceleration factor used for for the
-generalized least squares estimator.}
+\item{start_gamma}{Starting value for the common acceleration factor in the
+optimization procedure. Defaults to \code{0.75}.}
 }
 \value{
 A named vector with the following elements:

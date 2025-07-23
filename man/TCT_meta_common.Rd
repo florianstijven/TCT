@@ -8,10 +8,8 @@ TCT_meta_common(
   TCT_Fit,
   inference = "least-squares",
   B = 0,
-  bs_fix_vcov = FALSE,
   select_coef = 1:length(coef(TCT_Fit)),
   constraints = FALSE,
-  type = NULL,
   weights = NULL,
   start_gamma = 0.75
 )
@@ -20,45 +18,95 @@ TCT_meta_common(
 \item{TCT_Fit}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"contrast"}, \code{"least-squares"}, or \code{"delta-method"}.}
+be \code{"least-squares"}, \code{"contrast"}or \code{"delta-method"}.}
 
 \item{B}{Number of parametric bootstrap replications. If \code{B = 0}, no
 bootstrap is performed (default).}
 
-\item{bs_fix_vcov}{(boolean) Fix the estimated variance-covariance matrix for
-the estimated acceleration factors? This speeds up computations, but can have
-a negative impact of the method's properties.}
-
 \item{select_coef}{Estimates from the \code{exp_estimates} in \code{\link[=TCT_meta]{TCT_meta()}} to use
 in estimating the common acceleration factor. If there is reason to believe
-that the proportional slowing assumption does not hold, e.g., for the first
-measurement after randomization, then the corresponding estimate should not
-be used in estimation the common acceleration factor.}
+that the proportional slowing assumption does not hold for only some time
+points (e.g., for the first measurement after randomization), then the
+corresponding estimate should not be used in estimation the common
+acceleration factor.}
 
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
 
-\item{type}{Which type of test statistic should be used. See Test Statistic
-Variants. Should be one of
-\enumerate{
-\item \code{type = "omnibus"}
-\item \code{type = "directional"}
-\item \code{type = "inverse variance"}
-\item \code{type = "custom"}
-}}
+\item{weights}{If \code{inference = "contrast"}, then the user can provide weights
+for the different measurement occasions. If not provided, the optimal
+weights are estimated data-adapatively.}
 
-\item{weights}{If \code{type == "custom"}, the user should specify a weight
-vector for weighting estimates at different time points differently.}
-
-\item{start_gamma}{Starting value for the acceleration factor used for for the
-generalized least squares estimator.}
+\item{start_gamma}{Initial value for the algorithm that finds the common
+acceleration factor numerically. Defaults to \code{0.75}.}
 }
 \value{
 S3 object of class \code{"TCT_meta_common"}
 }
 \description{
-The \code{\link[=TCT_meta_common]{TCT_meta_common()}} function estimates the common acceleration factor.
+The \code{\link[=TCT_meta_common]{TCT_meta_common()}} function estimates the common acceleration factor under
+the assumption of proportional slowing.
 }
+\section{Time-Component Tests}{
+Time-component tests (TCT) constitutes a general methodology to evaluating
+treatment effects with longitudinal data on the time scale. Conventional
+treatment effects with longitudinal data are so-called vertical treatment
+effects; these are comparisons of group means (or other summary measures like
+the median) at fixed measurement occasions. Throughout the documentation, we
+assumed that the mean is the summary measure of interest.
+
+Let \eqn{\boldsymbol{t} = (t_0 = 0, t_1, ..., t_K)'} be the fixed measurement
+occasions (\code{timepoints} in this function). Let \eqn{\boldsymbol{\alpha} =
+(\alpha_0, \alpha_1, ..., \alpha_K)'} be the corresponding means in the
+control group. Let \eqn{\boldsymbol{\beta} = (\beta_1, ..., \beta_{K})} be
+the corresponding means in the experimental group. Note that the index starts
+here at 1, i.e., the first measurement \emph{after} start of the treatment. Let
+the mean trajectory in the control and experimental group be, respectively,
+\eqn{E(Y_t(0)) =: f_0(t; \boldsymbol{\alpha})} and \eqn{E(Y_t(0)) =: f_1(t; \boldsymbol{\beta})},
+where \eqn{E(Y_t(z))} is the potential outcome at time \eqn{t} under treatment
+\eqn{z} (0 for control, 1 for experimental group).
+
+The treatment effects on the time scale are acceleration factors, analogous
+to accelerated failure time models. These are defined as follows at
+\eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
+\boldsymbol{\alpha})}
+where \eqn{\gamma_j} is the so-called time-specific acceleration factor at \eqn{t_j}, i.e.,
+treatment causes an acceleration of \eqn{\gamma_j}. For example, if
+\eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
+slow as patients in the control group. The time-specific acceleration factors
+are estimated by the \code{\link[=TCT_meta]{TCT_meta()}} function. Also note that no testable assumptions
+are required for estimating the time-specific acceleration factors.
+
+One may assume that \eqn{\gamma_j = \gamma} for all \eqn{j}, which
+corresponds to proportional slowing (or a constant acceleration factor in
+accelerated-failure time model terminology). The \code{\link[=TCT_meta_common]{TCT_meta_common()}} function
+estimates the common acceleration factor under the assumption of proportional
+slowing. Estimating the common acceleration factor may be more efficient than
+estimating time-specific acceleration factors and leads to a more
+parsimonious interpretation of the treatment effect, but this relies on the
+proportional slowing assumption. This is a testable assumption, a test for
+which is automatically performed by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.
+}
+
+\section{Estimation and Inference}{
+Following options for estimation and inference are available:
+\itemize{
+\item Least-squares based estimation and inference. More information in \code{\link[=nonlinear_gls_estimator]{nonlinear_gls_estimator()}}.
+\item Contrast-based estimation and inference: More information in \code{\link[=contrast_test]{contrast_test()}} and
+\code{\link[=contrast_test_common]{contrast_test_common()}}. For estimation and inference about time-specific acceleration factors,
+this is equivalent to least squares (but not for the common acceleration factor).
+\item Parametric bootstrap. More information in
+\code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}}. If \code{B > 1} then the parametric
+bootstrap is performed.
+\item Delta method. More information in \code{\link[=DeltaMethod]{DeltaMethod()}}. This approach to inference
+is not recommended, but is available for completeness.
+}
+
+Note that the estimators for the time-specific acceleration factors in the
+above methods are equivalent. The difference lies in the procedures to
+computing standard errors, p-values, and confidence intervals.
+}
+
 \examples{
 # transform example data set to desired format
 library(dplyr)

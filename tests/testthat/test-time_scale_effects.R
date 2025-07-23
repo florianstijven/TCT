@@ -34,12 +34,12 @@ test_that("TCT_meta_common() function works with cubic spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = TRUE, inference = "delta-method")
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, inference = "delta-method")
   summary(TCT_common_fit)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
-  check_vctr = c(0.802783786, 0.848841763, 0.890680251, 0.004629814)
+  check_vctr = c(0.802783786, 0.80783893, 0.85520306, 0.004629814)
   expect_equal(TCT_output_vctr, check_vctr,
                ignore_attr = "names")
 })
@@ -82,7 +82,6 @@ test_that("TCT_meta_common() function works with monoH.FC spline interpolation",
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 1e1,
-    bs_fix_vcov = FALSE,
     inference = "delta-method"
   )
   TCT_output_vctr = c(TCT_common_fit$coefficients,
@@ -130,7 +129,7 @@ test_that("TCT_meta_common() function works with linear spline interpolation", {
     B = 0
   )
   set.seed(1)
-  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, bs_fix_vcov = FALSE, inference = "delta-method")
+  TCT_common_fit = TCT_meta_common(TCT_Fit = TCT_Fit, B = 1e1, inference = "delta-method")
   TCT_output_vctr = c(TCT_common_fit$coefficients,
                       TCT_common_fit$bootstrap_estimates$estimates_bootstrap[1:2],
                       TCT_common_fit$vcov)
@@ -192,9 +191,7 @@ test_that("TCT_meta() and TCT_meta_common() function works with cubic spline int
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 10,
-    bs_fix_vcov = TRUE,
-    inference = "least-squares",
-    type = "custom"
+    inference = "least-squares"
   )
   TCT_common_summary = summary(TCT_common_fit)
 
@@ -245,9 +242,7 @@ test_that("TCT_meta() and TCT_meta_common() yield similar results with known and
   TCT_common_fit_known = TCT_meta_common(
     TCT_Fit = TCT_Fit_known,
     B = 10,
-    bs_fix_vcov = TRUE,
-    inference = "least-squares",
-    type = "custom"
+    inference = "least-squares"
   )
   TCT_common_summary_known = summary(TCT_common_fit_known)
 
@@ -264,9 +259,7 @@ test_that("TCT_meta() and TCT_meta_common() yield similar results with known and
   TCT_common_fit_quasi_known = TCT_meta_common(
     TCT_Fit = TCT_Fit_quasi_known,
     B = 10,
-    bs_fix_vcov = TRUE,
-    inference = "least-squares",
-    type = "custom"
+    inference = "least-squares"
   )
   TCT_common_summary_quasi_known = summary(TCT_common_fit_quasi_known)
 
@@ -326,9 +319,7 @@ test_that("TCT_meta_common() and its summary work with cubic spline interpolatio
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 10,
-    bs_fix_vcov = TRUE,
-    inference = "contrast",
-    type = "custom"
+    inference = "contrast"
   )
   TCT_common_summary = summary(TCT_common_fit)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
@@ -355,9 +346,7 @@ test_that("TCT_meta_common(inference = contrast) can be combine with TCT_meta(in
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 10,
-    bs_fix_vcov = TRUE,
-    inference = "contrast",
-    type = "custom"
+    inference = "contrast"
   )
   TCT_common_summary = summary(TCT_common_fit)
   TCT_output_vctr = c(TCT_common_fit$coefficients,
@@ -384,7 +373,6 @@ test_that("TCT_meta_common() and its summary work with the nonlinear GLS estimat
   TCT_common_fit = TCT_meta_common(
     TCT_Fit = TCT_Fit,
     B = 10,
-    bs_fix_vcov = TRUE,
     inference = "least-squares"
   )
   TCT_common_summary = summary(TCT_common_fit)

@@ -16,7 +16,7 @@ DeltaMethod(
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
 the estimated means in the \code{ctrl_estimates} vector. The first element
-should be zero which generally corresponds to the time of randomization.}
+should be zero and correspond to the time of randomization.}
 
 \item{ctrl_estimates}{Estimated mean outcome in the control group at the
 fixed occasions corresponding to the times in \code{time_points}.}

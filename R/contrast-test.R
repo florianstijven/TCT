@@ -11,7 +11,10 @@
 #'
 #' @details
 #'
-#' # contrast Test
+#' In the following sections, we use notation introduced in the documentation of
+#' [TCT_meta()].
+#'
+#' # Contrast Test
 #'
 #' For constructing a contrast test, we start from the null hypothesis,
 #' \deqn{H_{\gamma_0}: \gamma_j = \gamma_0,} where \eqn{\gamma_j} is the
@@ -28,41 +31,34 @@
 #' \hat{\boldsymbol{\alpha}})}. Still, this provides the starting point for a
 #' contrast test that draws upon well-established statistical tests.
 #'
-#' We first define the contrast vector as follows, \deqn{\boldsymbol{s}(\gamma
-#' \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) =
-#' \hat{\boldsymbol{\beta}} - \boldsymbol{f_0}(\gamma \cdot \boldsymbol{t};
-#' \hat{\boldsymbol{\alpha}})}
-#' where \eqn{\boldsymbol{t} = (t_1, ..., t_K)'} and \eqn{\boldsymbol{f_0}(\gamma \cdot
-#' \boldsymbol{t}; \hat{\boldsymbol{\alpha}}) = (f_0(\gamma \cdot t_1;
-#' \hat{\boldsymbol{\alpha}}), ..., f_0(\gamma \cdot t_K;
-#' \hat{\boldsymbol{\alpha}}))'}. Under \eqn{H_{\gamma_0}} for all time points and using the delta
-#' method, we have that \deqn{\boldsymbol{s}(\gamma \cdot \boldsymbol{t};
-#' \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}) \; \dot\sim \; N \left(
-#' \boldsymbol{0}, \Sigma_s \right)} where \deqn{\Sigma_s =
-#' J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0) \cdot \Sigma \cdot
-#' J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0)^t} with
-#' \eqn{J_s(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0}; \gamma_0)} the
-#' Jacobian of \eqn{\boldsymbol{s}(\gamma \cdot \boldsymbol{t}; \boldsymbol{\alpha},
-#' \boldsymbol{\beta})} evaluated in the true parameter vector,
-#' \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}, with \eqn{\gamma} held
-#' constant at \eqn{\gamma_0}. Note that this matrix is a function of
-#' \eqn{\boldsymbol{\alpha}}, \eqn{\boldsymbol{\beta}}, and \eqn{\gamma_0}. The
-#' Jacobian matrix with the true parameter vector replaced by the corresponding
-#' estimates, \eqn{(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})'}, is
-#' denoted by \eqn{\hat{\Sigma}_s}.
+#' We first define the contrast vector as follows, \deqn{\boldsymbol{\Phi}(\boldsymbol{\gamma}; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n) =
+#' \hat{\boldsymbol{\beta}}_n - \left(f_0(\gamma_1 \cdot t_1;
+#' \hat{\boldsymbol{\alpha}}_n), \dots, f_0(\gamma_K \cdot t_K;
+#' \hat{\boldsymbol{\alpha}}_n)\right)^\top.}
+#' Under \eqn{H_{\gamma_0}} for all time points and using the delta
+#' method, we have that
+#' \deqn{n^{1/2}\boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
+#' \hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \Omega)} where
+#' \deqn{\Omega =
+#' \dot{\boldsymbol{\Phi}}_{\boldsymbol{\alpha}, \boldsymbol{\beta}}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha_0}, \boldsymbol{\beta_0}) \cdot \Sigma \cdot
+#' \dot{\boldsymbol{\Phi}}_{\boldsymbol{\alpha}, \boldsymbol{\beta}}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha_0}, \boldsymbol{\beta_0})^\top} with
+#' \eqn{\dot{\boldsymbol{\Phi}}_{\boldsymbol{\alpha}, \boldsymbol{\beta}}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha_0}, \boldsymbol{\beta_0})} the
+#' Jacobian of \eqn{(\boldsymbol{\alpha}, \boldsymbol{\beta}) \mapsto \boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha}, \boldsymbol{\beta})} evaluated in the true parameter vector,
+#' \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}.
+#' In practice, \eqn{\Omega} is unknown because the true parameter vector is unknown.
+#' We, therefore, replace the unkown parameters wit the corresponding estimates in
+#' the above expression for \eqn{\Omega}; the corresponding estimated matrix is
+#' denoted by \eqn{\hat{\Omega}_n}. As long as \eqn{\hat{\Omega}_n} is consistent
+#' for \eqn{\Omega}, we have the following distributional result, which forms the
+#' basis for hypothesis tests and confidence intervals:
+#' \deqn{n^{1/2}\boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
+#' \hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n).}
+#' Specifically, for tests for time-specific acceleration factors, we use the
+#' following distributional result:
+#' \deqn{n^{1/2}\Phi_j(\gamma_0; \hat{\boldsymbol{\alpha}}_n,
+#' \hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n)}
+#' where
 #'
-#' # Time-Specific Acceleration Factor
-#'
-#' From the distributional result in the previous section follows that \deqn{z =
-#' \frac{s(\gamma_0 \cdot t_j; \hat{\boldsymbol{\alpha}},
-#' \hat{\boldsymbol{\beta}})}{\sqrt{\hat{\Sigma}_{s,jj}}} \; \dot\sim \;N(0, 1)}
-#' under \eqn{H_{\gamma_0}} where \eqn{\hat{\Sigma}_{s,jj}} is the \eqn{j}'th
-#' diagonal element of \eqn{\hat{\Sigma}_s}. Note that this result relies on the
-#' delta method and is thus only asymptotic. The finite sample properties of
-#' this test will thus depend to a large extent on the accuracy of the delta
-#' method, i.e., the degree of non-linearity of
-#' \eqn{g_{\gamma_0}(\boldsymbol{\alpha}, \boldsymbol{\beta}; t_j)} around the
-#' true parameter values. The [contrast_test()] function returns the above z-value.
 #'
 #' @return Named (numeric) vector with two elements:
 #'
@@ -104,7 +100,7 @@ contrast_test = function(time_points,
          )
 }
 
-#' Compute Confidence Interval Based on contrast Test
+#' Compute Confidence Interval Based on Contrast Test
 #'
 #' The [contrast_conf_int()] function computes the confidence interval for the
 #' contrast test at measurement `j`. This confidence interval is based on the
@@ -119,7 +115,7 @@ contrast_test = function(time_points,
 #'
 #' @details
 #'
-#' # contrast Test Confidence Intervals
+#' # Contrast Test Confidence Intervals
 #'
 #' For the construction of a confidence interval based on the contrasts, we make
 #' use of the relationship between confidence intervals and hypothesis tests. A
@@ -239,7 +235,7 @@ contrast_conf_int = function(time_points,
 #' @param weights If `type == "custom"`, the user should specify a weight
 #'   vector for weighting estimates at different time points differently.
 #' @inheritParams contrast_test
-#' @inheritSection contrast_test contrast Test
+#' @inheritSection contrast_test Contrast Test
 #' @details
 #'
 #' # Test Statistic Variants
@@ -364,7 +360,7 @@ contrast_test_common = function(time_points,
 #' @inheritParams contrast_estimate_common
 #' @inheritParams contrast_conf_int
 #' @param gamma_est Estimate for the common acceleration factor.
-#' @inheritSection contrast_conf_int contrast Test Confidence Intervals
+#' @inheritSection contrast_conf_int Contrast Test Confidence Intervals
 #' @inherit contrast_conf_int return
 contrast_conf_int_common = function(time_points,
                                  ctrl_estimates,

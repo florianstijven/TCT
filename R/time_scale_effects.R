@@ -7,7 +7,7 @@
 #'
 #' @param time_points Ordered vector that contains the times corresponding to
 #'   the estimated means in the `ctrl_estimates` vector. The first element
-#'   should be zero which generally corresponds to the time of randomization.
+#'   should be zero and correspond to the time of randomization.
 #' @param ctrl_estimates Estimated mean outcome in the control group at the
 #'   fixed occasions corresponding to the times in `time_points`.
 #' @param exp_estimates Estimated mean outcomes in the experimental group at
@@ -21,7 +21,7 @@
 #'   outcome), then the corresponding row and column in `vcov` should be set to
 #'   zero.
 #' @param inference Which approach is used for estimation and inference? Should
-#'   be `"contrast"` or `"delta-method"`.
+#'   be `"least-squares"`, `"contrast"`or `"delta-method"`.
 #' @param interpolation Which interpolation method to use?
 #'  * `"linear"`: linear interpolation.
 #'  * `"spline"`: natural cubic spline interpolation. This interpolation method has been most
@@ -42,7 +42,9 @@
 #' Time-component tests (TCT) constitutes a general methodology to evaluating
 #' treatment effects with longitudinal data on the time scale. Conventional
 #' treatment effects with longitudinal data are so-called vertical treatment
-#' effects; these are comparisons of group means at fixed measurement occasions.
+#' effects; these are comparisons of group means (or other summary measures like
+#' the median) at fixed measurement occasions. Throughout the documentation, we
+#' assumed that the mean is the summary measure of interest.
 #'
 #' Let \eqn{\boldsymbol{t} = (t_0 = 0, t_1, ..., t_K)'} be the fixed measurement
 #' occasions (`timepoints` in this function). Let \eqn{\boldsymbol{\alpha} =
@@ -51,36 +53,48 @@
 #' the corresponding means in the experimental group. Note that the index starts
 #' here at 1, i.e., the first measurement *after* start of the treatment. Let
 #' the mean trajectory in the control and experimental group be, respectively,
-#' \eqn{f_0(t; \boldsymbol{\alpha})} and \eqn{f_1(t; \boldsymbol{\beta})}.
+#' \eqn{E(Y_t(0)) =: f_0(t; \boldsymbol{\alpha})} and \eqn{E(Y_t(0)) =: f_1(t; \boldsymbol{\beta})},
+#' where \eqn{E(Y_t(z))} is the potential outcome at time \eqn{t} under treatment
+#' \eqn{z} (0 for control, 1 for experimental group).
 #'
 #' The treatment effects on the time scale are acceleration factors, analogous
 #' to accelerated failure time models. These are defined as follows at
 #' \eqn{t_j}, \deqn{f_1(t; \boldsymbol{\beta}) = f_0(\gamma_j \cdot t;
 #' \boldsymbol{\alpha})}
-#' where \eqn{\gamma_j} is the so-called acceleration factor at \eqn{t_j}, i.e.,
+#' where \eqn{\gamma_j} is the so-called time-specific acceleration factor at \eqn{t_j}, i.e.,
 #' treatment causes an acceleration of \eqn{\gamma_j}. For example, if
 #' \eqn{\gamma_j = 0.5}, patients in the active treatment group progress half as
-#' slow as patients in the control group.
+#' slow as patients in the control group. The time-specific acceleration factors
+#' are estimated by the [TCT_meta()] function. Also note that no testable assumptions
+#' are required for estimating the time-specific acceleration factors.
+#'
+#' One may assume that \eqn{\gamma_j = \gamma} for all \eqn{j}, which
+#' corresponds to proportional slowing (or a constant acceleration factor in
+#' accelerated-failure time model terminology). The [TCT_meta_common()] function
+#' estimates the common acceleration factor under the assumption of proportional
+#' slowing. Estimating the common acceleration factor may be more efficient than
+#' estimating time-specific acceleration factors and leads to a more
+#' parsimonious interpretation of the treatment effect, but this relies on the
+#' proportional slowing assumption. This is a testable assumption, a test for
+#' which is automatically performed by [TCT_meta_common()].
 #'
 #' # Estimation and Inference
 #'
 #' Following options for estimation and inference are available:
-#' * Contrast test: More information in [contrast_test()] and [contrast_test_common()].
+#' * Least-squares based estimation and inference. More information in [nonlinear_gls_estimator()].
+#' * Contrast-based estimation and inference: More information in [contrast_test()] and
+#'  [contrast_test_common()]. For estimation and inference about time-specific acceleration factors,
+#'  this is equivalent to least squares (but not for the common acceleration factor).
 #' * Parametric bootstrap. More information in
-#' [pm_bootstrap_vertical_to_horizontal()].
-#' * Delta method. More information in [DeltaMethod()].
+#' [pm_bootstrap_vertical_to_horizontal()]. If `B > 1` then the parametric
+#' bootstrap is performed.
+#' * Delta method. More information in [DeltaMethod()]. This approach to inference
+#' is not recommended, but is available for completeness.
 #'
-#' Note that the estimators in the above three methods are equivalent. The
-#' estimates for the acceleration factor at \eqn{t_j} will thus be identical.
-#' The difference lies in the procedures to computing standard errors, p-values,
-#' and confidence intervals.
+#' Note that the estimators for the time-specific acceleration factors in the
+#' above methods are equivalent. The difference lies in the procedures to
+#' computing standard errors, p-values, and confidence intervals.
 #'
-#' Inference based on a direct application of the delta method can be unstable
-#' and should be avoided. The parametric bootstrap and contrast test generally
-#' yield very similar inferences. The main advantage of the contrast test is that
-#' it reduces to "classical" hypothesis tests for \eqn{H_0: \alpha_j = \beta_j}.
-#' The p-value of the contrast test will thus equal that of classical hypothesis
-#' tests.
 #'
 #' @examples
 #' # transform example data set to desired format
@@ -111,7 +125,7 @@ TCT_meta = function(time_points,
                exp_estimates,
                vcov,
                interpolation = "spline",
-               inference = "contrast",
+               inference = "least-squares",
                B = 0,
                constraints = FALSE) {
   # Apply constraint GLS estimator if asked.
@@ -478,20 +492,26 @@ print.summary_TCT_meta = function(x, ...) {
 
 #' Estimate Common Acceleration Factor
 #'
-#' The [TCT_meta_common()] function estimates the common acceleration factor.
+#' The [TCT_meta_common()] function estimates the common acceleration factor under
+#' the assumption of proportional slowing.
 #'
 #' @param TCT_Fit Object returned by [TCT_meta()]
 #' @param select_coef Estimates from the `exp_estimates` in [TCT_meta()] to use
-#'  in estimating the common acceleration factor. If there is reason to believe
-#'  that the proportional slowing assumption does not hold, e.g., for the first
-#'  measurement after randomization, then the corresponding estimate should not
-#'  be used in estimation the common acceleration factor.
-#' @param inference Which approach is used for estimation and inference? Should
-#'   be `"contrast"`, `"least-squares"`, or `"delta-method"`.
+#'   in estimating the common acceleration factor. If there is reason to believe
+#'   that the proportional slowing assumption does not hold for only some time
+#'   points (e.g., for the first measurement after randomization), then the
+#'   corresponding estimate should not be used in estimation the common
+#'   acceleration factor.
+#' @param weights If `inference = "contrast"`, then the user can provide weights
+#'   for the different measurement occasions. If not provided, the optimal
+#'   weights are estimated data-adapatively.
+#' @param start_gamma Initial value for the algorithm that finds the common
+#' acceleration factor numerically. Defaults to `0.75`.
 #' @inheritParams TCT_meta
 #' @inheritParams contrast_test_common
 #' @inheritParams pm_bootstrap_vertical_to_common
 #' @inheritParams nonlinear_gls_estimator
+#' @inherit TCT_meta
 #'
 #' @return S3 object of class `"TCT_meta_common"`
 #' @export
@@ -525,10 +545,8 @@ print.summary_TCT_meta = function(x, ...) {
 TCT_meta_common = function(TCT_Fit,
                            inference = "least-squares",
                            B = 0,
-                           bs_fix_vcov = FALSE,
                            select_coef = 1:length(coef(TCT_Fit)),
                            constraints = FALSE,
-                           type = NULL,
                            weights = NULL,
                            start_gamma = 0.75)
 {
@@ -556,8 +574,9 @@ TCT_meta_common = function(TCT_Fit,
     gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1) ** (-1)
   }
   else if (inference == "contrast") {
+    type = "custom"
     # Compute optimal weights if the user did not provide weights themselves.
-    if ((type == "custom") & (is.null(weights))) {
+    if (is.null(weights)) {
       weights = optimize_weights(
         time_points = time_points,
         ctrl_estimates = ctrl_estimates,
@@ -624,11 +643,9 @@ TCT_meta_common = function(TCT_Fit,
     TCT_Fit = TCT_Fit,
     inference = inference,
     B = B,
-    bs_fix_vcov = bs_fix_vcov,
     return_se = TRUE,
     select_coef = select_coef,
     constraints = constraints,
-    type = type,
     weights = weights,
     start_gamma = start_gamma
   )
@@ -655,7 +672,6 @@ TCT_meta_common = function(TCT_Fit,
     bootstrap_estimates = bs_estimates,
     interpolation = interpolation,
     lht_common = lht_common,
-    type = type,
     weights = weights,
     vertical_model = TCT_Fit$vertical_model,
     select_coef = select_coef,
@@ -669,7 +685,6 @@ new_TCT_meta_common = function(coefficients,
                           bootstrap_estimates,
                           interpolation,
                           lht_common,
-                          type,
                           weights,
                           vertical_model,
                           select_coef,
@@ -678,7 +693,6 @@ new_TCT_meta_common = function(coefficients,
   # All options regarding inference are put into a single list.
   inference_options = list(
     interpolation = interpolation,
-    type = type,
     inference = inference,
     weights = weights,
     select_coef = select_coef
@@ -749,7 +763,6 @@ summary.TCT_meta_common = function(object,
   time_points = object$vertical_model$time_points
   interpolation = object$inference_options$interpolation
   vcov_vertical = object$vertical_model$vcov
-  type = object$inference_options$type
   select_coef = object$inference_options$select_coef
   weights = object$inference_options$weights
   proportional_slowing_test = object$proportional_slowing_test
@@ -782,6 +795,7 @@ summary.TCT_meta_common = function(object,
   }
   # contrast based inference
   if (inference == "contrast") {
+    type = "custom"
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
       time_points,
@@ -982,11 +996,6 @@ print.summary_TCT_meta_common = function(x, ...) {
   }
   # If the omnibus contrast-test is used, the test statistic is not a z-value, but
   # rather chi-squared statistic.
-  if (x$inference_options$inference == "contrast") {
-    if (x$inference_options$type == "omnibus") {
-      colnames(coefficients_df)[3] = "chi-squared"
-    }
-  }
   if (x$inference_options$inference == "least-squares") {
     colnames(coefficients_df)[3] = "chi-squared"
   }
@@ -1003,27 +1012,10 @@ print.summary_TCT_meta_common = function(x, ...) {
   if (x$inference_options$inference == "contrast") {
     cat("\n")
     cat("\t")
-    cat(paste0("Type of contrast Test: ", x$inference_options$type))
-    if (x$inference_options$type == "custom") {
-      cat("\n")
-      cat("\t")
-      cat("Weights: ")
-      cat(round(x$inference_options$weights, 3))
-    }
+    cat("Weights: ")
+    cat(round(x$inference_options$weights, 3))
   }
   cat("\n\n")
-
-
-
-
-  # Print test for proportional slowing (OLD)
-  # cat("Test for proportional slowing factor:\n")
-  # print(
-  #   data.frame("Df" = x$lht_common$Df[2],
-  #              "Chisq" = x$lht_common$Chisq[2],
-  #              "p-value" = x$lht_common$`Pr(>Chisq)`[2]),
-  #   digits = 5
-  # )
 
   # Print test for proportional slowing based on minimized GLS criterion.
   cat("Test for proportional slowing factor (at the selected time points):\n")

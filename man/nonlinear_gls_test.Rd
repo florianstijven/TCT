@@ -19,7 +19,7 @@ nonlinear_gls_test(
 \arguments{
 \item{time_points}{Ordered vector that contains the times corresponding to
 the estimated means in the \code{ctrl_estimates} vector. The first element
-should be zero which generally corresponds to the time of randomization.}
+should be zero and correspond to the time of randomization.}
 
 \item{ctrl_estimates}{Estimated mean outcome in the control group at the
 fixed occasions corresponding to the times in \code{time_points}.}
@@ -50,8 +50,8 @@ corresponds to \code{exp_estimates[j]}.}
 
 \item{gamma_0}{Value for the acceleration factor under the null hypothesis.}
 
-\item{start_gamma}{Starting value for the acceleration factor used for for the
-generalized least squares estimator.}
+\item{start_gamma}{Starting value for the common acceleration factor in the
+optimization procedure. Defaults to \code{0.75}.}
 
 \item{...}{Tuning parameters that are passed to \code{\link[stats:optim]{stats::optim()}}.}
 }

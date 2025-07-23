@@ -114,9 +114,6 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 #' The [pm_bootstrap_vertical_to_common()] function implements a parametric
 #' bootstrap for the time-specific acceleration factors.
 #'
-#' @param bs_fix_vcov (boolean) Fix the estimated variance-covariance matrix for
-#' the estimated acceleration factors? This speeds up computations, but can have
-#' a negative impact of the method's properties.
 #' @param return_se (boolean) Return the estimated standard error from each
 #' bootstrap replication? This standard error is computed with the delta method.
 #' @inheritParams pm_bootstrap_vertical_to_horizontal
@@ -131,12 +128,10 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 pm_bootstrap_vertical_to_common = function(TCT_Fit,
                                            inference,
                                            B = 100,
-                                           bs_fix_vcov = TRUE,
                                            return_se = TRUE,
                                            null = FALSE,
                                            select_coef,
                                            constraints = FALSE,
-                                           type,
                                            weights,
                                            start_gamma) {
   if (B == 0)
@@ -209,6 +204,9 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
 
   # Re-estimate common acceleration factor for Wald-based inference
   if (inference == "delta-method") {
+    # Do not fix the variance-covariance matrix for the time-specific
+    # acceleration factors across bootstrap replications.
+    bs_fix_vcov = FALSE
     for (i in seq_along(estimates_bootstrap)) {
       if (bs_fix_vcov) {
         vcov_gls = TCT_vcov[select_coef, select_coef]
@@ -278,10 +276,8 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
           TCT_Fit = TCT_Fit_replicate,
           inference = inference,
           B = 0,
-          bs_fix_vcov = FALSE,
           select_coef = select_coef,
           constraints = FALSE,
-          type = type,
           weight = weights,
           start_gamma = start_gamma
           )

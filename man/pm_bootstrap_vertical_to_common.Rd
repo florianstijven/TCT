@@ -8,12 +8,10 @@ pm_bootstrap_vertical_to_common(
   TCT_Fit,
   inference,
   B = 100,
-  bs_fix_vcov = TRUE,
   return_se = TRUE,
   null = FALSE,
   select_coef,
   constraints = FALSE,
-  type,
   weights,
   start_gamma
 )
@@ -22,13 +20,9 @@ pm_bootstrap_vertical_to_common(
 \item{TCT_Fit}{Object returned by \code{\link[=TCT_meta]{TCT_meta()}}}
 
 \item{inference}{Which approach is used for estimation and inference? Should
-be \code{"contrast"}, \code{"least-squares"}, or \code{"delta-method"}.}
+be \code{"least-squares"}, \code{"contrast"}or \code{"delta-method"}.}
 
 \item{B}{Number of bootstrap replications.}
-
-\item{bs_fix_vcov}{(boolean) Fix the estimated variance-covariance matrix for
-the estimated acceleration factors? This speeds up computations, but can have
-a negative impact of the method's properties.}
 
 \item{return_se}{(boolean) Return the estimated standard error from each
 bootstrap replication? This standard error is computed with the delta method.}
@@ -38,27 +32,20 @@ treatment effect? Defaults to \code{FALSE}.}
 
 \item{select_coef}{Estimates from the \code{exp_estimates} in \code{\link[=TCT_meta]{TCT_meta()}} to use
 in estimating the common acceleration factor. If there is reason to believe
-that the proportional slowing assumption does not hold, e.g., for the first
-measurement after randomization, then the corresponding estimate should not
-be used in estimation the common acceleration factor.}
+that the proportional slowing assumption does not hold for only some time
+points (e.g., for the first measurement after randomization), then the
+corresponding estimate should not be used in estimation the common
+acceleration factor.}
 
 \item{constraints}{Use the constrained generalized least squares estimator
 for the vertical treatment effects.}
 
-\item{type}{Which type of test statistic should be used. See Test Statistic
-Variants. Should be one of
-\enumerate{
-\item \code{type = "omnibus"}
-\item \code{type = "directional"}
-\item \code{type = "inverse variance"}
-\item \code{type = "custom"}
-}}
+\item{weights}{If \code{inference = "contrast"}, then the user can provide weights
+for the different measurement occasions. If not provided, the optimal
+weights are estimated data-adapatively.}
 
-\item{weights}{If \code{type == "custom"}, the user should specify a weight
-vector for weighting estimates at different time points differently.}
-
-\item{start_gamma}{Starting value for the acceleration factor used for for the
-generalized least squares estimator.}
+\item{start_gamma}{Initial value for the algorithm that finds the common
+acceleration factor numerically. Defaults to \code{0.75}.}
 }
 \value{
 A list with two element:
