@@ -55,8 +55,6 @@ zero.}
 Variants. Should be one of
 \enumerate{
 \item \code{type = "omnibus"}
-\item \code{type = "directional"}
-\item \code{type = "inverse variance"}
 \item \code{type = "custom"}
 }}
 
@@ -80,6 +78,14 @@ assumption that there exists a common acceleration factor. Multiple variants
 to this test exist and are implemented.
 }
 \section{Test Statistic Variants}{
+In this documentation file, we continue with the distributional results
+for the contrast functions as detailed in the documentation of
+\code{\link[=contrast_test]{contrast_test()}}. The \code{\link[=contrast_test_common]{contrast_test_common()}} function implements
+several types of tests for the null hypothesis that the common acceleration
+factor equals a particular value, \eqn{\gamma_0}. Note that in the functions
+available to users, only the \code{type = "custom"} test is available (other tests
+have not been thoroughly studied and are, therefore, not direct available).
+
 Two types of test statistics are implemented in the \code{\link[=contrast_test_common]{contrast_test_common()}}
 function:
 \enumerate{
@@ -91,10 +97,16 @@ These are discussed in more detail next.
 \subsection{Omnibus}{
 
 The omnibus contrast test is based on the "classic" chi-squared statistic that is
-defined as follows,
-\deqn{t^2 = \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t \cdot \Sigma_s^{-1} \cdot \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}).}
-which follows a chi-squared distribution with K degrees of freedom under
-\eqn{H_{\gamma_0}} for all time points. An important feature of this test
+defined as follows:
+\deqn{
+n
+\boldsymbol{\Phi}(\gamma_0; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)^\top
+\Sigma_n^{-1}
+\boldsymbol{\Phi}(\gamma_0; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n).
+}
+which follows asymptotically a chi-squared distribution with K degrees of
+freedom if \eqn{\gamma_0} is the true common acceleration factor. An
+important feature of this test
 statistic is that it reduces to the chi-squared statistic for \eqn{H_0 :
 \alpha_j = \beta_j} for all \eqn{j} in \code{j} when \code{gamma_0 = 1}. However, this
 also means that there is no gain in power.
@@ -103,59 +115,15 @@ also means that there is no gain in power.
 \subsection{Custom}{
 
 The "custom" contrast test allows for user-specified weights, \eqn{w}. The test
-statistic is defined as follows,
-\deqn{z = \frac{v(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}; \gamma_0)}{\sqrt{\boldsymbol{w}^t \Sigma_s \boldsymbol{w}}} \; \dot\sim \; N(0, 1).}
-As indicated above, this test statistic follows a standard normal
-distribution under the null hypothesis.
-
-Note that \code{\link[=optimize_weights]{optimize_weights()}} allows one to find optimal weights in the
-sense of minimizing the estimated standard error for the corresponding
-estimator of the common acceleration factor.
+statistic is defined as follows:
+\deqn{
+n^{1/2}
+\left(\boldsymbol{w}^\top \Omega_n \boldsymbol{w}\right)^{-1/2})
+\boldsymbol{w}^\top
+\boldsymbol{\Phi}(\gamma_0; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n),
 }
+which follows asymptotically a standard normal distribution if
+\eqn{\gamma_0} is the true common acceleration factor.
 }
-
-\section{Contrast Test}{
-For constructing a contrast test, we start from the null hypothesis,
-\deqn{H_{\gamma_0}: \gamma_j = \gamma_0,} where \eqn{\gamma_j} is the
-acceleration factor at time \eqn{t_j}. Under this null hypothesis, and taking
-the control group as reference, we can
-compute the experimental treatment group mean at \eqn{t_j} as \deqn{\beta_{0,
-j} = f_0( \gamma_0 \cdot t_{j}; \boldsymbol{\alpha})} given the true control
-group mean vector, \eqn{\boldsymbol{\alpha}}. Consequently, a test for
-\eqn{H_0: \beta_j = \beta_{0, j}} is also a valid test for
-\eqn{H_{\gamma_0}}. Well-established tests are available for the former
-hypothesis. However, these cannot be applied directly since
-\eqn{\boldsymbol{\alpha}} is not known, but only estimated. Indeed, \eqn{\beta_{0,
-j}} is itself estimated by \eqn{\hat{\beta}_{0, j} =  f_0( \gamma_0 \cdot t_{j};
-\hat{\boldsymbol{\alpha}})}. Still, this provides the starting point for a
-contrast test that draws upon well-established statistical tests.
-
-We first define the contrast vector as follows, \deqn{\boldsymbol{\Phi}(\boldsymbol{\gamma}; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n) =
-\hat{\boldsymbol{\beta}}_n - \left(f_0(\gamma_1 \cdot t_1;
-\hat{\boldsymbol{\alpha}}_n), \dots, f_0(\gamma_K \cdot t_K;
-\hat{\boldsymbol{\alpha}}_n)\right)^\top.}
-Under \eqn{H_{\gamma_0}} for all time points and using the delta
-method, we have that
-\deqn{n^{1/2}\boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
-\hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \Omega)} where
-\deqn{\Omega =
-\dot{\boldsymbol{\Phi}}_{\boldsymbol{\alpha}, \boldsymbol{\beta}}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha_0}, \boldsymbol{\beta_0}) \cdot \Sigma \cdot
-\dot{\boldsymbol{\Phi}}_{\boldsymbol{\alpha}, \boldsymbol{\beta}}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha_0}, \boldsymbol{\beta_0})^\top} with
-\eqn{\dot{\boldsymbol{\Phi}}_{\boldsymbol{\alpha}, \boldsymbol{\beta}}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha_0}, \boldsymbol{\beta_0})} the
-Jacobian of \eqn{(\boldsymbol{\alpha}, \boldsymbol{\beta}) \mapsto \boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha}, \boldsymbol{\beta})} evaluated in the true parameter vector,
-\eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}.
-In practice, \eqn{\Omega} is unknown because the true parameter vector is unknown.
-We, therefore, replace the unkown parameters wit the corresponding estimates in
-the above expression for \eqn{\Omega}; the corresponding estimated matrix is
-denoted by \eqn{\hat{\Omega}_n}. As long as \eqn{\hat{\Omega}_n} is consistent
-for \eqn{\Omega}, we have the following distributional result, which forms the
-basis for hypothesis tests and confidence intervals:
-\deqn{n^{1/2}\boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
-\hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n).}
-Specifically, for tests for time-specific acceleration factors, we use the
-following distributional result:
-\deqn{n^{1/2}\Phi_j(\gamma_0; \hat{\boldsymbol{\alpha}}_n,
-\hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n)}
-where
 }
 

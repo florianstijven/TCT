@@ -91,12 +91,16 @@ data_test = simulated_test_trial %>%
                       "baseline",
                       paste0(arm, ":", time_int))
   )
+
 # Fit a MMRM model to the data set. The parameter estimates of this model form
 # the basis to perform the time component tests.
-mmrm_fit = analyze_mmrm(data_test,
-                        package = "mmrm",
-                        method = "REML",
-                        type = "full")
+formula = formula(ADAScog_integer ~ arm_time + us(time_int | SubjId))
+data_test$SubjId = as.factor(data_test$SubjId)
+data_test$time_int = as.factor(data_test$time_int)
+formula = stats::update.formula(old = formula, . ~ .)
+mmrm_fit = mmrm::mmrm(formula = formula,
+                      data = data_test,
+                      reml = TRUE)
 ```
 
 We can print the summary of this fitted model. However, the mean estimates may
@@ -183,7 +187,7 @@ equally-spaced, this should be reflected in `time_points`.
 2. The second set of arguments pertains to options for inference. All options 
 are described in the function documentation. 
   * For constructing the reference trajectory, we use cubic spline interpolation,       hence, the `"spline"` argument for `interpolation`.
-  * For inference on the estimated acceleration factors, we use the `"score"` based
+  * For inference on the estimated acceleration factors, we use the `"contrast"` based
     inference.
   * `B` specifies the number of bootstrap replications. We do not use the bootstrap     for inference in this vignette. 
   
@@ -194,7 +198,7 @@ TCT_meta_fit = TCT_meta(
   exp_estimates = active_estimates, 
   vcov = vcov_mmrm, 
   interpolation = "spline", 
-  inference = "score", 
+  inference = "contrast", 
   B = 0
 )
 ```
@@ -229,11 +233,10 @@ Whereas there are only a limited number of inference options in the case of
 time-specific acceleration factors, there are many more options for the case
 of a common acceleration factor. 
 
-* The `inference` argument specifies the method of inference. We choose once `"score"` and
+* The `inference` argument specifies the method of inference. We choose once `"contrast"` and
 once `"least-squares"`.
-  * For `"score"` based inference, several `type`s are possible. We choose 
-   `type = "custom"`. If we then leave the `weights` unspecified, the weights
-   will be adaptively selected as to minimize the standard error of the common 
+  * For `"contrast"` based inference, if we leave the `weights` unspecified, the weights
+   will be estimated data-adaptively as to minimize the standard error of the common 
    acceleration factor estimate.
 * As before, `B` specifies the number of replications in a bootstrap. We do not use
 the boostrap, so we set `B = 0`.
@@ -245,11 +248,10 @@ occasions are used.
 
 
 ```{r}
-TCT_common_score = TCT_meta_common(
+TCT_common_contrast = TCT_meta_common(
   TCT_Fit = TCT_meta_fit, 
-  inference = "score", 
-  B = 0,
-  type = "custom"
+  inference = "contrast", 
+  B = 0
 )
 TCT_common_ls = TCT_meta_common(
   TCT_Fit = TCT_meta_fit, 
@@ -262,7 +264,7 @@ We can again use the `summary()` method on the object returned by `TCT_meta()` t
 get more information on the estimates and corresponding inference.
 
 ```{r}
-summary(TCT_common_score)
+summary(TCT_common_contrast)
 summary(TCT_common_ls)
 ```
 

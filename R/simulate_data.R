@@ -158,6 +158,14 @@ qnorm.trunc = function (p,
         sd)
 }
 
+# Define global variables. These variables are used in mutate() calls and R raises
+# a note because we're using a non-standard evaluation.
+utils::globalVariables(c(
+  "Eta", "Alpha", "Week", "theta", "LogitCondExp",
+  "ADAScog_numeric", "Age", "SubjId"
+))
+
+
 # Function to generate data from a single arm in a single clinical trial.
 simulate_single_arm = function(control,
                                arm_sample_size,

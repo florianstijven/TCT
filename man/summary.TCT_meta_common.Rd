@@ -49,6 +49,6 @@ TCT_Fit = TCT_meta(
 )
 TCT_fit_common = TCT_meta_common(
   TCT_Fit = TCT_Fit,
-  inference = "wald"
+  inference = "delta-method"
 )
 }

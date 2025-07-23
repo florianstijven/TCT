@@ -9,29 +9,57 @@
 #' @inheritParams TCT_meta
 #'
 #' @details
-#' We can write the slowing factor at \eqn{\boldsymbol{t} = (t_1, ..., t_K)'}
-#' as a function of the the mean parameters,
-#' \deqn{
-#' \boldsymbol{\gamma} = \boldsymbol{\gamma}(\boldsymbol{t}; \boldsymbol{\alpha}, \boldsymbol{\beta}).
-#' }
-#' Further assume that \eqn{\hat{\boldsymbol{\alpha}}} and \eqn{\hat{\boldsymbol{\beta}}}
-#' are normally distributed,
+#' We can write the vector of time-specific acceleration factors
+#' as a vector-valued function of the mean parameters:
+#' \eqn{
+#' (\boldsymbol{\alpha}, \boldsymbol{\beta})
+#' \mapsto
+#' \boldsymbol{\gamma}(\boldsymbol{\alpha}, \boldsymbol{\beta})
+#' },
+#' where we assume asymptotic normality of the mean parameter estimator:
 #'\deqn{
-#' (\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})' \sim N\left( (\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})', D \right)
+#' n^{1/2}
+#' \left((\hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)' -
+#' (\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})' \right)
+#' \overset{d}{\to}
+#' \mathcal{N}
+#' \left( \boldsymbol{0}, \Sigma \right),
 #' }
 #' where \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'} is the true
-#' parameter vector. We can obtain an approximate sampling distribution for
-#' \eqn{\hat{\boldsymbol{\gamma}}} by a parametric bootstrap in two steps,
+#' parameter vector. We let \eqn{\Sigma_n} be a consistent estimator of
+#' \eqn{\Sigma}.
+#'
+#' The [pm_bootstrap_vertical_to_horizontal()] function implements a parametric
+#' bootstrap in the following two steps:
 #' 1. Sample \eqn{B} bootstrap replications of the vertical parameters from
 #' \deqn{
-#' (\hat{\boldsymbol{\alpha}}^b, \hat{\boldsymbol{\beta}}^b)' \sim N \left( (\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})', \hat{D}  \right)
+#' (\hat{\boldsymbol{\alpha}}_b, \hat{\boldsymbol{\beta}}_b)'
+#' \sim
+#' \mathcal{N} \left( (\hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)', \Sigma_n  \right)
 #' }
-#'  where \eqn{b} refers to the \eqn{b}'th bootstrap replicate.
+#' where \eqn{b} refers to the \eqn{b}'th bootstrap replicate.
 #' 2. Transform the bootstrap replicates to the time scale,
 #' \deqn{
-#' \hat{\boldsymbol{\gamma}}^b = \boldsymbol{\gamma}(\boldsymbol{t}; \hat{\boldsymbol{\alpha}}^b, \hat{\boldsymbol{\beta}}^b).
+#' \hat{\boldsymbol{\gamma}}_b :=
+#' \boldsymbol{\gamma}(\hat{\boldsymbol{\alpha}}_b, \hat{\boldsymbol{\beta}}_b).
 #' }
-#' This transformation is implemented in [g_Delta_bis()].
+#' This transformation is implemented in [g_Delta_bis()] for the time-specific
+#' acceleration factors.
+#'
+#' For the common acceleration factor, we replace the vector-valued function
+#' \eqn{
+#' (\boldsymbol{\alpha}, \boldsymbol{\beta})
+#' \mapsto
+#' \boldsymbol{\gamma}(\boldsymbol{\alpha}, \boldsymbol{\beta})
+#' }
+#' with the real-valued function
+#' \eqn{
+#' (\boldsymbol{\alpha}, \boldsymbol{\beta})
+#' \mapsto
+#' \gamma(\boldsymbol{\alpha}, \boldsymbol{\beta})
+#' }
+#' and repeat the same steps as described above. The nature of this real-valued
+#' function depends on the estimator for the common acceleration factor.
 #'
 #' @return A \eqn{(B \times K)} matrix where the \eqn{b}'th row corresponds to
 #' \eqn{\hat{\boldsymbol{\gamma}}^b} and \eqn{K = } `length(exp_estimates)`.
@@ -112,19 +140,22 @@ pm_bootstrap_vertical_to_horizontal = function(time_points,
 #' Parametric Bootstrap for a Common Acceleration Factor
 #'
 #' The [pm_bootstrap_vertical_to_common()] function implements a parametric
-#' bootstrap for the time-specific acceleration factors.
+#' bootstrap for the common acceleration factor.
 #'
 #' @param return_se (boolean) Return the estimated standard error from each
 #' bootstrap replication? This standard error is computed with the delta method.
 #' @inheritParams pm_bootstrap_vertical_to_horizontal
 #' @inheritParams TCT_meta_common
-#'
-#' @return A list with two element:
+#' @return A list with two elements:
 #'  * `estimates_bootstrap`: (numeric) vector of length `B` that contains the
 #'  bootstrap replicates for the common acceleration factor.
 #'  * `se_bootstrap`: (numeric) vector of length `B` that contains the bootstrap
 #'  replicates of the estimated standard error. Is a vector of `NA`s when
 #'  `return_se = FALSE`.
+#'
+#' @inherit pm_bootstrap_vertical_to_horizontal
+#'
+
 pm_bootstrap_vertical_to_common = function(TCT_Fit,
                                            inference,
                                            B = 100,
@@ -278,7 +309,7 @@ pm_bootstrap_vertical_to_common = function(TCT_Fit,
           B = 0,
           select_coef = select_coef,
           constraints = FALSE,
-          weight = weights,
+          weights = weights,
           start_gamma = start_gamma
           )
         return(TCT_common_fit)

@@ -46,18 +46,38 @@
 #' Jacobian of \eqn{(\boldsymbol{\alpha}, \boldsymbol{\beta}) \mapsto \boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha}, \boldsymbol{\beta})} evaluated in the true parameter vector,
 #' \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}.
 #' In practice, \eqn{\Omega} is unknown because the true parameter vector is unknown.
-#' We, therefore, replace the unkown parameters wit the corresponding estimates in
+#' We, therefore, replace the unknown parameters with the corresponding estimates in
 #' the above expression for \eqn{\Omega}; the corresponding estimated matrix is
 #' denoted by \eqn{\hat{\Omega}_n}. As long as \eqn{\hat{\Omega}_n} is consistent
 #' for \eqn{\Omega}, we have the following distributional result, which forms the
 #' basis for hypothesis tests and confidence intervals:
-#' \deqn{n^{1/2}\boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
-#' \hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n).}
-#' Specifically, for tests for time-specific acceleration factors, we use the
-#' following distributional result:
-#' \deqn{n^{1/2}\Phi_j(\gamma_0; \hat{\boldsymbol{\alpha}}_n,
-#' \hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n)}
-#' where
+#' \deqn{n^{1/2} \hat{\Omega}_n^{-1/2} \boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
+#' \hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, I).}
+#'
+#' # Time-Specific Acceleration Factors
+#'
+#' The estimated vector of time-specific acceleration factors is defined as the
+#' root of
+#' \eqn{\boldsymbol{\gamma} \mapsto
+#' \boldsymbol{\Phi}(\boldsymbol{\gamma}; \hat{\boldsymbol{\alpha}}_n \hat{\boldsymbol{\beta}}_n)}.
+#' For inferences, we use the above distributional result.
+#'
+#' # Common Acceleration Factor
+#'
+#' Let
+#' \eqn{\gamma \mapsto \boldsymbol{w}^\top
+#' \boldsymbol{\Phi}(\boldsymbol{\gamma}; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)}
+#' be an estimating function where
+#' \eqn{\boldsymbol{\gamma}(\gamma) := (\gamma, \dots, \gamma)'} and
+#' \eqn{\boldsymbol{w}} a vector of weights.
+#' The contrast-based estimator of the common acceleration factor is defined as
+#' the root of this function and is denoted by
+#' \eqn{\hat{\gamma}_{\boldsymbol{w}, n}}. The weights vector can be
+#' prespecified through the `weights` argument, or if no value is given to
+#' `weights`, the weights are estimated data-adaptively by minimizing the
+#' estimated standard error of \eqn{\hat{\gamma}_{\boldsymbol{w}, n}}.
+#' For (asymptotically valid) inferences, it does not matter that the weights
+#' were estimated using the same data.
 #'
 #'
 #' @return Named (numeric) vector with two elements:
@@ -226,19 +246,24 @@ contrast_conf_int = function(time_points,
 #' @param type Which type of test statistic should be used. See Test Statistic
 #'   Variants. Should be one of
 #'   1. `type = "omnibus"`
-#'   2. `type = "directional"`
-#'   3. `type = "inverse variance"`
-#'   4. `type = "custom"`
+#'   2. `type = "custom"`
 #' @param j (Integer) vector that indicates which elements in `exp_estimates`
 #'   should be used for the contrast test. Defaults to `1:length(exp_estimates)`,
 #'   i.e., all elements are used.
 #' @param weights If `type == "custom"`, the user should specify a weight
 #'   vector for weighting estimates at different time points differently.
 #' @inheritParams contrast_test
-#' @inheritSection contrast_test Contrast Test
 #' @details
 #'
 #' # Test Statistic Variants
+#'
+#' In this documentation file, we continue with the distributional results
+#' for the contrast functions as detailed in the documentation of
+#' [contrast_test()]. The [contrast_test_common()] function implements
+#' several types of tests for the null hypothesis that the common acceleration
+#' factor equals a particular value, \eqn{\gamma_0}. Note that in the functions
+#' available to users, only the `type = "custom"` test is available (other tests
+#' have not been thoroughly studied and are, therefore, not direct available).
 #'
 #' Two types of test statistics are implemented in the [contrast_test_common()]
 #' function:
@@ -251,10 +276,16 @@ contrast_conf_int = function(time_points,
 #' ## Omnibus
 #'
 #' The omnibus contrast test is based on the "classic" chi-squared statistic that is
-#' defined as follows,
-#' \deqn{t^2 = \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}})^t \cdot \Sigma_s^{-1} \cdot \boldsymbol{s}(\gamma_0 \cdot \boldsymbol{t}; \hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}).}
-#' which follows a chi-squared distribution with K degrees of freedom under
-#' \eqn{H_{\gamma_0}} for all time points. An important feature of this test
+#' defined as follows:
+#' \deqn{
+#' n
+#' \boldsymbol{\Phi}(\gamma_0; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)^\top
+#' \Sigma_n^{-1}
+#' \boldsymbol{\Phi}(\gamma_0; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n).
+#' }
+#' which follows asymptotically a chi-squared distribution with K degrees of
+#' freedom if \eqn{\gamma_0} is the true common acceleration factor. An
+#' important feature of this test
 #' statistic is that it reduces to the chi-squared statistic for \eqn{H_0 :
 #' \alpha_j = \beta_j} for all \eqn{j} in `j` when `gamma_0 = 1`. However, this
 #' also means that there is no gain in power.
@@ -262,14 +293,15 @@ contrast_conf_int = function(time_points,
 #' ## Custom
 #'
 #' The "custom" contrast test allows for user-specified weights, \eqn{w}. The test
-#' statistic is defined as follows,
-#' \deqn{z = \frac{v(\hat{\boldsymbol{\alpha}}, \hat{\boldsymbol{\beta}}; \gamma_0)}{\sqrt{\boldsymbol{w}^t \Sigma_s \boldsymbol{w}}} \; \dot\sim \; N(0, 1).}
-#' As indicated above, this test statistic follows a standard normal
-#' distribution under the null hypothesis.
-#'
-#' Note that [optimize_weights()] allows one to find optimal weights in the
-#' sense of minimizing the estimated standard error for the corresponding
-#' estimator of the common acceleration factor.
+#' statistic is defined as follows:
+#' \deqn{
+#' n^{1/2}
+#' \left(\boldsymbol{w}^\top \Omega_n \boldsymbol{w}\right)^{-1/2})
+#' \boldsymbol{w}^\top
+#' \boldsymbol{\Phi}(\gamma_0; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n),
+#' }
+#' which follows asymptotically a standard normal distribution if
+#' \eqn{\gamma_0} is the true common acceleration factor.
 #'
 #'
 #' @return Named (numeric) vector with two elements:

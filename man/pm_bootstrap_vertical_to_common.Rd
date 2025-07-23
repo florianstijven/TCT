@@ -48,7 +48,7 @@ weights are estimated data-adapatively.}
 acceleration factor numerically. Defaults to \code{0.75}.}
 }
 \value{
-A list with two element:
+A list with two elements:
 \itemize{
 \item \code{estimates_bootstrap}: (numeric) vector of length \code{B} that contains the
 bootstrap replicates for the common acceleration factor.
@@ -59,5 +59,60 @@ replicates of the estimated standard error. Is a vector of \code{NA}s when
 }
 \description{
 The \code{\link[=pm_bootstrap_vertical_to_common]{pm_bootstrap_vertical_to_common()}} function implements a parametric
-bootstrap for the time-specific acceleration factors.
+bootstrap for the common acceleration factor.
+}
+\details{
+We can write the vector of time-specific acceleration factors
+as a vector-valued function of the mean parameters:
+\eqn{
+(\boldsymbol{\alpha}, \boldsymbol{\beta})
+\mapsto
+\boldsymbol{\gamma}(\boldsymbol{\alpha}, \boldsymbol{\beta})
+},
+where we assume asymptotic normality of the mean parameter estimator:
+\deqn{
+n^{1/2}
+\left((\hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)' -
+(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})' \right)
+\overset{d}{\to}
+\mathcal{N}
+\left( \boldsymbol{0}, \Sigma \right),
+}
+where \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'} is the true
+parameter vector. We let \eqn{\Sigma_n} be a consistent estimator of
+\eqn{\Sigma}.
+
+The \code{\link[=pm_bootstrap_vertical_to_horizontal]{pm_bootstrap_vertical_to_horizontal()}} function implements a parametric
+bootstrap in the following two steps:
+\enumerate{
+\item Sample \eqn{B} bootstrap replications of the vertical parameters from
+\deqn{
+(\hat{\boldsymbol{\alpha}}_b, \hat{\boldsymbol{\beta}}_b)'
+\sim
+\mathcal{N} \left( (\hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)', \Sigma_n  \right)
+}
+where \eqn{b} refers to the \eqn{b}'th bootstrap replicate.
+\item Transform the bootstrap replicates to the time scale,
+\deqn{
+\hat{\boldsymbol{\gamma}}_b :=
+\boldsymbol{\gamma}(\hat{\boldsymbol{\alpha}}_b, \hat{\boldsymbol{\beta}}_b).
+}
+This transformation is implemented in \code{\link[=g_Delta_bis]{g_Delta_bis()}} for the time-specific
+acceleration factors.
+}
+
+For the common acceleration factor, we replace the vector-valued function
+\eqn{
+(\boldsymbol{\alpha}, \boldsymbol{\beta})
+\mapsto
+\boldsymbol{\gamma}(\boldsymbol{\alpha}, \boldsymbol{\beta})
+}
+with the real-valued function
+\eqn{
+(\boldsymbol{\alpha}, \boldsymbol{\beta})
+\mapsto
+\gamma(\boldsymbol{\alpha}, \boldsymbol{\beta})
+}
+and repeat the same steps as described above. The nature of this real-valued
+function depends on the estimator for the common acceleration factor.
 }

@@ -290,7 +290,7 @@ summary.TCT_meta = function(object,
   interpolation = object$inference_options$interpolation
   vcov_vertical = object$vertical_model$vcov
 
-  # Wald-based inference if the inference option is equal to "wald".
+  # Delte method-based inference if the inference option is equal to "delta-method".
   if (inference == "delta-method") {
     if (delta_transformation == "identity") {
       se_delta = sqrt(diag(object$vcov))
@@ -317,7 +317,8 @@ summary.TCT_meta = function(object,
     )
   }
   # contrast-based inference if the inference option is equal to "contrast".
-  if (inference == "contrast") {
+  if (inference == "contrast" |
+      inference == "least-squares") {
     se_delta = sqrt(diag(object$vcov))
     # (Re)construct reference trajectory.
     ref_fun = ref_fun_constructor(
@@ -540,7 +541,7 @@ print.summary_TCT_meta = function(x, ...) {
 #' )
 #' TCT_fit_common = TCT_meta_common(
 #'   TCT_Fit = TCT_Fit,
-#'   inference = "wald"
+#'   inference = "delta-method"
 #' )
 TCT_meta_common = function(TCT_Fit,
                            inference = "least-squares",
@@ -766,7 +767,7 @@ summary.TCT_meta_common = function(object,
   select_coef = object$inference_options$select_coef
   weights = object$inference_options$weights
   proportional_slowing_test = object$proportional_slowing_test
-  # Wald-based inference
+  # Delta method-based inference
   if (inference == "delta-method") {
     if (delta_transformation == "identity") {
       gamma_common_se = sqrt(diag(object$vcov))

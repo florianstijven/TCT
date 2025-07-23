@@ -52,8 +52,6 @@ zero.}
 Variants. Should be one of
 \enumerate{
 \item \code{type = "omnibus"}
-\item \code{type = "directional"}
-\item \code{type = "inverse variance"}
 \item \code{type = "custom"}
 }}
 

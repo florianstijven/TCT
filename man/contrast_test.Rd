@@ -100,17 +100,37 @@ method, we have that
 Jacobian of \eqn{(\boldsymbol{\alpha}, \boldsymbol{\beta}) \mapsto \boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \boldsymbol{\alpha}, \boldsymbol{\beta})} evaluated in the true parameter vector,
 \eqn{(\boldsymbol{\alpha_0}, \boldsymbol{\beta_0})'}.
 In practice, \eqn{\Omega} is unknown because the true parameter vector is unknown.
-We, therefore, replace the unkown parameters wit the corresponding estimates in
+We, therefore, replace the unknown parameters with the corresponding estimates in
 the above expression for \eqn{\Omega}; the corresponding estimated matrix is
 denoted by \eqn{\hat{\Omega}_n}. As long as \eqn{\hat{\Omega}_n} is consistent
 for \eqn{\Omega}, we have the following distributional result, which forms the
 basis for hypothesis tests and confidence intervals:
-\deqn{n^{1/2}\boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
-\hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n).}
-Specifically, for tests for time-specific acceleration factors, we use the
-following distributional result:
-\deqn{n^{1/2}\Phi_j(\gamma_0; \hat{\boldsymbol{\alpha}}_n,
-\hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, \hat{\Omega}_n)}
-where
+\deqn{n^{1/2} \hat{\Omega}_n^{-1/2} \boldsymbol{\Phi}(\boldsymbol{\gamma_0}; \hat{\boldsymbol{\alpha}}_n,
+\hat{\boldsymbol{\beta}}_n) \overset{d}{\to} \mathcal{N}(\boldsymbol{0}, I).}
+}
+
+\section{Time-Specific Acceleration Factors}{
+The estimated vector of time-specific acceleration factors is defined as the
+root of
+\eqn{\boldsymbol{\gamma} \mapsto
+\boldsymbol{\Phi}(\boldsymbol{\gamma}; \hat{\boldsymbol{\alpha}}_n \hat{\boldsymbol{\beta}}_n)}.
+For inferences, we use the above distributional result.
+}
+
+\section{Common Acceleration Factor}{
+Let
+\eqn{\gamma \mapsto \boldsymbol{w}^\top
+\boldsymbol{\Phi}(\boldsymbol{\gamma}; \hat{\boldsymbol{\alpha}}_n, \hat{\boldsymbol{\beta}}_n)}
+be an estimating function where
+\eqn{\boldsymbol{\gamma}(\gamma) := (\gamma, \dots, \gamma)'} and
+\eqn{\boldsymbol{w}} a vector of weights.
+The contrast-based estimator of the common acceleration factor is defined as
+the root of this function and is denoted by
+\eqn{\hat{\gamma}_{\boldsymbol{w}, n}}. The weights vector can be
+prespecified through the \code{weights} argument, or if no value is given to
+\code{weights}, the weights are estimated data-adaptively by minimizing the
+estimated standard error of \eqn{\hat{\gamma}_{\boldsymbol{w}, n}}.
+For (asymptotically valid) inferences, it does not matter that the weights
+were estimated using the same data.
 }
 
