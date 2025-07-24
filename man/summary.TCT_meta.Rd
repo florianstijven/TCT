@@ -9,6 +9,7 @@
   alpha = 0.05,
   delta_transformation = "identity",
   bounds = c(-5, 5),
+  bootstrap_type = "percentile",
   ...
 )
 }
@@ -23,6 +24,9 @@ obtain confidence intervals.}
 \item{bounds}{(numeric) vector with two elements that defines the bounds of
 the search interval for the (contrast-based) confidence limits or estimate.
 Defaults to \code{c(-5, 5)}.}
+
+\item{bootstrap_type}{Type of bootstrap confidence interval to compute.
+Currently only two types are implemented: \code{"BC percentile"} and \code{"percentile"}.}
 
 \item{...}{
   Arguments passed on to \code{\link[base:summary]{base::summary}}

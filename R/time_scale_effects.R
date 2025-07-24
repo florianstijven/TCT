@@ -270,6 +270,8 @@ new_summary_TCT_meta = function(
 #' @param alpha Two-sided confidence level for confidence intervals.
 #' @param delta_transformation Transformation when applying the delta-method to
 #'   obtain confidence intervals.
+#' @param bootstrap_type Type of bootstrap confidence interval to compute.
+#'   Currently only two types are implemented: `"BC percentile"` and `"percentile"`.
 #' @inheritDotParams base::summary
 #'
 #' @return S3 object of class `"summary_TCT_meta"`
@@ -281,6 +283,7 @@ summary.TCT_meta = function(object,
                             alpha = 0.05,
                             delta_transformation = "identity",
                             bounds = c(-5, 5),
+                            bootstrap_type = "percentile",
                             ...) {
   # Extract information from the TCT_meta object that is used further on.
   inference = object$inference_options$inference
@@ -290,7 +293,7 @@ summary.TCT_meta = function(object,
   interpolation = object$inference_options$interpolation
   vcov_vertical = object$vertical_model$vcov
 
-  # Delte method-based inference if the inference option is equal to "delta-method".
+  # Delta method-based inference if the inference option is equal to "delta-method".
   if (inference == "delta-method") {
     if (delta_transformation == "identity") {
       se_delta = sqrt(diag(object$vcov))
@@ -380,12 +383,11 @@ summary.TCT_meta = function(object,
   if (!(is.null(object$bootstrap_estimates))) {
     vcov_bootstrap = stats::var(object$bootstrap_estimates, na.rm = TRUE)
     se_bootstrap = sqrt(diag(vcov_bootstrap))
-    ci_bootstrap = t(apply(
-      X = object$bootstrap_estimates,
-      MARGIN = 2,
-      FUN = stats::quantile,
-      probs = c(alpha / 2, 1 - alpha / 2),
-      na.rm = TRUE
+    ci_bootstrap = t(mapply(
+      boot_replicates = asplit(object$bootstrap_estimates, MARGIN = 2),
+      estimate = coef(object),
+      FUN = bootstrap_CI,
+      MoreArgs = list(alpha = alpha, type = bootstrap_type)
     ))
     p_bootstrap = apply(
       X = object$bootstrap_estimates,
@@ -756,6 +758,7 @@ print.TCT_meta_common = function(x, ...) {
 summary.TCT_meta_common = function(object,
                                    alpha = 0.05,
                                    delta_transformation = "identity",
+                                   bootstrap_type = "percentile",
                                    ...) {
   # Extract information from the TCT_meta object that is used further on.
   inference = object$inference_options$inference
@@ -881,10 +884,11 @@ summary.TCT_meta_common = function(object,
   if (!(is.null(object$bootstrap_estimates))) {
     vcov_bootstrap = stats::var(object$bootstrap_estimates[[1]], na.rm = TRUE)
     se_bootstrap = sqrt(vcov_bootstrap)
-    ci_bootstrap = stats::quantile(
-      x = object$bootstrap_estimates[[1]],
-      probs = c(alpha / 2, 1 - alpha / 2),
-      na.rm = TRUE
+    ci_bootstrap = bootstrap_CI(
+      boot_replicates = object$bootstrap_estimates[[1]],
+      estimate = coef(object),
+      alpha = alpha,
+      type = bootstrap_type
     )
     p_bootstrap = min(mean(object$bootstrap_estimates[[1]] > 1, na.rm = TRUE) * 2,
                       (1 - mean(object$bootstrap_estimates[[1]] > 1, na.rm = TRUE)) * 2)

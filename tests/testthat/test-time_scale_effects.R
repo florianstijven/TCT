@@ -413,3 +413,29 @@ test_that("TCT_meta_common() works with subset of estimates in exp_estimates", {
                check_vctr,
                ignore_attr = "names")
 })
+
+test_that("TCT_meta() and TCT_meta_common() work with BC percentile interval", {
+  set.seed(1)
+  TCT_Fit = TCT_meta(
+    time_points = 0:4,
+    ctrl_estimates = ctrl_estimates,
+    exp_estimates = exp_estimates,
+    vcov = vcov_mmrm,
+    interpolation = "spline",
+    B = 50,
+    inference = "delta-method"
+  )
+  TCT_Fit_summary = summary(TCT_Fit, bootstrap_type = "BC percentile")
+  TCT_common_fit = TCT_meta_common(
+    TCT_Fit = TCT_Fit,
+    inference = "least-squares",
+    B = 50
+  )
+  TCT_common_summary = summary(TCT_common_fit, bootstrap_type = "BC percentile")
+  TCT_output_vctr = c(TCT_Fit_summary$ci_bootstrap[1, 1:2],
+                      TCT_common_summary$ci_bootstrap)
+  check_vctr = c( -0.118015572370, 1.377234650547, 0.712604553192, 1.275732088628)
+  expect_equal(TCT_output_vctr,
+               check_vctr,
+               ignore_attr = "names")
+})

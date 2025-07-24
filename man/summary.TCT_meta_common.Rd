@@ -4,7 +4,13 @@
 \alias{summary.TCT_meta_common}
 \title{Summarize fitted Meta-Time Component Test model with Proportional Slowing}
 \usage{
-\method{summary}{TCT_meta_common}(object, alpha = 0.05, delta_transformation = "identity", ...)
+\method{summary}{TCT_meta_common}(
+  object,
+  alpha = 0.05,
+  delta_transformation = "identity",
+  bootstrap_type = "percentile",
+  ...
+)
 }
 \arguments{
 \item{object}{Object returned by \code{\link[=TCT_meta_common]{TCT_meta_common()}}.}
@@ -13,6 +19,9 @@
 
 \item{delta_transformation}{Transformation when applying the delta-method to
 obtain confidence intervals.}
+
+\item{bootstrap_type}{Type of bootstrap confidence interval to compute.
+Currently only two types are implemented: \code{"BC percentile"} and \code{"percentile"}.}
 
 \item{...}{
   Arguments passed on to \code{\link[base:summary]{base::summary}}
