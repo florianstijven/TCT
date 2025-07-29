@@ -121,13 +121,13 @@
 #' # the Meta-TCT.
 #' summary(TCT_Fit)
 TCT_meta = function(time_points,
-               ctrl_estimates,
-               exp_estimates,
-               vcov,
-               interpolation = "spline",
-               inference = "least-squares",
-               B = 0,
-               constraints = FALSE) {
+                    ctrl_estimates,
+                    exp_estimates,
+                    vcov,
+                    interpolation = "spline",
+                    inference = "least-squares",
+                    B = 0,
+                    constraints = FALSE) {
   # Apply constraint GLS estimator if asked.
   if (constraints) {
     # Known mean parameters has not been implemented for the constrained GLS
@@ -189,12 +189,12 @@ TCT_meta = function(time_points,
 }
 
 new_TCT_meta = function(coefficients,
-                   vcov,
-                   inference,
-                   bootstrap_estimates,
-                   interpolation,
-                   type,
-                   vertical_model) {
+                        vcov,
+                        inference,
+                        bootstrap_estimates,
+                        interpolation,
+                        type,
+                        vertical_model) {
   # All options regarding inference are put into a single list.
   inference_options = list(
     interpolation = interpolation,
@@ -575,6 +575,8 @@ TCT_meta_common = function(TCT_Fit,
     gamma_common_estimate = (t(vec_1) %*% solve(vcov) %*% matrix(estimates, ncol = 1)) /
       (t(vec_1) %*% solve(vcov) %*% vec_1)
     gamma_common_vcov = (t(vec_1) %*% solve(vcov) %*% vec_1) ** (-1)
+    # The control-group parameters are not re-estimated.
+    alpha_est = ctrl_estimates
   }
   else if (inference == "contrast") {
     type = "custom"
@@ -613,6 +615,8 @@ TCT_meta_common = function(TCT_Fit,
       j = select_coef,
       weights = weights
     )
+    # The control-group parameters are not re-estimated.
+    alpha_est = ctrl_estimates
   }
   else if (inference == "least-squares") {
     # Estimate parameter vector. The first length(ctrl_estimates) elements are
@@ -678,21 +682,23 @@ TCT_meta_common = function(TCT_Fit,
     weights = weights,
     vertical_model = TCT_Fit$vertical_model,
     select_coef = select_coef,
-    proportional_slowing_test = proportional_slowing_test
+    proportional_slowing_test = proportional_slowing_test,
+    alpha_est = alpha_est
   )
 }
 
 new_TCT_meta_common = function(coefficients,
-                          inference,
-                          vcov,
-                          bootstrap_estimates,
-                          interpolation,
-                          lht_common,
-                          weights,
-                          vertical_model,
-                          select_coef,
-                          proportional_slowing_test
-                          ) {
+                               inference,
+                               vcov,
+                               bootstrap_estimates,
+                               interpolation,
+                               lht_common,
+                               weights,
+                               vertical_model,
+                               select_coef,
+                               proportional_slowing_test,
+                               alpha_est
+) {
   # All options regarding inference are put into a single list.
   inference_options = list(
     interpolation = interpolation,
@@ -709,7 +715,8 @@ new_TCT_meta_common = function(coefficients,
       bootstrap_estimates = bootstrap_estimates,
       lht_common = lht_common,
       vertical_model = vertical_model,
-      proportional_slowing_test = proportional_slowing_test
+      proportional_slowing_test = proportional_slowing_test,
+      alpha_est = alpha_est
     ),
     class = "TCT_meta_common"
   )
@@ -971,10 +978,10 @@ print.summary_TCT_meta_common = function(x, ...) {
       `z value` = x$z_value,
       `p value` = x$p_value,
       `CI` = paste0("(",
-                            format(x$gamma_common_ci[1], digits = 5),
-                            ", ",
-                            format(x$gamma_common_ci[2], digits = 5),
-                            ")"),
+                    format(x$gamma_common_ci[1], digits = 5),
+                    ", ",
+                    format(x$gamma_common_ci[2], digits = 5),
+                    ")"),
       check.names = FALSE
     )
   }
@@ -985,10 +992,10 @@ print.summary_TCT_meta_common = function(x, ...) {
       `z value` = x$z_value,
       `p value` = x$p_value,
       `CI` = paste0("(",
-                            format(x$gamma_common_ci[1], digits = 5),
-                            ", ",
-                            format(x$gamma_common_ci[2], digits = 5),
-                            ")"),
+                    format(x$gamma_common_ci[1], digits = 5),
+                    ", ",
+                    format(x$gamma_common_ci[2], digits = 5),
+                    ")"),
       `CI (bootstrap)` = paste0("(",
                                 format(x$ci_bootstrap[1], digits = 5),
                                 ", ",
@@ -1034,8 +1041,3 @@ print.summary_TCT_meta_common = function(x, ...) {
     row.names = FALSE
   )
 }
-
-
-
-
-
